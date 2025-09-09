@@ -176,7 +176,7 @@ const startInterview = async () => {
   userAnswer.value = '';
 };
 
-// Заглушка для генерации вопросов ИИ 
+// Заглушка для генерации вопросов ИИ
 const generateAIQuestions = async () => {
   // В реальности здесь будет запрос к API нейросети
   return new Promise<void>((resolve) => {

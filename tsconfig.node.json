@@ -22,7 +22,11 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "vite.config.ts",
+    "vite.config.*",
     "eslint.config.*"
-  ]
+  ],
+  "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
 }
