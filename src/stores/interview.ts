@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { OpenAIService } from '@/services/openai';
+import { QuestionService } from '@/services/questionService';
 import type { Question, InterviewMode, AISettings } from '@/types/interview';
 
 export const useInterviewStore = defineStore('interview', () => {
@@ -27,20 +27,6 @@ export const useInterviewStore = defineStore('interview', () => {
       ? Math.round((currentQuestionIndex.value / questions.value.length) * 100) 
       : 0
   );
-
-  // Действия
-  const addQuestion = (questionText: string) => {
-    questions.value.push({
-      id: Date.now(),
-      text: questionText,
-      type: 'text',
-      source: 'user'
-    });
-  };
-
-  const removeQuestion = (index: number) => {
-    questions.value.splice(index, 1);
-  };
 
   const startInterview = async (aiSettings?: AISettings) => {
     isInterviewStarted.value = true;
@@ -96,6 +82,56 @@ export const useInterviewStore = defineStore('interview', () => {
     isInterviewStarted.value = false;
     error.value = null;
   };
+
+ const loadUserQuestions = async () => {
+    isLoading.value = true;
+    try {
+      const userQuestions = await QuestionService.getQuestions();
+      questions.value = userQuestions;
+    } catch (error) {
+      console.error('Error loading questions:', error);
+      error.value = 'Не удалось загрузить вопросы';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const addQuestion = async (questionText: string) => {
+    try {
+      const newQuestion: Omit<Question, 'id'> = {
+        text: questionText,
+        type: 'text',
+        category: 'general',
+        difficulty: 'middle',
+        createdAt: new Date()
+      };
+
+      const questionId = await QuestionService.addQuestion(newQuestion);
+      questions.value.unshift({
+        id: questionId,
+        ...newQuestion
+      });
+    } catch (error) {
+      console.error('Error adding question:', error);
+      throw error;
+    }
+  };
+
+  const removeQuestion = async (index: number) => {
+    const question = questions.value[index];
+    if (question.id) {
+      try {
+        await QuestionService.deleteQuestion(question.id);
+        questions.value.splice(index, 1);
+      } catch (error) {
+        console.error('Error deleting question:', error);
+        throw error;
+      }
+    }
+  };
+
+  // Вызываем загрузку вопросов при инициализации
+  loadUserQuestions();
 
   return {
     // State

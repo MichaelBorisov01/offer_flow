@@ -2,11 +2,35 @@
   <a-config-provider :locale="ruRU">
     <div id="app">
       <a-layout>
-        <a-layout-header class="header">
-          <h1>{{ appName }}</h1>
+        <a-layout-header class="header" v-if="showHeader">
+          <div class="header-content">
+            <h1>{{ appName }}</h1>
+            <div v-if="isAuthenticated" class="user-menu">
+              <a-dropdown>
+                <a class="ant-dropdown-link" @click.prevent>
+                  <UserOutlined />
+                  {{ userDisplayName }}
+                </a>
+                <template #overlay>
+                  <a-menu>
+                    <a-menu-item key="profile">
+                      <UserOutlined /> Профиль
+                    </a-menu-item>
+                    <a-menu-item key="logout" @click="handleLogout">
+                      <LogoutOutlined /> Выйти
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
+            </div>
+          </div>
         </a-layout-header>
+        
         <a-layout-content class="content">
-          <router-view />
+          <router-view v-if="!authStore.isLoading" />
+          <div v-else class="loading-spinner">
+            <a-spin size="large" />
+          </div>
         </a-layout-content>
       </a-layout>
     </div>
@@ -14,10 +38,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import ruRU from 'ant-design-vue/es/locale/ru_RU';
+import { UserOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+import { useAuthStore } from '@/stores/auth';
 
-const appName = ref('OfferFlow'); 
+const appName = 'OfferFlow';
+const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
+
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const userDisplayName = computed(() => authStore.userDisplayName);
+const showHeader = computed(() => route.path !== '/auth');
+
+onMounted(() => {
+  authStore.init();
+});
+
+const handleLogout = async () => {
+  try {
+    const success = await authStore.signOut();
+    if (success) {
+      router.push('/auth');
+    }
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
 </script>
 
 <style>
@@ -28,16 +77,37 @@ const appName = ref('OfferFlow');
 .header {
   background: #001529;
   color: white;
+  padding: 0 24px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
 }
 
 .header h1 {
   color: white;
   margin: 0;
+  font-size: 20px;
+}
+
+.user-menu .ant-dropdown-link {
+  color: white;
+  cursor: pointer;
 }
 
 .content {
   padding: 24px;
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
 }
 </style>
