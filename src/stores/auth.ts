@@ -73,7 +73,7 @@ export const useAuthStore = defineStore('auth', {
                     ...userData,
                     createdAt: new Date()
                 });
-                
+
                 await this.loadUserProfile(user.uid);
                 return true;
             } catch (error: any) {
