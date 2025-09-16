@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { QuestionService } from '@/services/questionService';
-import type { Question, InterviewMode, AISettings } from '@/types/interview';
+import type { Question, InterviewMode, AISettings, QuestionForm } from '@/types/interview';
 
 export const useInterviewStore = defineStore('interview', () => {
   // Состояние
@@ -14,76 +14,29 @@ export const useInterviewStore = defineStore('interview', () => {
   const error = ref<string | null>(null);
 
   // Геттеры
-  const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
+  const currentQuestion = computed(() => {
+    return questions.value[currentQuestionIndex.value];
+  });
+
   const currentAnswer = computed({
     get: () => userAnswers.value[currentQuestionIndex.value] || '',
     set: (value) => {
       userAnswers.value[currentQuestionIndex.value] = value;
     }
   });
-  const isLastQuestion = computed(() => currentQuestionIndex.value === questions.value.length - 1);
+
+  const isLastQuestion = computed(() => {
+    return currentQuestionIndex.value === questions.value.length - 1;
+  });
+
   const progress = computed(() => 
     questions.value.length > 0 
       ? Math.round((currentQuestionIndex.value / questions.value.length) * 100) 
       : 0
   );
 
-  const startInterview = async (aiSettings?: AISettings) => {
-    isInterviewStarted.value = true;
-    currentQuestionIndex.value = 0;
-    userAnswers.value = {};
-    
-    if (mode.value === 'ai' && aiSettings) {
-      await generateAIQuestions(aiSettings);
-    }
-  };
-
-  const generateAIQuestions = async (settings: AISettings) => {
-    isLoading.value = true;
-    error.value = null;
-    
-    try {
-      const aiQuestions = await OpenAIService.generateQuestions(settings);
-      questions.value = aiQuestions.map((text, index) => ({
-        id: index,
-        text,
-        type: 'text',
-        source: 'ai'
-      }));
-    } catch (err) {
-      error.value = 'Не удалось сгенерировать вопросы';
-      console.error('Error generating AI questions:', err);
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  const nextQuestion = () => {
-    if (!isLastQuestion.value) {
-      currentQuestionIndex.value++;
-    }
-  };
-
-  const previousQuestion = () => {
-    if (currentQuestionIndex.value > 0) {
-      currentQuestionIndex.value--;
-    }
-  };
-
-  const finishInterview = () => {
-    isInterviewStarted.value = false;
-    // сохранения результатов
-  };
-
-  const resetInterview = () => {
-    questions.value = [];
-    userAnswers.value = {};
-    currentQuestionIndex.value = 0;
-    isInterviewStarted.value = false;
-    error.value = null;
-  };
-
- const loadUserQuestions = async () => {
+  // Действия
+  const loadUserQuestions = async () => {
     isLoading.value = true;
     try {
       const userQuestions = await QuestionService.getQuestions();
@@ -103,6 +56,7 @@ export const useInterviewStore = defineStore('interview', () => {
         type: 'text',
         category: 'general',
         difficulty: 'middle',
+        tags: [],
         createdAt: new Date()
       };
 
@@ -130,7 +84,72 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   };
 
-  // Вызываем загрузку вопросов при инициализации
+  const startInterview = async (aiSettings?: AISettings) => {
+    isInterviewStarted.value = true;
+    currentQuestionIndex.value = 0;
+    userAnswers.value = {};
+    
+    if (mode.value === 'ai' && aiSettings) {
+      // Здесь будет генерация вопросов ИИ
+      await generateAIQuestions(aiSettings);
+    }
+  };
+
+  const generateAIQuestions = async (settings: AISettings) => {
+    // Заглушка для ИИ вопросов
+    isLoading.value = true;
+    try {
+      // Временные вопросы для демонстрации
+      questions.value = [
+        {
+          id: 'ai-1',
+          text: 'Расскажите о принципах реактивности во Vue 3',
+          type: 'text',
+          category: 'vue',
+          difficulty: settings.difficulty,
+          source: 'ai'
+        },
+        {
+          id: 'ai-2',
+          text: 'В чем разница между Composition API и Options API?',
+          type: 'text',
+          category: 'vue',
+          difficulty: settings.difficulty,
+          source: 'ai'
+        }
+      ];
+    } catch (error) {
+      error.value = 'Не удалось сгенерировать вопросы';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const nextQuestion = () => {
+    if (!isLastQuestion.value) {
+      currentQuestionIndex.value++;
+    }
+  };
+
+  const previousQuestion = () => {
+    if (currentQuestionIndex.value > 0) {
+      currentQuestionIndex.value--;
+    }
+  };
+
+  const finishInterview = () => {
+    isInterviewStarted.value = false;
+  };
+
+  const resetInterview = () => {
+    questions.value = [];
+    userAnswers.value = {};
+    currentQuestionIndex.value = 0;
+    isInterviewStarted.value = false;
+    error.value = null;
+  };
+
+  // Загружаем вопросы при инициализации
   loadUserQuestions();
 
   return {
@@ -156,6 +175,7 @@ export const useInterviewStore = defineStore('interview', () => {
     nextQuestion,
     previousQuestion,
     finishInterview,
-    resetInterview
+    resetInterview,
+    loadUserQuestions 
   };
 });

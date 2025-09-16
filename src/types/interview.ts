@@ -1,19 +1,19 @@
-export type InterviewMode = 'manual' | 'ai';
-
 export interface Question {
-  id: number;
+  id?: string;
   text: string;
   type: 'text' | 'code';
-  source: 'user' | 'ai';
+  category: string;
+  difficulty: 'junior' | 'middle' | 'senior';
+  tags?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId?: string;
 }
 
-export interface AISettings {
-  field: string;
-  difficulty: string;
-  questionsCount: number;
-}
-
-export interface InterviewResults {
-  answers: Record<number, string>;
-  completedAt: Date;
+export interface QuestionForm {
+  text: string;
+  type: 'text' | 'code';
+  category: string;
+  difficulty: 'junior' | 'middle' | 'senior';
+  tags: string[];
 }

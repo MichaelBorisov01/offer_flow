@@ -1,14 +1,14 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
   doc,
   query,
   where,
   orderBy,
-  Timestamp 
+  Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { useAuthStore } from '@/stores/auth';
@@ -19,6 +19,7 @@ export interface Question {
   type: 'text' | 'code';
   category: string;
   difficulty: 'junior' | 'middle' | 'senior';
+  tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
   userId?: string;
@@ -29,8 +30,11 @@ export const QuestionService = {
     try {
       const authStore = useAuthStore();
       const userId = authStore.user?.uid;
-      
-      if (!userId) throw new Error('User not authenticated');
+
+      if (!userId) {
+        console.log('User not authenticated, returning empty array');
+        return [];
+      }
 
       let q = query(
         collection(db, 'questions'),
@@ -47,10 +51,23 @@ export const QuestionService = {
       }
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Question));
+      const questions = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          text: data.text,
+          type: data.type || 'text',
+          category: data.category || 'general',
+          difficulty: data.difficulty || 'middle',
+          tags: data.tags || [],
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+          userId: data.userId
+        } as Question;
+      });
+
+      console.log('Loaded questions:', questions);
+      return questions;
     } catch (error) {
       console.error('Error getting questions:', error);
       throw error;
@@ -61,19 +78,22 @@ export const QuestionService = {
     try {
       const authStore = useAuthStore();
       const userId = authStore.user?.uid;
-      
-      if (!userId) throw new Error('User not authenticated');
 
-      const docRef = await addDoc(collection(db, 'questions'), {
-        ...question,
-        userId,
+      const questionData = {
+        text: question.text,
+        type: question.type || 'text',
+        category: question.category || 'general',
+        difficulty: question.difficulty || 'middle',
+        tags: question.tags || [],
+        userId: userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
-      });
+      };
+
+      const docRef = await addDoc(collection(db, 'questions'), questionData);
 
       return docRef.id;
     } catch (error) {
-      console.error('Error adding question:', error);
       throw error;
     }
   },
@@ -85,7 +105,6 @@ export const QuestionService = {
         updatedAt: Timestamp.now()
       });
     } catch (error) {
-      console.error('Error updating question:', error);
       throw error;
     }
   },
@@ -94,7 +113,6 @@ export const QuestionService = {
     try {
       await deleteDoc(doc(db, 'questions', id));
     } catch (error) {
-      console.error('Error deleting question:', error);
       throw error;
     }
   }

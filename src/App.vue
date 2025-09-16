@@ -70,10 +70,6 @@ const handleLogout = async () => {
 </script>
 
 <style>
-#app {
-  min-height: 100vh;
-}
-
 .header {
   background: #001529;
   color: white;
