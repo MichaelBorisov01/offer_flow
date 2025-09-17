@@ -5,7 +5,6 @@ import type { Question, InterviewMode, AISettings, QuestionForm } from '@/types/
 
 export const useInterviewStore = defineStore('interview', () => {
   // Состояние
-  const mode = ref<InterviewMode>('manual');
   const questions = ref<Question[]>([]);
   const currentQuestionIndex = ref(0);
   const userAnswers = ref<Record<number, string>>({});
@@ -29,9 +28,9 @@ export const useInterviewStore = defineStore('interview', () => {
     return currentQuestionIndex.value === questions.value.length - 1;
   });
 
-  const progress = computed(() => 
-    questions.value.length > 0 
-      ? Math.round((currentQuestionIndex.value / questions.value.length) * 100) 
+  const progress = computed(() =>
+    questions.value.length > 0
+      ? Math.round((currentQuestionIndex.value / questions.value.length) * 100)
       : 0
   );
 
@@ -49,14 +48,14 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   };
 
-  const addQuestion = async (questionText: string) => {
+  const addQuestion = async (questionData: QuestionForm) => { 
     try {
       const newQuestion: Omit<Question, 'id'> = {
-        text: questionText,
-        type: 'text',
-        category: 'general',
-        difficulty: 'middle',
-        tags: [],
+        text: questionData.text,
+        type: questionData.type,
+        category: questionData.category,
+        difficulty: questionData.difficulty,
+        tags: questionData.tags,
         createdAt: new Date()
       };
 
@@ -73,7 +72,7 @@ export const useInterviewStore = defineStore('interview', () => {
 
   const removeQuestion = async (index: number) => {
     const question = questions.value[index];
-    if (question.id) {
+    if (question?.id) {
       try {
         await QuestionService.deleteQuestion(question.id);
         questions.value.splice(index, 1);
@@ -81,47 +80,6 @@ export const useInterviewStore = defineStore('interview', () => {
         console.error('Error deleting question:', error);
         throw error;
       }
-    }
-  };
-
-  const startInterview = async (aiSettings?: AISettings) => {
-    isInterviewStarted.value = true;
-    currentQuestionIndex.value = 0;
-    userAnswers.value = {};
-    
-    if (mode.value === 'ai' && aiSettings) {
-      // Здесь будет генерация вопросов ИИ
-      await generateAIQuestions(aiSettings);
-    }
-  };
-
-  const generateAIQuestions = async (settings: AISettings) => {
-    // Заглушка для ИИ вопросов
-    isLoading.value = true;
-    try {
-      // Временные вопросы для демонстрации
-      questions.value = [
-        {
-          id: 'ai-1',
-          text: 'Расскажите о принципах реактивности во Vue 3',
-          type: 'text',
-          category: 'vue',
-          difficulty: settings.difficulty,
-          source: 'ai'
-        },
-        {
-          id: 'ai-2',
-          text: 'В чем разница между Composition API и Options API?',
-          type: 'text',
-          category: 'vue',
-          difficulty: settings.difficulty,
-          source: 'ai'
-        }
-      ];
-    } catch (error) {
-      error.value = 'Не удалось сгенерировать вопросы';
-    } finally {
-      isLoading.value = false;
     }
   };
 
@@ -154,28 +112,26 @@ export const useInterviewStore = defineStore('interview', () => {
 
   return {
     // State
-    mode,
     questions,
     currentQuestionIndex,
     userAnswers,
     isInterviewStarted,
     isLoading,
     error,
-    
+
     // Getters
     currentQuestion,
     currentAnswer,
     isLastQuestion,
     progress,
-    
+
     // Actions
     addQuestion,
     removeQuestion,
-    startInterview,
     nextQuestion,
     previousQuestion,
     finishInterview,
     resetInterview,
-    loadUserQuestions 
+    loadUserQuestions
   };
 });

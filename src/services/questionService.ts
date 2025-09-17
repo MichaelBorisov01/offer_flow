@@ -78,22 +78,26 @@ export const QuestionService = {
     try {
       const authStore = useAuthStore();
       const userId = authStore.user?.uid;
+      
+      if (!userId) throw new Error('User not authenticated');
 
       const questionData = {
         text: question.text,
-        type: question.type || 'text',
-        category: question.category || 'general',
-        difficulty: question.difficulty || 'middle',
-        tags: question.tags || [],
+        type: question.type,
+        category: question.category,
+        difficulty: question.difficulty,
+        tags: question.tags,
         userId: userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
 
-      const docRef = await addDoc(collection(db, 'questions'), questionData);
+      console.log('Saving question with data:', questionData);
 
+      const docRef = await addDoc(collection(db, 'questions'), questionData);
       return docRef.id;
     } catch (error) {
+      console.error('Error adding question:', error);
       throw error;
     }
   },

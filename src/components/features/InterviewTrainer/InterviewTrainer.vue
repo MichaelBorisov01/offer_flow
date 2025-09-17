@@ -2,7 +2,7 @@
   <div class="interview-trainer">
     <a-card title="Тренажер собеседований" class="trainer-card">
       <p>Добро пожаловать в тренажер собеседований! Выберите режим работы:</p>
-      
+
       <!-- Режимы работы -->
       <a-radio-group v-model:value="mode" class="mode-selector" button-style="solid">
         <a-radio-button value="manual">Ручной режим</a-radio-button>
@@ -13,20 +13,15 @@
 
       <!-- Контент в зависимости от режима -->
       <ManualSetup v-if="mode === 'manual'" />
-      
+
       <div v-else>
         <h3>Режим с ИИ</h3>
         <p>ИИ сгенерирует вопросы на основе вашего уровня и специализации.</p>
         <!-- Здесь позже добавим компонент для AI режима -->
       </div>
 
-      <a-button 
-        type="primary" 
-        size="large" 
-        :disabled="questions.length === 0" 
-        @click="startInterview"
-        class="start-button"
-      >
+      <a-button type="primary" size="large" :disabled="questions.length === 0" @click="startInterview"
+        class="start-button">
         Начать собеседование ({{ questions.length }})
       </a-button>
     </a-card>
@@ -45,7 +40,6 @@ const questions = computed(() => interviewStore.questions);
 
 const startInterview = () => {
   if (questions.value.length > 0) {
-    interviewStore.startInterview();
   }
 };
 </script>
