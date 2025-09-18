@@ -1,97 +1,10 @@
 <template>
   <div class="manual-setup">
-    <h3>Добавьте свои вопросы</h3>
-    
-    <a-form :model="formState" @finish="addQuestion" layout="vertical">
-      <a-form-item label="Вопрос" required>
-        <a-textarea 
-          v-model:value="formState.text" 
-          placeholder="Введите вопрос для собеседования"
-          :rows="3"
-          size="large"
-        />
-      </a-form-item>
-
-      <a-row :gutter="16">
-        <a-col :span="8">
-          <a-form-item label="Тип вопроса" required>
-            <a-select v-model:value="formState.type" size="large">
-              <a-select-option value="text">Текстовый</a-select-option>
-              <a-select-option value="code">Программирование</a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="Сложность" required>
-            <a-select v-model:value="formState.difficulty" size="large">
-              <a-select-option value="junior">Junior</a-select-option>
-              <a-select-option value="middle">Middle</a-select-option>
-              <a-select-option value="senior">Senior</a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
-          <a-form-item label="Категория" required>
-            <a-select 
-              v-model:value="formState.category" 
-              size="large"
-              show-search
-              option-filter-prop="label"
-            >
-              <a-select-option value="javascript" label="JavaScript">JavaScript</a-select-option>
-              <a-select-option value="vue" label="Vue.js">Vue.js</a-select-option>
-              <a-select-option value="react" label="React">React</a-select-option>
-              <a-select-option value="html-css" label="HTML/CSS">HTML/CSS</a-select-option>
-              <a-select-option value="algorithms" label="Алгоритмы">Алгоритмы</a-select-option>
-              <a-select-option value="database" label="Базы данных">Базы данных</a-select-option>
-              <a-select-option value="system-design" label="System Design">System Design</a-select-option>
-              <a-select-option value="soft-skills" label="Soft Skills">Soft Skills</a-select-option>
-              <a-select-option value="typescript" label="TypeScript">TypeScript</a-select-option>
-              <a-select-option value="nodejs" label="Node.js">Node.js</a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
-      </a-row>
-
-      <a-form-item label="Теги (через запятую)">
-        <a-input 
-          v-model:value="tagsInput" 
-          placeholder="vue3, composition-api, reactivity"
-          size="large"
-          @blur="handleTagsBlur"
-          @keypress.enter="handleTagsBlur"
-        />
-        <div class="tags-preview" v-if="formState.tags.length > 0">
-          <a-tag 
-            v-for="(tag, index) in formState.tags" 
-            :key="index" 
-            closable 
-            @close="removeTag(index)"
-            color="blue"
-          >
-            {{ tag }}
-          </a-tag>
-        </div>
-      </a-form-item>
-
-      <a-form-item>
-        <a-button 
-          type="primary" 
-          html-type="submit" 
-          size="large" 
-          :loading="isAdding"
-          :disabled="!formState.text.trim()"
-        >
-          Добавить вопрос
-        </a-button>
-        <a-button 
-          style="margin-left: 8px;" 
-          @click="resetForm"
-        >
-          Очистить
-        </a-button>
-      </a-form-item>
-    </a-form>
+    <EditQuestionForm
+      :question-toEdit="editingQuestion"
+      @submit="handleFormSubmit"
+      @cancel="cancelEditing"
+    />
 
     <a-divider />
 
@@ -117,7 +30,7 @@
               <a-button type="link" danger @click="removeQuestion(index)" size="small">
                 <DeleteOutlined /> Удалить
               </a-button>
-              <a-button type="link" @click="editQuestion(index)" size="small">
+              <a-button type="link" @click="startEditing(item)" size="small">
                 <EditOutlined /> Редактировать
               </a-button>
             </template>
@@ -157,6 +70,9 @@
                   <span class="question-date" v-if="item.createdAt">
                     Добавлен: {{ formatDate(item.createdAt) }}
                   </span>
+                  <span class="question-date" v-if="item.updatedAt && item.updatedAt !== item.createdAt">
+                    • Обновлен: {{ formatDate(item.updatedAt) }}
+                  </span>
                 </div>
               </template>
             </a-list-item-meta>
@@ -173,51 +89,16 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue';
 import { useInterviewStore } from '@/stores/interview';
 import { useAuthStore } from '@/stores/auth';
 import { message } from 'ant-design-vue';
-import type { QuestionForm } from '@/types/interview';
+import type { Question } from '@/types/interview';
+import EditQuestionForm from './EditQuestionForm.vue';
 
 const interviewStore = useInterviewStore();
 const authStore = useAuthStore();
-const isAdding = ref(false);
-const tagsInput = ref('');
 const error = ref<string | null>(null);
-
-const formState = ref<QuestionForm>({
-  text: '',
-  type: 'text',
-  category: 'javascript',
-  difficulty: 'middle',
-  tags: []
-});
+const editingQuestion = ref<Question | null>(null);
 
 const questions = computed(() => interviewStore.questions);
 const isLoading = computed(() => interviewStore.isLoading);
-
-const handleTagsBlur = () => {
-  if (tagsInput.value.trim()) {
-    const newTags = tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0 && !formState.value.tags.includes(tag));
-    
-    formState.value.tags = [...formState.value.tags, ...newTags];
-    tagsInput.value = '';
-  }
-};
-
-const removeTag = (index: number) => {
-  formState.value.tags.splice(index, 1);
-};
-
-const resetForm = () => {
-  formState.value = {
-    text: '',
-    type: 'text',
-    category: 'javascript',
-    difficulty: 'middle',
-    tags: []
-  };
-  tagsInput.value = '';
-};
 
 const getDifficultyColor = (difficulty: string) => {
   const colors = {
@@ -287,31 +168,30 @@ const formatDate = (date: Date) => {
   }).format(date);
 };
 
-const addQuestion = async () => {
-  if (!authStore.isAuthenticated) {
-    message.error('Необходимо войти в систему');
-    return;
-  }
-
-  if (!formState.value.text.trim()) {
-    message.error('Введите текст вопроса');
-    return;
-  }
-
-  isAdding.value = true;
-  error.value = null;
-  
+const handleFormSubmit = async (questionData: any) => {
   try {
-    await interviewStore.addQuestion(formState.value);
-    
-    resetForm();
-    message.success('Вопрос добавлен!');
+    if (editingQuestion.value?.id) {
+      // Редактирование существующего вопроса
+      await interviewStore.updateQuestion(editingQuestion.value.id, questionData);
+      message.success('Вопрос обновлен!');
+    } else {
+      // Добавление нового вопроса
+      await interviewStore.addQuestion(questionData);
+      message.success('Вопрос добавлен!');
+    }
+    editingQuestion.value = null;
   } catch (error: any) {
-    console.error('Add question error:', error);
-    message.error('Ошибка при добавлении вопроса');
-  } finally {
-    isAdding.value = false;
+    console.error('Submit error:', error);
+    message.error('Ошибка при сохранении вопроса');
   }
+};
+
+const startEditing = (question: Question) => {
+  editingQuestion.value = { ...question };
+};
+
+const cancelEditing = () => {
+  editingQuestion.value = null;
 };
 
 const removeQuestion = async (index: number) => {
@@ -321,18 +201,6 @@ const removeQuestion = async (index: number) => {
   } catch (error) {
     message.error('Ошибка при удалении вопроса');
   }
-};
-
-const editQuestion = (index: number) => {
-  const question = questions.value[index];
-  formState.value = {
-    text: question.text,
-    type: question.type,
-    category: question.category,
-    difficulty: question.difficulty,
-    tags: question.tags || []
-  };
-  message.info('Режим редактирования. Функционал в разработке.');
 };
 
 onMounted(() => {
@@ -346,19 +214,17 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-.tags-preview {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 .question-item {
   border: 1px solid #f0f0f0;
   border-radius: 8px;
   margin-bottom: 12px;
   padding: 16px;
   background: white;
+  transition: box-shadow 0.2s;
+}
+
+.question-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .question-header {
@@ -402,7 +268,6 @@ onMounted(() => {
 .question-date {
   color: #8c8c8c;
   font-size: 12px;
-  margin-left: auto;
 }
 
 :deep(.ant-list-item-action) {

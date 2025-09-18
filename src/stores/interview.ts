@@ -11,6 +11,7 @@ export const useInterviewStore = defineStore('interview', () => {
   const isInterviewStarted = ref(false);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const editingQuestionId = ref<string | null>(null);
 
   // Геттеры
   const currentQuestion = computed(() => {
@@ -34,7 +35,38 @@ export const useInterviewStore = defineStore('interview', () => {
       : 0
   );
 
+  const isEditing = computed(() => editingQuestionId.value !== null);
+
   // Действия
+  const startEditing = (questionId: string) => {
+    editingQuestionId.value = questionId;
+  };
+
+  const cancelEditing = () => {
+    editingQuestionId.value = null;
+  };
+
+  const updateQuestion = async (questionId: string, updates: Partial<Question>) => {
+    try {
+      await QuestionService.updateQuestion(questionId, updates);
+
+      // Обновляем локальное состояние
+      const index = questions.value.findIndex(q => q.id === questionId);
+      if (index !== -1) {
+        questions.value[index] = {
+          ...questions.value[index],
+          ...updates,
+          updatedAt: new Date()
+        };
+      }
+
+      editingQuestionId.value = null;
+    } catch (error) {
+      console.error('Error updating question:', error);
+      throw error;
+    }
+  };
+
   const loadUserQuestions = async () => {
     isLoading.value = true;
     try {
@@ -48,7 +80,7 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   };
 
-  const addQuestion = async (questionData: QuestionForm) => { 
+  const addQuestion = async (questionData: QuestionForm) => {
     try {
       const newQuestion: Omit<Question, 'id'> = {
         text: questionData.text,
@@ -118,6 +150,8 @@ export const useInterviewStore = defineStore('interview', () => {
     isInterviewStarted,
     isLoading,
     error,
+    editingQuestionId,
+    isEditing,
 
     // Getters
     currentQuestion,
@@ -132,6 +166,9 @@ export const useInterviewStore = defineStore('interview', () => {
     previousQuestion,
     finishInterview,
     resetInterview,
-    loadUserQuestions
+    loadUserQuestions,
+    startEditing,
+    cancelEditing,
+    updateQuestion
   };
 });

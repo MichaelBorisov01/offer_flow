@@ -102,16 +102,26 @@ export const QuestionService = {
     }
   },
 
-  async updateQuestion(id: string, updates: Partial<Question>): Promise<void> {
-    try {
-      await updateDoc(doc(db, 'questions', id), {
-        ...updates,
-        updatedAt: Timestamp.now()
-      });
-    } catch (error) {
-      throw error;
-    }
-  },
+ async updateQuestion(id: string, updates: Partial<Question>): Promise<void> {
+  try {
+    const authStore = useAuthStore();
+    const userId = authStore.user?.uid;
+    
+    if (!userId) throw new Error('User not authenticated');
+
+    const updateData = {
+      ...updates,
+      updatedAt: Timestamp.now()
+    };
+
+    console.log('Updating question:', id, updateData);
+
+    await updateDoc(doc(db, 'questions', id), updateData);
+  } catch (error) {
+    console.error('Error updating question:', error);
+    throw error;
+  }
+},
 
   async deleteQuestion(id: string): Promise<void> {
     try {
