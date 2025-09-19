@@ -1,46 +1,113 @@
 <template>
   <div class="interview-trainer">
     <a-card title="Тренажер собеседований" class="trainer-card">
-      <p>Добро пожаловать в тренажер собеседований! Выберите режим работы:</p>
+      <template #extra>
+        <a-button 
+          v-if="isInterviewStarted" 
+          @click="exitInterview" 
+          danger 
+          size="small"
+        >
+          Выйти из собеседования
+        </a-button>
+      </template>
 
-      <!-- Режимы работы -->
-      <a-radio-group v-model:value="mode" class="mode-selector" button-style="solid">
-        <a-radio-button value="manual">Ручной режим</a-radio-button>
-        <a-radio-button value="ai">Режим с ИИ</a-radio-button>
-      </a-radio-group>
+      <div v-if="!isInterviewStarted">
+        <p>Добро пожаловать в тренажер собеседований! Выберите режим работы:</p>
+        
+        <!-- Режимы работы -->
+        <a-radio-group v-model:value="mode" class="mode-selector" button-style="solid">
+          <a-radio-button value="manual">Ручной режим</a-radio-button>
+          <a-radio-button value="ai">Режим с ИИ</a-radio-button>
+        </a-radio-group>
 
-      <a-divider />
+        <a-divider />
 
-      <!-- Контент в зависимости от режима -->
-      <ManualSetup v-if="mode === 'manual'" />
+        <!-- Контент в зависимости от режима -->
+        <ManualSetup v-if="mode === 'manual'" />
+        
+        <div v-else>
+          <h3>Режим с ИИ</h3>
+          <p>ИИ сгенерирует вопросы на основе вашего уровня и специализации.</p>
+          <!-- Здесь позже добавим компонент для AI режима -->
+        </div>
 
-      <div v-else>
-        <h3>Режим с ИИ</h3>
-        <p>ИИ сгенерирует вопросы на основе вашего уровня и специализации.</p>
-        <!-- Здесь позже добавим компонент для AI режима -->
+        <!-- Настройки собеседования -->
+        <a-card title="Настройки собеседования" style="margin-top: 24px;">
+          <a-form layout="vertical">
+            <a-form-item label="Время на ответ (минуты)">
+              <a-input-number 
+                v-model:value="interviewSettings.timePerQuestion" 
+                :min="1" 
+                :max="30"
+                :step="1"
+                @change="updateTimePerQuestion"
+              />
+              <span style="margin-left: 8px;">минут</span>
+            </a-form-item>
+            
+            <a-form-item>
+              <a-checkbox v-model:checked="interviewSettings.showTimer">
+                Показывать таймер
+              </a-checkbox>
+            </a-form-item>
+            
+            <a-form-item>
+              <a-checkbox v-model:checked="interviewSettings.autoEvaluate">
+                Автоматическая оценка ответов
+              </a-checkbox>
+            </a-form-item>
+          </a-form>
+        </a-card>
+
+        <a-button 
+          type="primary" 
+          size="large" 
+          :disabled="questions.length === 0" 
+          @click="startInterview"
+          class="start-button"
+        >
+          Начать собеседование ({{ questions.length }})
+        </a-button>
       </div>
 
-      <a-button type="primary" size="large" :disabled="questions.length === 0" @click="startInterview"
-        class="start-button">
-        Начать собеседование ({{ questions.length }})
-      </a-button>
+      <div v-else>
+        <InterviewSession />
+      </div>
     </a-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import ManualSetup from './ManualSetup.vue';
+import InterviewSession from './InterviewSession.vue';
 import { useInterviewStore } from '@/stores/interview';
+import { message } from 'ant-design-vue';
 
 const interviewStore = useInterviewStore();
-const mode = ref<'manual' | 'ai'>('manual');
 
+const mode = ref<'manual' | 'ai'>('manual');
 const questions = computed(() => interviewStore.questions);
+const isInterviewStarted = computed(() => interviewStore.isInterviewStarted);
+const interviewSettings = computed(() => interviewStore.interviewSettings);
 
 const startInterview = () => {
   if (questions.value.length > 0) {
+    interviewStore.startInterview();
+  } else {
+    message.error('Добавьте вопросы для начала собеседования');
   }
+};
+
+const exitInterview = () => {
+  interviewStore.stopTimer();
+  interviewStore.isInterviewStarted = false;
+  message.info('Собеседование прервано');
+};
+
+const updateTimePerQuestion = (value: number) => {
+  interviewStore.interviewSettings.timePerQuestion = value * 60; // Конвертируем в секунды
 };
 </script>
 

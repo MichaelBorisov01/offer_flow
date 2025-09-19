@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { QuestionService } from '@/services/questionService';
-import type { Question, InterviewMode, AISettings, QuestionForm } from '@/types/interview';
+import type { Question, InterviewAnswer, InterviewSession, InterviewSettings, QuestionForm } from '@/types/interview';
+import { message } from 'ant-design-vue';
 
 export const useInterviewStore = defineStore('interview', () => {
   // Состояние
@@ -12,6 +13,17 @@ export const useInterviewStore = defineStore('interview', () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const editingQuestionId = ref<string | null>(null);
+
+  const interviewSettings = ref<InterviewSettings>({
+    timePerQuestion: 180, // 3 минуты
+    showTimer: true,
+    autoEvaluate: false
+  });
+
+  const currentSession = ref<InterviewSession | null>(null);
+  const currentTimer = ref<number | null>(null);
+  const timeRemaining = ref<number>(0);
+  const isTimerRunning = ref(false);
 
   // Геттеры
   const currentQuestion = computed(() => {
@@ -116,19 +128,49 @@ export const useInterviewStore = defineStore('interview', () => {
   };
 
   const nextQuestion = () => {
-    if (!isLastQuestion.value) {
+    stopTimer();
+
+    // Сохраняем ответ текущего вопроса
+    if (currentSession.value && currentQuestion.value) {
+      const answer: InterviewAnswer = {
+        questionId: currentQuestion.value.id!,
+        questionText: currentQuestion.value.text,
+        userAnswer: userAnswers.value[currentQuestionIndex.value] || '',
+        timeSpent: interviewSettings.value.timePerQuestion - timeRemaining.value
+      };
+
+      currentSession.value.answers.push(answer);
+    }
+
+    if (isLastQuestion.value) {
+      finishInterview();
+    } else {
       currentQuestionIndex.value++;
+      userAnswers.value[currentQuestionIndex.value] = '';
+      timeRemaining.value = interviewSettings.value.timePerQuestion;
+      startTimer();
     }
   };
 
   const previousQuestion = () => {
     if (currentQuestionIndex.value > 0) {
+      stopTimer();
       currentQuestionIndex.value--;
+      timeRemaining.value = interviewSettings.value.timePerQuestion;
+      startTimer();
     }
   };
 
   const finishInterview = () => {
+    stopTimer();
     isInterviewStarted.value = false;
+
+    if (currentSession.value) {
+      currentSession.value.completedAt = new Date();
+      // Здесь можно добавить сохранение сессии в базу
+    }
+
+    message.success('Собеседование завершено!');
   };
 
   const resetInterview = () => {
@@ -137,6 +179,56 @@ export const useInterviewStore = defineStore('interview', () => {
     currentQuestionIndex.value = 0;
     isInterviewStarted.value = false;
     error.value = null;
+  };
+
+  const startInterview = async () => {
+    if (questions.value.length === 0) {
+      message.error('Добавьте вопросы для начала собеседования');
+      return;
+    }
+
+    isInterviewStarted.value = true;
+    currentQuestionIndex.value = 0;
+    userAnswers.value = {};
+    timeRemaining.value = interviewSettings.value.timePerQuestion;
+
+    // Создаем новую сессию
+    currentSession.value = {
+      questions: [...questions.value],
+      answers: [],
+      totalTime: 0,
+      createdAt: new Date()
+    };
+
+    startTimer();
+  };
+
+  const startTimer = () => {
+    isTimerRunning.value = true;
+    if (currentTimer.value) {
+      clearInterval(currentTimer.value);
+    }
+
+    currentTimer.value = window.setInterval(() => {
+      if (timeRemaining.value > 0) {
+        timeRemaining.value--;
+
+        if (currentSession.value) {
+          currentSession.value.totalTime++;
+        }
+      } else {
+        // Время вышло, переходим к следующему вопросу
+        nextQuestion();
+      }
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    isTimerRunning.value = false;
+    if (currentTimer.value) {
+      clearInterval(currentTimer.value);
+      currentTimer.value = null;
+    }
   };
 
   // Загружаем вопросы при инициализации
@@ -152,6 +244,10 @@ export const useInterviewStore = defineStore('interview', () => {
     error,
     editingQuestionId,
     isEditing,
+    interviewSettings,
+    currentSession,
+    timeRemaining,
+    isTimerRunning,
 
     // Getters
     currentQuestion,
@@ -169,6 +265,9 @@ export const useInterviewStore = defineStore('interview', () => {
     loadUserQuestions,
     startEditing,
     cancelEditing,
-    updateQuestion
+    updateQuestion,
+    startInterview,
+    stopTimer,
+    startTimer
   };
 });
