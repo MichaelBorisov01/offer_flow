@@ -17,29 +17,8 @@ export interface InterviewSession {
   id?: string;
   userId?: string;
   questions: Question[];
-  answers: InterviewAnswer[];
   score?: number;
   totalTime: number;
   completedAt?: Date;
   createdAt?: Date;
-}
-
-export interface InterviewAnswer {
-  questionId: string;
-  questionText: string;
-  userAnswer: string;
-  evaluation?: AnswerEvaluation;
-  timeSpent: number; // в секундах
-}
-
-export interface AnswerEvaluation {
-  score: number; // 0-10
-  feedback: string;
-  suggestions: string[];
-}
-
-export interface InterviewSettings {
-  timePerQuestion: number; // в секундах
-  showTimer: boolean;
-  autoEvaluate: boolean;
 }

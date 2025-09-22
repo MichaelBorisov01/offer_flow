@@ -1,8 +1,8 @@
 <template>
   <div class="interview-session">
-    <a-card title="Собеседование" class="session-card">
+    <a-card title="Режим собеседования" class="session-card">
       <!-- Прогресс бар -->
-      <div class="progress-section">
+      <div class="progress-section" v-if="interviewSettings.showProgress">
         <a-progress 
           :percent="progress" 
           :show-info="false" 
@@ -15,31 +15,23 @@
         </div>
       </div>
 
-      <!-- Таймер -->
-      <div class="timer-section" v-if="interviewSettings.showTimer">
-        <a-alert 
-          :message="`Осталось времени: ${formatTime(timeRemaining)}`" 
-          :type="timeRemaining > 30 ? 'info' : timeRemaining > 10 ? 'warning' : 'error'"
-          show-icon
-          class="timer-alert"
-        />
-      </div>
-
       <!-- Текущий вопрос -->
       <div class="question-section">
-        <a-card :title="`Вопрос ${currentQuestionIndex + 1}`" class="question-card">
+        <a-card :title="`Вопрос ${ currentQuestionIndex + 1 }`" class="question-card">
           <template #extra>
-            <a-tag :color="getDifficultyColor(currentQuestion.difficulty)">
-              {{ getDifficultyLabel(currentQuestion.difficulty) }}
-            </a-tag>
-            <a-tag :color="getCategoryColor(currentQuestion.category)">
-              {{ getCategoryLabel(currentQuestion.category) }}
-            </a-tag>
+            <a-space v-if="interviewSettings.showQuestionMeta">
+              <a-tag :color="getDifficultyColor(currentQuestion.difficulty)">
+                {{ getDifficultyLabel(currentQuestion.difficulty) }}
+              </a-tag>
+              <a-tag :color="getCategoryColor(currentQuestion.category)">
+                {{ getCategoryLabel(currentQuestion.category) }}
+              </a-tag>
+            </a-space>
           </template>
 
           <p class="question-text">{{ currentQuestion.text }}</p>
           
-          <div class="question-meta" v-if="currentQuestion.tags && currentQuestion.tags.length">
+          <div class="question-meta" v-if="currentQuestion.tags && currentQuestion.tags.length && interviewSettings.showQuestionMeta">
             <a-tag 
               v-for="(tag, index) in currentQuestion.tags" 
               :key="index" 
@@ -52,20 +44,15 @@
         </a-card>
       </div>
 
-      <!-- Поле для ответа -->
-      <div class="answer-section">
-      <a-form-item label="Ваш ответ:" class="answer-input">
-        <a-textarea 
-          :value="currentAnswer" 
-          @update:value="handleAnswerChange"
-          placeholder="Введите ваш ответ здесь..."
-          :rows="6"
-          :auto-size="{ minRows: 4, maxRows: 8 }"
-          show-count
-          :maxlength="2000"
+      <!-- Инструкция -->
+      <div class="instruction-section">
+        <a-alert 
+          message="Режим подготовки" 
+          description="Отвечайте на вопросы устно. После ответа переходите к следующему вопросу."
+          type="info"
+          show-icon
         />
-      </a-form-item>
-    </div>
+      </div>
 
       <!-- Навигация -->
       <div class="navigation-section">
@@ -75,14 +62,13 @@
             :disabled="currentQuestionIndex === 0"
             size="large"
           >
-            ← Назад
+            ← Предыдущий вопрос
           </a-button>
           
           <a-button 
             v-if="!isLastQuestion"
             type="primary" 
             @click="nextQuestion"
-            :disabled="!currentAnswer.trim()"
             size="large"
           >
             Следующий вопрос →
@@ -92,26 +78,15 @@
             v-else
             type="primary" 
             @click="finishInterview"
-            :disabled="!currentAnswer.trim()"
             size="large"
           >
             Завершить собеседование
-          </a-button>
-
-          <a-button 
-            v-if="!isLastQuestion"
-            @click="nextQuestion"
-            :disabled="timeRemaining > 0"
-            danger
-            size="large"
-          >
-            Пропустить ({{ formatTime(timeRemaining) }})
           </a-button>
         </a-space>
       </div>
 
       <!-- Быстрая навигация по вопросам -->
-      <div class="quick-navigation">
+      <div class="quick-navigation" v-if="interviewSettings.showProgress">
         <a-divider />
         <h4>Быстрая навигация:</h4>
         <a-space wrap>
@@ -133,28 +108,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useInterviewStore } from '@/stores/interview';
-import { message } from 'ant-design-vue';
 
 const interviewStore = useInterviewStore();
 
 const questions = computed(() => interviewStore.questions);
 const currentQuestion = computed(() => interviewStore.currentQuestion!);
 const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex);
-const currentAnswer = computed(() => interviewStore.currentAnswer);
 const progress = computed(() => interviewStore.progress);
-const timeRemaining = computed(() => interviewStore.timeRemaining);
 const interviewSettings = computed(() => interviewStore.interviewSettings);
 const isLastQuestion = computed(() => interviewStore.isLastQuestion);
-
-const handleAnswerChange = (value: string) => {
-  interviewStore.currentAnswer = value;
-};
-
-const formatTime = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
 
 const getDifficultyColor = (difficulty: string) => {
   const colors = { junior: 'green', middle: 'orange', senior: 'red' };
@@ -194,15 +156,11 @@ const previousQuestion = () => {
 
 const finishInterview = () => {
   interviewStore.finishInterview();
-  message.success('Собеседование завершено!');
 };
 
 const goToQuestion = (index: number) => {
   if (index >= 0 && index < questions.value.length) {
-    interviewStore.stopTimer();
     interviewStore.currentQuestionIndex = index;
-    interviewStore.timeRemaining = interviewSettings.value.timePerQuestion;
-    interviewStore.startTimer();
   }
 };
 </script>
@@ -238,37 +196,25 @@ const goToQuestion = (index: number) => {
   color: #1890ff;
 }
 
-.timer-section {
-  margin-bottom: 20px;
-}
-
-.timer-alert {
-  font-size: 16px;
-  font-weight: 500;
-}
-
 .question-section {
   margin-bottom: 24px;
 }
 
 .question-card {
   background: #fafafa;
+  border: 2px solid #e8f4ff;
 }
 
 .question-text {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.6;
   margin: 0;
   color: #262626;
-}
-
-.answer-section {
-  margin-bottom: 24px;
-}
-
-.answer-input :deep(.ant-form-item-label) {
   font-weight: 500;
-  font-size: 16px;
+}
+
+.instruction-section {
+  margin-bottom: 24px;
 }
 
 .navigation-section {

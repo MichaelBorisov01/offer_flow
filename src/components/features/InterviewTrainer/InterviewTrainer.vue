@@ -33,28 +33,17 @@
         </div>
 
         <!-- Настройки собеседования -->
-        <a-card title="Настройки собеседования" style="margin-top: 24px;">
+        <a-card title="Настройки просмотра" style="margin-top: 24px;">
           <a-form layout="vertical">
-            <a-form-item label="Время на ответ (минуты)">
-              <a-input-number 
-                v-model:value="interviewSettings.timePerQuestion" 
-                :min="1" 
-                :max="30"
-                :step="1"
-                @change="updateTimePerQuestion"
-              />
-              <span style="margin-left: 8px;">минут</span>
-            </a-form-item>
-            
             <a-form-item>
-              <a-checkbox v-model:checked="interviewSettings.showTimer">
-                Показывать таймер
+              <a-checkbox v-model:checked="interviewSettings.showProgress">
+                Показывать прогресс
               </a-checkbox>
             </a-form-item>
             
             <a-form-item>
-              <a-checkbox v-model:checked="interviewSettings.autoEvaluate">
-                Автоматическая оценка ответов
+              <a-checkbox v-model:checked="interviewSettings.showQuestionMeta">
+                Показывать метаданные вопросов
               </a-checkbox>
             </a-form-item>
           </a-form>
@@ -67,7 +56,7 @@
           @click="startInterview"
           class="start-button"
         >
-          Начать собеседование ({{ questions.length }})
+          Начать подготовку ({{ questions.length }})
         </a-button>
       </div>
 
@@ -79,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import ManualSetup from './ManualSetup.vue';
 import InterviewSession from './InterviewSession.vue';
 import { useInterviewStore } from '@/stores/interview';
@@ -96,18 +85,13 @@ const startInterview = () => {
   if (questions.value.length > 0) {
     interviewStore.startInterview();
   } else {
-    message.error('Добавьте вопросы для начала собеседования');
+    message.error('Добавьте вопросы для начала подготовки');
   }
 };
 
 const exitInterview = () => {
-  interviewStore.stopTimer();
   interviewStore.isInterviewStarted = false;
-  message.info('Собеседование прервано');
-};
-
-const updateTimePerQuestion = (value: number) => {
-  interviewStore.interviewSettings.timePerQuestion = value * 60; // Конвертируем в секунды
+  message.info('Подготовка прервана');
 };
 </script>
 
