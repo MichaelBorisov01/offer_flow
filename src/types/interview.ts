@@ -22,3 +22,15 @@ export interface InterviewSession {
   completedAt?: Date;
   createdAt?: Date;
 }
+
+export interface AISettings {
+  field: string;
+  difficulty: 'junior' | 'middle' | 'senior';
+  questionsCount: number;
+  technology?: string; // конкретная технология (Vue, React, etc)
+}
+
+export interface AIQuestion extends Question {
+  generatedBy: 'ai';
+  context?: string; // дополнительный контекст для вопроса
+}

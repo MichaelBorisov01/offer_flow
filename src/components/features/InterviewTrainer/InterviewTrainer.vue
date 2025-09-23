@@ -25,12 +25,7 @@
 
         <!-- Контент в зависимости от режима -->
         <ManualSetup v-if="mode === 'manual'" />
-        
-        <div v-else>
-          <h3>Режим с ИИ</h3>
-          <p>ИИ сгенерирует вопросы на основе вашего уровня и специализации.</p>
-          <!-- Здесь позже добавим компонент для AI режима -->
-        </div>
+        <AISetup v-else />
 
         <!-- Настройки собеседования -->
         <a-card title="Настройки просмотра" style="margin-top: 24px;">
@@ -56,7 +51,7 @@
           @click="startInterview"
           class="start-button"
         >
-          Начать подготовку ({{ questions.length }})
+          Начать подготовку
         </a-button>
       </div>
 
@@ -71,6 +66,7 @@
 import { ref, computed } from 'vue';
 import ManualSetup from './ManualSetup.vue';
 import InterviewSession from './InterviewSession.vue';
+import AISetup from './AISetup.vue';
 import { useInterviewStore } from '@/stores/interview';
 import { message } from 'ant-design-vue';
 
