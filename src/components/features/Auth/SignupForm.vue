@@ -1,3 +1,50 @@
+<script setup lang="ts">
+import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+interface FormState {
+  displayName: string
+  email: string
+  password: string
+  experienceLevel: 'junior' | 'middle' | 'senior'
+}
+
+const formState = reactive<FormState>({
+  displayName: '',
+  email: '',
+  password: '',
+  experienceLevel: 'junior',
+})
+
+const authStore = useAuthStore()
+const router = useRouter()
+const isLoading = authStore.isLoading
+
+async function handleSignup() {
+  try {
+    const success = await authStore.signUp(
+      formState.email,
+      formState.password,
+      {
+        displayName: formState.displayName,
+        experienceLevel: formState.experienceLevel,
+      },
+    )
+
+    if (success) {
+      message.success('Регистрация успешна!')
+      router.push('/')
+    }
+  }
+  catch (error: any) {
+    message.error(error.message || 'Ошибка регистрации')
+  }
+}
+</script>
+
 <template>
   <a-card title="Регистрация" class="auth-card">
     <a-form :model="formState" @finish="handleSignup">
@@ -27,9 +74,15 @@
 
       <a-form-item>
         <a-select v-model:value="formState.experienceLevel" placeholder="Уровень опыта" size="large">
-          <a-select-option value="junior">Junior</a-select-option>
-          <a-select-option value="middle">Middle</a-select-option>
-          <a-select-option value="senior">Senior</a-select-option>
+          <a-select-option value="junior">
+            Junior
+          </a-select-option>
+          <a-select-option value="middle">
+            Middle
+          </a-select-option>
+          <a-select-option value="senior">
+            Senior
+          </a-select-option>
         </a-select>
       </a-form-item>
 
@@ -45,52 +98,6 @@
     </a-form>
   </a-card>
 </template>
-
-<script setup lang="ts">
-import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons-vue';
-import { useAuthStore } from '@/stores/auth';
-import { message } from 'ant-design-vue';
-
-interface FormState {
-  displayName: string;
-  email: string;
-  password: string;
-  experienceLevel: 'junior' | 'middle' | 'senior';
-}
-
-const formState = reactive<FormState>({
-  displayName: '',
-  email: '',
-  password: '',
-  experienceLevel: 'junior'
-});
-
-const authStore = useAuthStore();
-const router = useRouter();
-const isLoading = authStore.isLoading;
-
-const handleSignup = async () => {
-  try {
-    const success = await authStore.signUp(
-      formState.email,
-      formState.password,
-      {
-        displayName: formState.displayName,
-        experienceLevel: formState.experienceLevel
-      }
-    );
-    
-    if (success) {
-      message.success('Регистрация успешна!');
-      router.push('/');
-    }
-  } catch (error: any) {
-    message.error(error.message || 'Ошибка регистрации');
-  }
-};
-</script>
 
 <style scoped>
 .auth-card {

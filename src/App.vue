@@ -1,8 +1,41 @@
+<script setup lang="ts">
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
+import ruRU from 'ant-design-vue/es/locale/ru_RU'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const appName = 'OfferFlow'
+const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const userDisplayName = computed(() => authStore.userDisplayName)
+const showHeader = computed(() => route.path !== '/auth')
+
+onMounted(() => {
+  authStore.init()
+})
+
+async function handleLogout() {
+  try {
+    const success = await authStore.signOut()
+    if (success) {
+      router.push('/auth')
+    }
+  }
+  catch (error) {
+    console.error('Logout error:', error)
+  }
+}
+</script>
+
 <template>
   <a-config-provider :locale="ruRU">
     <div id="app">
       <a-layout>
-        <a-layout-header class="header" v-if="showHeader">
+        <a-layout-header v-if="showHeader" class="header">
           <div class="header-content">
             <h1>{{ appName }}</h1>
             <div v-if="isAuthenticated" class="user-menu">
@@ -25,7 +58,7 @@
             </div>
           </div>
         </a-layout-header>
-        
+
         <a-layout-content class="content">
           <router-view v-if="!authStore.isLoading" />
           <div v-else class="loading-spinner">
@@ -36,38 +69,6 @@
     </div>
   </a-config-provider>
 </template>
-
-<script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import ruRU from 'ant-design-vue/es/locale/ru_RU';
-import { UserOutlined, LogoutOutlined } from '@ant-design/icons-vue';
-import { useAuthStore } from '@/stores/auth';
-
-const appName = 'OfferFlow';
-const authStore = useAuthStore();
-const route = useRoute();
-const router = useRouter();
-
-const isAuthenticated = computed(() => authStore.isAuthenticated);
-const userDisplayName = computed(() => authStore.userDisplayName);
-const showHeader = computed(() => route.path !== '/auth');
-
-onMounted(() => {
-  authStore.init();
-});
-
-const handleLogout = async () => {
-  try {
-    const success = await authStore.signOut();
-    if (success) {
-      router.push('/auth');
-    }
-  } catch (error) {
-    console.error('Logout error:', error);
-  }
-};
-</script>
 
 <style>
 .header {

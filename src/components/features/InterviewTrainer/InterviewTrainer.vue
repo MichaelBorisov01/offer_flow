@@ -1,12 +1,42 @@
+<script setup lang="ts">
+import { message } from 'ant-design-vue'
+import { computed, ref } from 'vue'
+import { useInterviewStore } from '@/stores/interview'
+import AISetup from './AISetup.vue'
+import InterviewSession from './InterviewSession.vue'
+import ManualSetup from './ManualSetup.vue'
+
+const interviewStore = useInterviewStore()
+
+const mode = ref<'manual' | 'ai'>('manual')
+const questions = computed(() => interviewStore.questions)
+const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
+const interviewSettings = computed(() => interviewStore.interviewSettings)
+
+function startInterview() {
+  if (questions.value.length > 0) {
+    interviewStore.startInterview()
+  }
+  else {
+    message.error('Добавьте вопросы для начала подготовки')
+  }
+}
+
+function exitInterview() {
+  interviewStore.isInterviewStarted = false
+  message.info('Подготовка прервана')
+}
+</script>
+
 <template>
   <div class="interview-trainer">
     <a-card title="Тренажер собеседований" class="trainer-card">
       <template #extra>
-        <a-button 
-          v-if="isInterviewStarted" 
-          @click="exitInterview" 
-          danger 
+        <a-button
+          v-if="isInterviewStarted"
+          danger
           size="small"
+          @click="exitInterview"
         >
           Выйти из собеседования
         </a-button>
@@ -14,11 +44,15 @@
 
       <div v-if="!isInterviewStarted">
         <p>Добро пожаловать в тренажер собеседований! Выберите режим работы:</p>
-        
+
         <!-- Режимы работы -->
         <a-radio-group v-model:value="mode" class="mode-selector" button-style="solid">
-          <a-radio-button value="manual">Ручной режим</a-radio-button>
-          <a-radio-button value="ai">Режим с ИИ</a-radio-button>
+          <a-radio-button value="manual">
+            Ручной режим
+          </a-radio-button>
+          <a-radio-button value="ai">
+            Режим с ИИ
+          </a-radio-button>
         </a-radio-group>
 
         <a-divider />
@@ -35,7 +69,7 @@
                 Показывать прогресс
               </a-checkbox>
             </a-form-item>
-            
+
             <a-form-item>
               <a-checkbox v-model:checked="interviewSettings.showQuestionMeta">
                 Показывать метаданные вопросов
@@ -44,12 +78,12 @@
           </a-form>
         </a-card>
 
-        <a-button 
-          type="primary" 
-          size="large" 
-          :disabled="questions.length === 0" 
-          @click="startInterview"
+        <a-button
+          type="primary"
+          size="large"
+          :disabled="questions.length === 0"
           class="start-button"
+          @click="startInterview"
         >
           Начать подготовку
         </a-button>
@@ -61,35 +95,6 @@
     </a-card>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import ManualSetup from './ManualSetup.vue';
-import InterviewSession from './InterviewSession.vue';
-import AISetup from './AISetup.vue';
-import { useInterviewStore } from '@/stores/interview';
-import { message } from 'ant-design-vue';
-
-const interviewStore = useInterviewStore();
-
-const mode = ref<'manual' | 'ai'>('manual');
-const questions = computed(() => interviewStore.questions);
-const isInterviewStarted = computed(() => interviewStore.isInterviewStarted);
-const interviewSettings = computed(() => interviewStore.interviewSettings);
-
-const startInterview = () => {
-  if (questions.value.length > 0) {
-    interviewStore.startInterview();
-  } else {
-    message.error('Добавьте вопросы для начала подготовки');
-  }
-};
-
-const exitInterview = () => {
-  interviewStore.isInterviewStarted = false;
-  message.info('Подготовка прервана');
-};
-</script>
 
 <style scoped>
 .interview-trainer {

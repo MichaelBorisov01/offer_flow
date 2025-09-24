@@ -1,7 +1,135 @@
+<script setup lang="ts">
+import type { Question } from '@/types/interview'
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useInterviewStore } from '@/stores/interview'
+import EditQuestionForm from './EditQuestionForm.vue'
+
+const interviewStore = useInterviewStore()
+const authStore = useAuthStore()
+const error = ref<string | null>(null)
+const editingQuestion = ref<Question | null>(null)
+
+const questions = computed(() => interviewStore.questions)
+const isLoading = computed(() => interviewStore.isLoading)
+
+function getDifficultyColor(difficulty: string) {
+  const colors = {
+    junior: 'green',
+    middle: 'orange',
+    senior: 'red',
+  }
+  return colors[difficulty as keyof typeof colors] || 'blue'
+}
+
+function getDifficultyLabel(difficulty: string) {
+  const labels = {
+    junior: 'Junior',
+    middle: 'Middle',
+    senior: 'Senior',
+  }
+  return labels[difficulty as keyof typeof labels] || difficulty
+}
+
+function getTypeColor(type: string) {
+  return type === 'code' ? 'volcano' : 'geekblue'
+}
+
+function getTypeLabel(type: string) {
+  return type === 'code' ? 'Код' : 'Текст'
+}
+
+function getCategoryColor(category: string) {
+  const colors: Record<string, string> = {
+    'javascript': 'gold',
+    'vue': 'green',
+    'react': 'blue',
+    'typescript': 'geekblue',
+    'html-css': 'purple',
+    'algorithms': 'orange',
+    'database': 'red',
+    'system-design': 'cyan',
+    'soft-skills': 'lime',
+    'nodejs': 'green',
+  }
+  return colors[category] || 'default'
+}
+
+function getCategoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    'javascript': 'JavaScript',
+    'vue': 'Vue.js',
+    'react': 'React',
+    'typescript': 'TypeScript',
+    'html-css': 'HTML/CSS',
+    'algorithms': 'Алгоритмы',
+    'database': 'Базы данных',
+    'system-design': 'System Design',
+    'soft-skills': 'Soft Skills',
+    'nodejs': 'Node.js',
+  }
+  return labels[category] || category
+}
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+async function handleFormSubmit(questionData: any) {
+  try {
+    if (editingQuestion.value?.id) {
+      // Редактирование существующего вопроса
+      await interviewStore.updateQuestion(editingQuestion.value.id, questionData)
+      message.success('Вопрос обновлен!')
+    }
+    else {
+      // Добавление нового вопроса
+      await interviewStore.addQuestion(questionData)
+      message.success('Вопрос добавлен!')
+    }
+    editingQuestion.value = null
+  }
+  catch (error: any) {
+    console.error('Submit error:', error)
+    message.error('Ошибка при сохранении вопроса')
+  }
+}
+
+function startEditing(question: Question) {
+  editingQuestion.value = { ...question }
+}
+
+function cancelEditing() {
+  editingQuestion.value = null
+}
+
+async function removeQuestion(index: number) {
+  try {
+    await interviewStore.removeQuestion(index)
+    message.success('Вопрос удален')
+  }
+  catch (error) {
+    message.error('Ошибка при удалении вопроса')
+  }
+}
+
+onMounted(() => {
+  interviewStore.loadUserQuestions()
+})
+</script>
+
 <template>
   <div class="manual-setup">
     <EditQuestionForm
-      :question-toEdit="editingQuestion"
+      :question-to-edit="editingQuestion"
       @submit="handleFormSubmit"
       @cancel="cancelEditing"
     />
@@ -11,30 +139,30 @@
     <!-- Список добавленных вопросов -->
     <div class="questions-list">
       <h4>Добавленные вопросы ({{ questions.length }})</h4>
-      
-      <a-alert 
-        v-if="questions.length === 0 && !isLoading" 
-        message="Пока нет добавленных вопросов" 
+
+      <a-alert
+        v-if="questions.length === 0 && !isLoading"
+        message="Пока нет добавленных вопросов"
         type="info"
         show-icon
       />
-      
-      <a-list 
-        :data-source="questions" 
+
+      <a-list
+        :data-source="questions"
         item-layout="vertical"
         :loading="isLoading"
       >
         <template #renderItem="{ item, index }">
           <a-list-item class="question-item">
             <template #actions>
-              <a-button type="link" danger @click="removeQuestion(index)" size="small">
+              <a-button type="link" danger size="small" @click="removeQuestion(index)">
                 <DeleteOutlined /> Удалить
               </a-button>
-              <a-button type="link" @click="startEditing(item)" size="small">
+              <a-button type="link" size="small" @click="startEditing(item)">
                 <EditOutlined /> Редактировать
               </a-button>
             </template>
-            
+
             <a-list-item-meta>
               <template #title>
                 <div class="question-header">
@@ -49,28 +177,28 @@
                   </div>
                 </div>
               </template>
-              
+
               <template #description>
                 <div class="question-meta">
                   <a-tag :color="getCategoryColor(item.category)" class="category-tag">
                     {{ getCategoryLabel(item.category) }}
                   </a-tag>
-                  
+
                   <span v-if="item.tags && item.tags.length" class="tags-section">
-                    <a-tag 
-                      v-for="(tag, tagIndex) in item.tags" 
-                      :key="tagIndex" 
+                    <a-tag
+                      v-for="(tag, tagIndex) in item.tags"
+                      :key="tagIndex"
                       color="purple"
                       size="small"
                     >
                       {{ tag }}
                     </a-tag>
                   </span>
-                  
-                  <span class="question-date" v-if="item.createdAt">
+
+                  <span v-if="item.createdAt" class="question-date">
                     Добавлен: {{ formatDate(item.createdAt) }}
                   </span>
-                  <span class="question-date" v-if="item.updatedAt && item.updatedAt !== item.createdAt">
+                  <span v-if="item.updatedAt && item.updatedAt !== item.createdAt" class="question-date">
                     • Обновлен: {{ formatDate(item.updatedAt) }}
                   </span>
                 </div>
@@ -82,131 +210,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue';
-import { useInterviewStore } from '@/stores/interview';
-import { useAuthStore } from '@/stores/auth';
-import { message } from 'ant-design-vue';
-import type { Question } from '@/types/interview';
-import EditQuestionForm from './EditQuestionForm.vue';
-
-const interviewStore = useInterviewStore();
-const authStore = useAuthStore();
-const error = ref<string | null>(null);
-const editingQuestion = ref<Question | null>(null);
-
-const questions = computed(() => interviewStore.questions);
-const isLoading = computed(() => interviewStore.isLoading);
-
-const getDifficultyColor = (difficulty: string) => {
-  const colors = {
-    junior: 'green',
-    middle: 'orange',
-    senior: 'red'
-  };
-  return colors[difficulty as keyof typeof colors] || 'blue';
-};
-
-const getDifficultyLabel = (difficulty: string) => {
-  const labels = {
-    junior: 'Junior',
-    middle: 'Middle', 
-    senior: 'Senior'
-  };
-  return labels[difficulty as keyof typeof labels] || difficulty;
-};
-
-const getTypeColor = (type: string) => {
-  return type === 'code' ? 'volcano' : 'geekblue';
-};
-
-const getTypeLabel = (type: string) => {
-  return type === 'code' ? 'Код' : 'Текст';
-};
-
-const getCategoryColor = (category: string) => {
-  const colors: Record<string, string> = {
-    javascript: 'gold',
-    vue: 'green',
-    react: 'blue',
-    typescript: 'geekblue',
-    'html-css': 'purple',
-    algorithms: 'orange',
-    database: 'red',
-    'system-design': 'cyan',
-    'soft-skills': 'lime',
-    nodejs: 'green'
-  };
-  return colors[category] || 'default';
-};
-
-const getCategoryLabel = (category: string) => {
-  const labels: Record<string, string> = {
-    javascript: 'JavaScript',
-    vue: 'Vue.js',
-    react: 'React',
-    typescript: 'TypeScript',
-    'html-css': 'HTML/CSS',
-    algorithms: 'Алгоритмы',
-    database: 'Базы данных',
-    'system-design': 'System Design',
-    'soft-skills': 'Soft Skills',
-    nodejs: 'Node.js'
-  };
-  return labels[category] || category;
-};
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
-};
-
-const handleFormSubmit = async (questionData: any) => {
-  try {
-    if (editingQuestion.value?.id) {
-      // Редактирование существующего вопроса
-      await interviewStore.updateQuestion(editingQuestion.value.id, questionData);
-      message.success('Вопрос обновлен!');
-    } else {
-      // Добавление нового вопроса
-      await interviewStore.addQuestion(questionData);
-      message.success('Вопрос добавлен!');
-    }
-    editingQuestion.value = null;
-  } catch (error: any) {
-    console.error('Submit error:', error);
-    message.error('Ошибка при сохранении вопроса');
-  }
-};
-
-const startEditing = (question: Question) => {
-  editingQuestion.value = { ...question };
-};
-
-const cancelEditing = () => {
-  editingQuestion.value = null;
-};
-
-const removeQuestion = async (index: number) => {
-  try {
-    await interviewStore.removeQuestion(index);
-    message.success('Вопрос удален');
-  } catch (error) {
-    message.error('Ошибка при удалении вопроса');
-  }
-};
-
-onMounted(() => {
-  interviewStore.loadUserQuestions();
-});
-</script>
 
 <style scoped>
 .manual-setup {

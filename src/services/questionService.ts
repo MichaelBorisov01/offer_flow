@@ -1,58 +1,58 @@
 import {
-  collection,
   addDoc,
-  getDocs,
-  updateDoc,
+  collection,
   deleteDoc,
   doc,
-  query,
-  where,
+  getDocs,
   orderBy,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from './firebase';
-import { useAuthStore } from '@/stores/auth';
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
+import { useAuthStore } from '@/stores/auth'
+import { db } from './firebase'
 
 export interface Question {
-  id?: string;
-  text: string;
-  type: 'text' | 'code';
-  category: string;
-  difficulty: 'junior' | 'middle' | 'senior';
-  tags?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
-  userId?: string;
+  id?: string
+  text: string
+  type: 'text' | 'code'
+  category: string
+  difficulty: 'junior' | 'middle' | 'senior'
+  tags?: string[]
+  createdAt?: Date
+  updatedAt?: Date
+  userId?: string
 }
 
 export const QuestionService = {
   async getQuestions(category?: string, difficulty?: string): Promise<Question[]> {
     try {
-      const authStore = useAuthStore();
-      const userId = authStore.user?.uid;
+      const authStore = useAuthStore()
+      const userId = authStore.user?.uid
 
       if (!userId) {
-        console.log('User not authenticated, returning empty array');
-        return [];
+        console.log('User not authenticated, returning empty array')
+        return []
       }
 
       let q = query(
         collection(db, 'questions'),
         where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
-      );
+        orderBy('createdAt', 'desc'),
+      )
 
       if (category) {
-        q = query(q, where('category', '==', category));
+        q = query(q, where('category', '==', category))
       }
 
       if (difficulty) {
-        q = query(q, where('difficulty', '==', difficulty));
+        q = query(q, where('difficulty', '==', difficulty))
       }
 
-      const querySnapshot = await getDocs(q);
-      const questions = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+      const querySnapshot = await getDocs(q)
+      const questions = querySnapshot.docs.map((doc) => {
+        const data = doc.data()
         return {
           id: doc.id,
           text: data.text,
@@ -62,24 +62,26 @@ export const QuestionService = {
           tags: data.tags || [],
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
-          userId: data.userId
-        } as Question;
-      });
+          userId: data.userId,
+        } as Question
+      })
 
-      console.log('Loaded questions:', questions);
-      return questions;
-    } catch (error) {
-      console.error('Error getting questions:', error);
-      throw error;
+      console.log('Loaded questions:', questions)
+      return questions
+    }
+    catch (error) {
+      console.error('Error getting questions:', error)
+      throw error
     }
   },
 
   async addQuestion(question: Omit<Question, 'id'>): Promise<string> {
     try {
-      const authStore = useAuthStore();
-      const userId = authStore.user?.uid;
-      
-      if (!userId) throw new Error('User not authenticated');
+      const authStore = useAuthStore()
+      const userId = authStore.user?.uid
+
+      if (!userId)
+        throw new Error('User not authenticated')
 
       const questionData = {
         text: question.text,
@@ -87,47 +89,51 @@ export const QuestionService = {
         category: question.category,
         difficulty: question.difficulty,
         tags: question.tags,
-        userId: userId,
+        userId,
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      };
+        updatedAt: Timestamp.now(),
+      }
 
-      console.log('Saving question with data:', questionData);
+      console.log('Saving question with data:', questionData)
 
-      const docRef = await addDoc(collection(db, 'questions'), questionData);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error adding question:', error);
-      throw error;
+      const docRef = await addDoc(collection(db, 'questions'), questionData)
+      return docRef.id
+    }
+    catch (error) {
+      console.error('Error adding question:', error)
+      throw error
     }
   },
 
- async updateQuestion(id: string, updates: Partial<Question>): Promise<void> {
-  try {
-    const authStore = useAuthStore();
-    const userId = authStore.user?.uid;
-    
-    if (!userId) throw new Error('User not authenticated');
+  async updateQuestion(id: string, updates: Partial<Question>): Promise<void> {
+    try {
+      const authStore = useAuthStore()
+      const userId = authStore.user?.uid
 
-    const updateData = {
-      ...updates,
-      updatedAt: Timestamp.now()
-    };
+      if (!userId)
+        throw new Error('User not authenticated')
 
-    console.log('Updating question:', id, updateData);
+      const updateData = {
+        ...updates,
+        updatedAt: Timestamp.now(),
+      }
 
-    await updateDoc(doc(db, 'questions', id), updateData);
-  } catch (error) {
-    console.error('Error updating question:', error);
-    throw error;
-  }
-},
+      console.log('Updating question:', id, updateData)
+
+      await updateDoc(doc(db, 'questions', id), updateData)
+    }
+    catch (error) {
+      console.error('Error updating question:', error)
+      throw error
+    }
+  },
 
   async deleteQuestion(id: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, 'questions', id));
-    } catch (error) {
-      throw error;
+      await deleteDoc(doc(db, 'questions', id))
     }
-  }
-};
+    catch (error) {
+      throw error
+    }
+  },
+}
