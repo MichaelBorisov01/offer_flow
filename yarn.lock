@@ -1374,6 +1374,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@huggingface/inference@npm:^4.8.0":
+  version: 4.8.0
+  resolution: "@huggingface/inference@npm:4.8.0"
+  dependencies:
+    "@huggingface/jinja": "npm:^0.5.1"
+    "@huggingface/tasks": "npm:^0.19.45"
+  checksum: 10c0/93888df121c210ad2d7ecf4c9070e6c7e45a214a2ca4284115a6b977ead68ce7467235ae88bc25f62209fd74cedef6dc403463069edd33c28b44ae38aaaed1c8
+  languageName: node
+  linkType: hard
+
+"@huggingface/jinja@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@huggingface/jinja@npm:0.5.1"
+  checksum: 10c0/3e439151492310449c0110074583eabd545046a7ac926c294296c9d50f63b82045570c3116d5f5e871830a6008ec45c6637a16550f78a80963ca577fa90ad3ee
+  languageName: node
+  linkType: hard
+
+"@huggingface/tasks@npm:^0.19.45":
+  version: 0.19.48
+  resolution: "@huggingface/tasks@npm:0.19.48"
+  checksum: 10c0/7d4c8729cbb89188589bbc0357d2480acd74fe6a8c203ff29dba1ac2c617652e7da9efda8367ede4f03cf8da753cfe92d7dc06020b43cf8f9d109d4d714e4707
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -2963,6 +2987,7 @@ __metadata:
   dependencies:
     "@ant-design/icons-vue": "npm:^7.0.1"
     "@antfu/eslint-config": "npm:^5.3.0"
+    "@huggingface/inference": "npm:^4.8.0"
     "@types/node": "npm:^24.3.1"
     "@vitejs/plugin-vue": "npm:^6.0.1"
     "@vitejs/plugin-vue-jsx": "npm:5.0.1"

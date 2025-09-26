@@ -15,6 +15,17 @@ const aiSettings = reactive<AISettings>({
   technology: 'vue',
 })
 
+const aiStatus = ref<'connected' | 'fallback' | 'error'>('fallback')
+
+const aiStatusMessage = computed(() => {
+  const messages = {
+    connected: 'Режим ИИ: Подключен к Hugging Face API',
+    fallback: 'Режим ИИ: Используются локальные вопросы (добавьте Hugging Face API ключ)',
+    error: 'Режим ИИ: Ошибка подключения, используются локальные вопросы',
+  }
+  return messages[aiStatus.value]
+})
+
 const aiQuestions = ref<Question[]>([])
 
 // Технологии для разных специализаций
