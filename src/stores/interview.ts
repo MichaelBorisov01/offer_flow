@@ -3,6 +3,7 @@ import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { QuestionService } from '@/services/questionService'
+import { AIService } from '@/services/aiService'
 
 export const useInterviewStore = defineStore('interview', () => {
   // Состояние
@@ -167,6 +168,35 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
+  const isGeneratingAnswer = ref(false)
+
+  const generateAnswerForQuestion = async (questionId: string, userAnswer?: string) => {
+    const question = questions.value.find(q => q.id === questionId)
+    if (!question)
+      return
+
+    isGeneratingAnswer.value = true
+
+    try {
+      const aiAnswer = await AIService.generateAnswer(question.text, userAnswer)
+
+      // Обновляем вопрос с ответом ИИ
+      const questionIndex = questions.value.findIndex(q => q.id === questionId)
+      if (questionIndex !== -1) {
+        questions.value[questionIndex].aiAnswer = aiAnswer
+      }
+
+      return aiAnswer
+    }
+    catch (error) {
+      console.error('Error generating AI answer:', error)
+      throw error
+    }
+    finally {
+      isGeneratingAnswer.value = false
+    }
+  }
+
   // Загружаем вопросы при инициализации
   loadUserQuestions()
 
@@ -181,6 +211,7 @@ export const useInterviewStore = defineStore('interview', () => {
     isEditing,
     interviewSettings,
     currentSession,
+    isGeneratingAnswer,
 
     // Getters
     currentQuestion,
@@ -199,5 +230,6 @@ export const useInterviewStore = defineStore('interview', () => {
     cancelEditing,
     updateQuestion,
     startInterview,
+    generateAnswerForQuestion,
   }
 })

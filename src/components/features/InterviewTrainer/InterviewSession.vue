@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { BulbOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { computed, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
+import AIAnswerCard from './AIAnswerCard.vue'
 
 const interviewStore = useInterviewStore()
 
@@ -10,6 +13,42 @@ const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex)
 const progress = computed(() => interviewStore.progress)
 const interviewSettings = computed(() => interviewStore.interviewSettings)
 const isLastQuestion = computed(() => interviewStore.isLastQuestion)
+
+const showAnswer = ref(false)
+const isGeneratingAnswer = ref(false)
+
+async function toggleAnswer() {
+  if (showAnswer.value) {
+    hideAnswer()
+  }
+  else {
+    await generateAIAnswer()
+  }
+}
+
+function hideAnswer() {
+  showAnswer.value = false
+}
+
+async function generateAIAnswer() {
+  if (!currentQuestion.value?.id)
+    return
+
+  isGeneratingAnswer.value = true
+  showAnswer.value = true
+
+  try {
+    await interviewStore.generateAnswerForQuestion(currentQuestion.value.id)
+    message.success('Ответ сгенерирован!')
+  }
+  catch (error) {
+    console.error('Error generating answer:', error)
+    message.error('Не удалось сгенерировать ответ')
+  }
+  finally {
+    isGeneratingAnswer.value = false
+  }
+}
 
 function getDifficultyColor(difficulty: string) {
   const colors = { junior: 'green', middle: 'orange', senior: 'red' }
@@ -93,13 +132,23 @@ function goToQuestion(index: number) {
       <div class="question-section">
         <a-card :title="`Вопрос ${currentQuestionIndex + 1}`" class="question-card">
           <template #extra>
-            <a-space v-if="interviewSettings.showQuestionMeta">
+            <a-space>
               <a-tag :color="getDifficultyColor(currentQuestion.difficulty)">
                 {{ getDifficultyLabel(currentQuestion.difficulty) }}
               </a-tag>
               <a-tag :color="getCategoryColor(currentQuestion.category)">
                 {{ getCategoryLabel(currentQuestion.category) }}
               </a-tag>
+              <!-- Кнопка развернуть ответ -->
+              <a-button
+                type="link"
+                :loading="isGeneratingAnswer"
+                size="small"
+                @click="toggleAnswer"
+              >
+                <BulbOutlined />
+                {{ showAnswer ? 'Скрыть ответ' : 'Развернуть ответ' }}
+              </a-button>
             </a-space>
           </template>
 
@@ -107,7 +156,7 @@ function goToQuestion(index: number) {
             {{ currentQuestion.text }}
           </p>
 
-          <div v-if="currentQuestion.tags && currentQuestion.tags.length && interviewSettings.showQuestionMeta" class="question-meta">
+          <div v-if="currentQuestion.tags && currentQuestion.tags.length" class="question-meta">
             <a-tag
               v-for="(tag, index) in currentQuestion.tags"
               :key="index"
@@ -118,6 +167,15 @@ function goToQuestion(index: number) {
             </a-tag>
           </div>
         </a-card>
+
+        <!-- Ответ ИИ -->
+        <AIAnswerCard
+          v-if="showAnswer && currentQuestion.aiAnswer"
+          :answer="currentQuestion.aiAnswer"
+          :loading="isGeneratingAnswer"
+          @regenerate="generateAIAnswer"
+          @close="hideAnswer"
+        />
       </div>
 
       <!-- Инструкция -->
@@ -214,6 +272,13 @@ function goToQuestion(index: number) {
 
 .question-section {
   margin-bottom: 24px;
+  position: relative;
+}
+
+:deep(.question-card .ant-card-extra) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .question-card {

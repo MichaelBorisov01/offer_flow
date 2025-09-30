@@ -11,6 +11,7 @@ export interface Question extends QuestionForm {
   createdAt?: Date
   updatedAt?: Date
   userId?: string
+  aiAnswer?: AIAnswer
 }
 
 export interface InterviewSession {
@@ -33,4 +34,10 @@ export interface AISettings {
 export interface AIQuestion extends Question {
   generatedBy: 'ai'
   context?: string // дополнительный контекст для вопроса
+}
+
+export interface AIAnswer {
+  content: string
+  type: 'serious' | 'joke'
+  generatedAt: Date
 }

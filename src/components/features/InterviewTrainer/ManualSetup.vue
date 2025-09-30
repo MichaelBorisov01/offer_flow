@@ -5,15 +5,45 @@ import { message } from 'ant-design-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useInterviewStore } from '@/stores/interview'
+import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 
 const interviewStore = useInterviewStore()
 const authStore = useAuthStore()
 const error = ref<string | null>(null)
 const editingQuestion = ref<Question | null>(null)
+const generatingAnswerId = ref<string | null>(null)
 
 const questions = computed(() => interviewStore.questions)
 const isLoading = computed(() => interviewStore.isLoading)
+
+async function generateAnswerForQuestion(question: any) {
+  if (!question.id)
+    return
+
+  generatingAnswerId.value = question.id
+
+  try {
+    await interviewStore.generateAnswerForQuestion(question.id)
+    message.success('Ответ сгенерирован!')
+  }
+  catch (error) {
+    console.error('Error generating answer:', error)
+    message.error('Не удалось сгенерировать ответ')
+  }
+  finally {
+    generatingAnswerId.value = null
+  }
+}
+
+function clearAnswer(question: any) {
+  if (question.id) {
+    const questionIndex = interviewStore.questions.findIndex(q => q.id === question.id)
+    if (questionIndex !== -1) {
+      interviewStore.questions[questionIndex].aiAnswer = undefined
+    }
+  }
+}
 
 function getDifficultyColor(difficulty: string) {
   const colors = {
@@ -116,7 +146,7 @@ async function removeQuestion(index: number) {
     await interviewStore.removeQuestion(index)
     message.success('Вопрос удален')
   }
-  catch (error) {
+  catch {
     message.error('Ошибка при удалении вопроса')
   }
 }
@@ -161,6 +191,17 @@ onMounted(() => {
               <a-button type="link" size="small" @click="startEditing(item)">
                 <EditOutlined /> Редактировать
               </a-button>
+
+              <!-- Кнопка для генерации ответа ИИ -->
+              <a-button
+                type="link"
+                :loading="item.id === generatingAnswerId"
+                size="small"
+                @click="generateAnswerForQuestion(item)"
+              >
+                <BulbOutlined />
+                Ответ ИИ
+              </a-button>
             </template>
 
             <a-list-item-meta>
@@ -204,6 +245,16 @@ onMounted(() => {
                 </div>
               </template>
             </a-list-item-meta>
+
+            <!-- Ответ ИИ -->
+            <AIAnswerCard
+              v-if="item.aiAnswer"
+              :answer="item.aiAnswer"
+              :loading="item.id === generatingAnswerId"
+              style="margin-top: 12px;"
+              @regenerate="() => generateAnswerForQuestion(item)"
+              @close="clearAnswer(item)"
+            />
           </a-list-item>
         </template>
       </a-list>

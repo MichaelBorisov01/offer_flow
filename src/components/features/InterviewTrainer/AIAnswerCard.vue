@@ -1,0 +1,167 @@
+<script setup lang="ts">
+import type { AIAnswer } from '@/types/interview'
+import { BulbOutlined, CloseOutlined, ReloadOutlined, SmileOutlined } from '@ant-design/icons-vue'
+import { computed } from 'vue'
+
+interface Props {
+  answer: AIAnswer
+  loading?: boolean
+  questionText?: string
+}
+
+interface Emits {
+  (e: 'regenerate'): void
+  (e: 'close'): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+
+const cardTitle = computed(() => {
+  return props.answer.type === 'joke' ? '🎭 Шутка от ИИ' : '💡 Ответ от ИИ'
+})
+
+const typeLabel = computed(() => {
+  return props.answer.type === 'joke' ? 'Шутка' : 'Объяснение'
+})
+
+const typeColor = computed(() => {
+  return props.answer.type === 'joke' ? 'orange' : 'green'
+})
+
+function formatTime(date: Date) {
+  return new Intl.DateTimeFormat('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+function regenerateAnswer() {
+  emit('regenerate')
+}
+</script>
+
+<template>
+  <div class="ai-answer-card">
+    <a-card
+      class="answer-card" :class="[answerType]"
+      :title="cardTitle"
+    >
+      <template #extra>
+        <a-button
+          type="link"
+          size="small"
+          @click="$emit('close')"
+        >
+          <CloseOutlined />
+        </a-button>
+      </template>
+
+      <!-- Индикатор загрузки -->
+      <div v-if="loading" class="loading-section">
+        <a-spin size="large" />
+        <p>ИИ генерирует ответ...</p>
+      </div>
+
+      <!-- Контент ответа -->
+      <div v-else class="answer-content">
+        <div class="answer-header">
+          <a-tag :color="typeColor" class="type-tag">
+            <SmileOutlined v-if="answer.type === 'joke'" />
+            <BulbOutlined v-else />
+            {{ typeLabel }}
+          </a-tag>
+          <span class="answer-time">
+            {{ formatTime(answer.generatedAt) }}
+          </span>
+        </div>
+
+        <div class="answer-text" :class="{ 'joke-text': answer.type === 'joke' }">
+          {{ answer.content }}
+        </div>
+
+        <div v-if="answer.type === 'serious'" class="answer-actions">
+          <a-button
+            type="link"
+            size="small"
+            :loading="loading"
+            @click="regenerateAnswer"
+          >
+            <ReloadOutlined />
+            Перегенерировать ответ
+          </a-button>
+        </div>
+      </div>
+    </a-card>
+  </div>
+</template>
+
+<style scoped>
+.ai-answer-card {
+  margin-top: 16px;
+}
+
+.answer-card {
+  border: 2px solid #e8f4ff;
+  border-radius: 8px;
+}
+
+.answer-card.joke {
+  border-color: #fff2e8;
+  background: #fffcf5;
+}
+
+.loading-section {
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-section p {
+  margin-top: 8px;
+  color: #8c8c8c;
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.type-tag {
+  font-weight: 500;
+}
+
+.answer-time {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.answer-text {
+  line-height: 1.6;
+  color: #262626;
+  white-space: pre-line;
+}
+
+.answer-text.joke-text {
+  font-style: italic;
+  color: #d46b08;
+  font-size: 15px;
+}
+
+.answer-actions {
+  margin-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  text-align: center;
+}
+
+:deep(.ant-card-head) {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 16px;
+}
+
+:deep(.ant-card-body) {
+  padding: 16px;
+}
+</style>

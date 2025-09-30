@@ -1,5 +1,6 @@
 import type { ChatCompletionInputMessage, ChatCompletionOutput } from '@huggingface/tasks'
 
+import type { AIAnswer } from '@/types/interview'
 import { InferenceClient } from '@huggingface/inference'
 
 export interface HuggingFaceConfig {
@@ -23,16 +24,12 @@ export class HuggingFaceService {
    */
   async chatCompletion(messages: ChatCompletionInputMessage[]): Promise<string> {
     try {
-      console.log('Sending chat completion request:', { messages })
-
       const response: ChatCompletionOutput = await this.client.chatCompletion({
         model: this.config.model || 'meta-llama/Llama-3.1-8B-Instruct',
         messages,
         max_tokens: this.config.maxTokens || 500,
         temperature: this.config.temperature || 0.7,
       })
-
-      console.log('Hugging Face response:', response)
 
       if (response.choices && response.choices.length > 0) {
         return response.choices[0]?.message.content || ''
@@ -75,7 +72,7 @@ export class HuggingFaceService {
   /**
    * Построение сообщений для генерации вопросов
    */
-  private buildQuestionsMessages(settings: any): ChatCompletionMessage[] {
+  private buildQuestionsMessages(settings: any): ChatCompletionInputMessage[] {
     const { field, difficulty, questionsCount, technology } = settings
 
     const fieldLabels: { [key: string]: string } = {
@@ -103,6 +100,7 @@ export class HuggingFaceService {
 - Проверять реальные практические знания
 - Быть актуальными для современной разработки
 - Формулироваться как на реальном собеседовании
+- Вопросы должны быть часто встречаемые на собеседованиях
 
 Формат ответа:
 - Каждый вопрос на отдельной строке
@@ -116,9 +114,9 @@ export class HuggingFaceService {
 ${technology ? `Основная технология: ${technology}` : ''}
 
 Примеры хороших вопросов:
-"Как работает event loop в JavaScript и как это влияет на асинхронный код?"
-"В чем основные различия между React и Vue с точки зрения архитектуры приложения?"
-"Как бы ты оптимизировал медленный SQL-запрос в большом проекте?"
+"Что такое Event Loop в JavaScript?"
+"В чем разница между интерфейсом и типов в TypeScript?"
+"Как можно оптимизировать Vue приложение?"
 
 Сгенерируй вопросы:`,
       },
@@ -156,7 +154,7 @@ ${technology ? `Основная технология: ${technology}` : ''}
     feedback: string
     suggestions: string[]
   }> {
-    const messages: ChatCompletionMessage[] = [
+    const messages: ChatCompletionInputMessage[] = [
       {
         role: 'system',
         content: `Ты - технический интервьюер. Оцени ответ кандидата объективно и дай конструктивную обратную связь.
@@ -232,7 +230,7 @@ ${technology ? `Основная технология: ${technology}` : ''}
    */
   async testConnection(): Promise<boolean> {
     try {
-      const messages: ChatCompletionMessage[] = [
+      const messages: ChatCompletionInputMessage[] = [
         {
           role: 'user',
           content: 'Ответь одним словом: "Работает"',
@@ -260,6 +258,129 @@ ${technology ? `Основная технология: ${technology}` : ''}
       'google/gemma-2-9b-it',
       'mistralai/Mistral-7B-Instruct-v0.3',
     ]
+  }
+
+  async generateAnswer(question: string, userAnswer?: string): Promise<AIAnswer> {
+    try {
+    // Проверяем, является ли ответ неразборчивым
+      const isGibberish = userAnswer ? this.isGibberish(userAnswer) : false
+
+      console.log('isGibberish', isGibberish)
+
+      const messages: ChatCompletionInputMessage[] = isGibberish
+        ? this.buildJokeMessages(question, userAnswer!)
+        : this.buildAnswerMessages(question)
+
+      const response = await this.chatCompletion(messages)
+
+      return {
+        content: response.trim(),
+        type: isGibberish ? 'joke' : 'serious',
+        generatedAt: new Date(),
+      }
+    }
+    catch (error) {
+      console.error('Error generating answer:', error)
+      return this.getDefaultAnswer()
+    }
+  }
+
+  /**
+   * Проверка на "неразборчивость" ответа
+   */
+  private isGibberish(text: string): boolean {
+    if (!text || text.length < 5)
+      return true
+
+    // Проверяем различные признаки неразборчивого текста
+    const gibberishPatterns = [
+      /^[а-яА-Я]*$/, // Только повторяющиеся буквы
+      /(.)\1{4,}/, // Одна буква повторяется 5+ раз
+      /^[^а-яА-Яa-zA-Z]*$/, // Нет букв вообще
+      /^[0-9\s]*$/, // Только цифры и пробелы
+      /^[^\w\s]{10,}$/, // Только спецсимволы
+      /(asdf|фыва|йцук)/i, // Клавиатурные комбинации
+      /^.{1,3}$/, // Слишком короткий текст
+    ]
+
+    const cleanText = text.trim()
+
+    // Если текст соответствует любому из паттернов - считаем неразборчивым
+    if (gibberishPatterns.some(pattern => pattern.test(cleanText))) {
+      return true
+    }
+
+    // Дополнительная проверка: если текст состоит в основном из повторяющихся символов
+    const uniqueChars = new Set(cleanText.toLowerCase().replace(/\s/g, ''))
+    if (uniqueChars.size <= 2 && cleanText.length > 10) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Построение сообщений для генерации серьезного ответа
+   */
+  private buildAnswerMessages(question: string): ChatCompletionInputMessage[] {
+    return [
+      {
+        role: 'system',
+        content: `Ты - опытный IT-специалист и ментор. Дай развернутый, но понятный ответ на технический вопрос.
+
+Требования к ответу:
+- Будь точным и технически корректным
+- Объясняй сложные концепции простыми словами
+- Приводи практические примеры
+- Структурируй ответ логически
+- Длина: 200-400 слов
+
+Формат:
+1. Краткий ответ (основная мысль)
+2. Подробное объяснение 
+3. Практические примеры
+4. Ключевые выводы`,
+      },
+      {
+        role: 'user',
+        content: `Дай развернутый ответ на вопрос: "${question}"`,
+      },
+    ]
+  }
+
+  /**
+   * Построение сообщений для генерации шутки
+   */
+  private buildJokeMessages(question: string, userAnswer: string): ChatCompletionInputMessage[] {
+    return [
+      {
+        role: 'system',
+        content: `Ты - остроумный IT-специалист с чувством юмора. Придумай креативную и добрую шутку про то, что кто-то написал неразборчивый ответ на технический вопрос.
+
+Требования к шутке:
+- Будь добрым и не обидным
+- Свяжи с IT-тематикой
+- Будь креативным и оригинальным
+- Шутка должна поднять настроение
+- Длина: 2-4 предложения
+
+Не используй сарказм и критику.`,
+      },
+      {
+        role: 'user',
+        content: `Кандидат на вопрос "${question}" ответил: "${userAnswer}"
+
+Это явно неразборчивый текст. Придумай добрую шутку по этому поводу в IT-тематике.`,
+      },
+    ]
+  }
+
+  private getDefaultAnswer(): AIAnswer {
+    return {
+      content: 'Не удалось сгенерировать ответ. Попробуйте обновить страницу и повторить запрос.',
+      type: 'serious',
+      generatedAt: new Date(),
+    }
   }
 }
 

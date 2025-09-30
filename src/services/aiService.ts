@@ -1,4 +1,4 @@
-import type { AISettings, Question } from '@/types/interview'
+import type { AIAnswer, AISettings, Question } from '@/types/interview'
 import { huggingFaceService, RECOMMENDED_MODELS } from './huggingFaceService'
 
 const isHuggingFaceConfigured = !!import.meta.env.VITE_HUGGING_FACE_API_KEY
@@ -45,8 +45,6 @@ export const AIService = {
     catch (error) {
       console.error('AI Service Error:', error)
 
-      // Fallback на локальные вопросы
-      console.log('Falling back to local questions')
       const localQuestions = await this.generateLocalQuestions(settings)
 
       return localQuestions.map((text, index) => ({
@@ -180,5 +178,27 @@ export const AIService = {
     return isHuggingFaceConfigured
       ? `Hugging Face Inference API (${RECOMMENDED_MODELS.GENERAL})`
       : 'Локальный режим (без AI)'
+  },
+
+  /**
+   * Генерация ответа на вопрос
+   */
+  async generateAnswer(question: string, userAnswer?: string): Promise<AIAnswer> {
+    if (isHuggingFaceConfigured) {
+      try {
+        return await huggingFaceService.generateAnswer(question, userAnswer)
+      }
+      catch (error) {
+        console.error('AI answer generation error:', error)
+      }
+    }
+    // Fallback ответ
+    return {
+      content: userAnswer
+        ? 'Кажется, ваш ответ требует дополнительных разъяснений. Попробуйте сформулировать его более четко.'
+        : 'Для получения развернутого ответа подключите Hugging Face API.',
+      type: 'serious',
+      generatedAt: new Date(),
+    }
   },
 }
