@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AIAnswer } from '@/types/interview'
-import { BulbOutlined, CloseOutlined, ReloadOutlined, SmileOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, CloseOutlined, InfoCircleOutlined, ReloadOutlined, SmileOutlined } from '@ant-design/icons-vue'
 import { computed } from 'vue'
 
 interface Props {
@@ -48,13 +48,19 @@ function regenerateAnswer() {
       :title="cardTitle"
     >
       <template #extra>
-        <a-button
-          type="link"
-          size="small"
-          @click="$emit('close')"
-        >
-          <CloseOutlined />
-        </a-button>
+        <a-space>
+          <a-tag v-if="answer.type === 'joke'" color="orange">
+            <SmileOutlined />
+            IT-Юмор
+          </a-tag>
+          <a-button
+            type="link"
+            size="small"
+            @click="$emit('close')"
+          >
+            <CloseOutlined />
+          </a-button>
+        </a-space>
       </template>
 
       <!-- Индикатор загрузки -->
@@ -71,6 +77,13 @@ function regenerateAnswer() {
             <BulbOutlined v-else />
             {{ typeLabel }}
           </a-tag>
+
+          <!-- Информация о причине шутки -->
+          <div v-if="answer.type === 'joke'" class="joke-context">
+            <InfoCircleOutlined />
+            <span>ИИ распознал это как творческий подход 😄</span>
+          </div>
+
           <span class="answer-time">
             {{ formatTime(answer.generatedAt) }}
           </span>
@@ -147,6 +160,9 @@ function regenerateAnswer() {
   font-style: italic;
   color: #d46b08;
   font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  padding: 8px;
 }
 
 .answer-actions {
@@ -163,5 +179,27 @@ function regenerateAnswer() {
 
 :deep(.ant-card-body) {
   padding: 16px;
+}
+
+.joke-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #d46b08;
+  background: #fff7e6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex: 1;
+  margin: 0 12px;
+}
+
+.joke-context span {
+  font-size: 12px;
+}
+
+.answer-card.joke {
+  border-color: #ffd591;
+  background: linear-gradient(135deg, #fff7e6 0%, #fff2e8 100%);
 }
 </style>
