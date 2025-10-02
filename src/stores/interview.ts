@@ -1,9 +1,9 @@
-import type { InterviewSession, Question, QuestionForm } from '@/types/interview'
+import type { InterviewSession, Question, QuestionForm, UserAnswer } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { QuestionService } from '@/services/questionService'
 import { AIService } from '@/services/aiService'
+import { QuestionService } from '@/services/questionService'
 
 export const useInterviewStore = defineStore('interview', () => {
   // Состояние
@@ -15,6 +15,63 @@ export const useInterviewStore = defineStore('interview', () => {
   const editingQuestionId = ref<string | null>(null)
 
   const currentSession = ref<InterviewSession | null>(null)
+  const userAnswers = ref<UserAnswer[]>([])
+  const isEvaluating = ref(false)
+  const currentUserAnswer = ref('')
+
+  const submitAnswer = async (questionId: string, questionText: string, answer: string) => {
+    if (!answer.trim()) {
+      message.error('Введите ответ перед отправкой')
+      return
+    }
+
+    isEvaluating.value = true
+
+    try {
+    // Создаем объект ответа
+      const userAnswer: UserAnswer = {
+        questionId,
+        questionText,
+        userAnswer: answer,
+        answeredAt: new Date(),
+      }
+
+      // Оцениваем ответ через ИИ
+      const evaluation = await AIService.evaluateAnswer(questionText, answer)
+      userAnswer.evaluation = {
+        ...evaluation,
+        evaluatedAt: new Date(),
+      }
+
+      // Добавляем ответ в массив
+      const existingIndex = userAnswers.value.findIndex(a => a.questionId === questionId)
+      if (existingIndex !== -1) {
+        userAnswers.value[existingIndex] = userAnswer
+      }
+      else {
+        userAnswers.value.push(userAnswer)
+      }
+
+      message.success('Ответ оценен!')
+      return userAnswer
+    }
+    catch (error) {
+      console.error('Error evaluating answer:', error)
+      message.error('Ошибка при оценке ответа')
+      throw error
+    }
+    finally {
+      isEvaluating.value = false
+    }
+  }
+
+  const getUserAnswer = (questionId: string): UserAnswer | undefined => {
+    return userAnswers.value.find(a => a.questionId === questionId)
+  }
+
+  const clearUserAnswers = () => {
+    userAnswers.value = []
+  }
 
   const interviewSettings = ref({
     showProgress: true,
@@ -212,6 +269,9 @@ export const useInterviewStore = defineStore('interview', () => {
     interviewSettings,
     currentSession,
     isGeneratingAnswer,
+    userAnswers,
+    isEvaluating,
+    currentUserAnswer,
 
     // Getters
     currentQuestion,
@@ -231,5 +291,8 @@ export const useInterviewStore = defineStore('interview', () => {
     updateQuestion,
     startInterview,
     generateAnswerForQuestion,
+    submitAnswer,
+    getUserAnswer,
+    clearUserAnswers,
   }
 })

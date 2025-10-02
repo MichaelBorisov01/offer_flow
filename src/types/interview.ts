@@ -20,6 +20,7 @@ export interface InterviewSession {
   questions: Question[]
   score?: number
   totalTime: number
+  userAnswers: UserAnswer[]
   completedAt?: Date
   createdAt?: Date
 }
@@ -40,4 +41,19 @@ export interface AIAnswer {
   content: string
   type: 'serious' | 'joke'
   generatedAt: Date
+}
+
+export interface UserAnswer {
+  questionId: string
+  questionText: string
+  userAnswer: string
+  evaluation?: AnswerEvaluation
+  answeredAt: Date
+}
+
+export interface AnswerEvaluation {
+  score: number // 1-10
+  feedback: string
+  suggestions: string[]
+  evaluatedAt: Date
 }

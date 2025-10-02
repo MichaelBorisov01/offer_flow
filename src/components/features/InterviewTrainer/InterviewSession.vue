@@ -133,11 +133,11 @@ function goToQuestion(index: number) {
         <a-card :title="`Вопрос ${currentQuestionIndex + 1}`" class="question-card">
           <template #extra>
             <a-space>
-              <a-tag :color="getDifficultyColor(currentQuestion.difficulty)">
-                {{ getDifficultyLabel(currentQuestion.difficulty) }}
+              <a-tag :color="getDifficultyColor(currentQuestion?.difficulty)">
+                {{ getDifficultyLabel(currentQuestion?.difficulty) }}
               </a-tag>
-              <a-tag :color="getCategoryColor(currentQuestion.category)">
-                {{ getCategoryLabel(currentQuestion.category) }}
+              <a-tag :color="getCategoryColor(currentQuestion?.category)">
+                {{ getCategoryLabel(currentQuestion?.category) }}
               </a-tag>
               <!-- Кнопка развернуть ответ -->
               <a-button
@@ -153,12 +153,12 @@ function goToQuestion(index: number) {
           </template>
 
           <p class="question-text">
-            {{ currentQuestion.text }}
+            {{ currentQuestion?.text }}
           </p>
 
-          <div v-if="currentQuestion.tags && currentQuestion.tags.length" class="question-meta">
+          <div v-if="currentQuestion?.tags && currentQuestion?.tags.length" class="question-meta">
             <a-tag
-              v-for="(tag, index) in currentQuestion.tags"
+              v-for="(tag, index) in currentQuestion?.tags"
               :key="index"
               color="blue"
               size="small"

@@ -2,7 +2,7 @@
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
-import AISetup from './AISetup.vue'
+import AIInterviewSession from './AIInterviewSession.vue'
 import InterviewSession from './InterviewSession.vue'
 import ManualSetup from './ManualSetup.vue'
 
@@ -18,13 +18,14 @@ function startInterview() {
     interviewStore.startInterview()
   }
   else {
-    message.error('Добавьте вопросы для начала подготовки')
+    message.error('Добавьте вопросы для начала собеседования')
   }
 }
 
 function exitInterview() {
   interviewStore.isInterviewStarted = false
-  message.info('Подготовка прервана')
+  interviewStore.clearUserAnswers() // Очищаем ответы при выходе
+  message.info('Собеседование прервано')
 }
 </script>
 
@@ -59,7 +60,7 @@ function exitInterview() {
 
         <!-- Контент в зависимости от режима -->
         <ManualSetup v-if="mode === 'manual'" />
-        <AISetup v-else />
+        <AIInterviewSession v-else />
 
         <!-- Настройки собеседования -->
         <a-card title="Настройки просмотра" style="margin-top: 24px;">
