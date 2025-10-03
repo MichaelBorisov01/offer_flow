@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 import AIInterviewSession from './AIInterviewSession.vue'
+import AISetup from './AISetup.vue'
 import InterviewSession from './InterviewSession.vue'
 import ManualSetup from './ManualSetup.vue'
 
@@ -11,22 +12,53 @@ const interviewStore = useInterviewStore()
 const mode = ref<'manual' | 'ai'>('manual')
 const questions = computed(() => interviewStore.questions)
 const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
-const interviewSettings = computed(() => interviewStore.interviewSettings)
+
+const interviewSettings = ref({
+  showProgress: true,
+  showQuestionMeta: true,
+  enableEvaluation: true, // Для ИИ режима - оценка ответов
+})
+
+// Обработчик сгенерированных вопросов от ИИ
+function handleQuestionsGenerated() {
+  message.success('Вопросы сгенерированы! Теперь можно начать собеседование.')
+}
+
+// Текст кнопки в зависимости от режима
+function getStartButtonText() {
+  const count = questions.value.length
+  if (mode.value === 'ai') {
+    return interviewSettings.value.enableEvaluation
+      ? `Начать собеседование с оценкой ИИ (${count})`
+      : `Начать подготовку (${count})`
+  }
+  return `Начать подготовку (${count})`
+}
 
 function startInterview() {
-  if (questions.value.length > 0) {
-    interviewStore.startInterview()
-  }
-  else {
+  if (questions.value.length === 0) {
     message.error('Добавьте вопросы для начала собеседования')
+    return
   }
+
+  // Обновляем настройки в хранилище
+  interviewStore.interviewSettings = {
+    ...interviewStore.interviewSettings,
+    ...interviewSettings.value,
+  }
+
+  interviewStore.startInterview()
 }
 
 function exitInterview() {
   interviewStore.isInterviewStarted = false
-  interviewStore.clearUserAnswers() // Очищаем ответы при выходе
+  interviewStore.clearUserAnswers()
   message.info('Собеседование прервано')
 }
+
+watch(mode, () => {
+  interviewStore.questions = []
+})
 </script>
 
 <template>
@@ -60,7 +92,7 @@ function exitInterview() {
 
         <!-- Контент в зависимости от режима -->
         <ManualSetup v-if="mode === 'manual'" />
-        <AIInterviewSession v-else />
+        <AISetup v-else @questions-generated="handleQuestionsGenerated" />
 
         <!-- Настройки собеседования -->
         <a-card title="Настройки просмотра" style="margin-top: 24px;">
@@ -76,6 +108,23 @@ function exitInterview() {
                 Показывать метаданные вопросов
               </a-checkbox>
             </a-form-item>
+
+            <!-- Дополнительные настройки для ИИ режима -->
+            <div v-if="mode === 'ai'">
+              <a-form-item>
+                <a-checkbox v-model:checked="interviewSettings.enableEvaluation">
+                  Включить оценку ответов ИИ
+                </a-checkbox>
+              </a-form-item>
+
+              <a-alert
+                v-if="interviewSettings.enableEvaluation"
+                message="В режиме оценки ИИ вы сможете отвечать на вопросы и получать автоматическую оценку ваших ответов."
+                type="info"
+                show-icon
+                style="margin-top: 8px;"
+              />
+            </div>
           </a-form>
         </a-card>
 
@@ -86,12 +135,13 @@ function exitInterview() {
           class="start-button"
           @click="startInterview"
         >
-          Начать подготовку
+          {{ getStartButtonText() }}
         </a-button>
       </div>
 
       <div v-else>
-        <InterviewSession />
+        <InterviewSession v-if="mode === 'manual'" />
+        <AIInterviewSession v-else />
       </div>
     </a-card>
   </div>

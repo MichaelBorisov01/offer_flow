@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { AIService } from '@/services/aiService'
 import { useInterviewStore } from '@/stores/interview'
 
+const emit = defineEmits<{
+  (e: 'questions-generated'): void
+}>()
 const interviewStore = useInterviewStore()
 const isGenerating = ref(false)
 
@@ -92,9 +95,11 @@ async function generateQuestions() {
     interviewStore.questions = questions
 
     message.success(`Сгенерировано ${questions.length} вопросов!`)
+    emit('questions-generated') // Уведомляем родительский компонент
   }
   catch (error) {
     console.error('Error generating questions:', error)
+    aiStatus.value = 'error'
     message.error('Ошибка при генерации вопросов')
   }
   finally {
@@ -111,6 +116,15 @@ function clearQuestions() {
 
 <template>
   <div class="ai-setup">
+    <div class="ai-status">
+      <a-alert
+        :message="aiStatusMessage"
+        :type="aiStatusType"
+        show-icon
+        style="margin-bottom: 16px;"
+      />
+    </div>
+
     <h3>Настройки генерации вопросов ИИ</h3>
 
     <a-form layout="vertical" class="ai-settings-form">
@@ -217,8 +231,14 @@ function clearQuestions() {
 
       <h4>Сгенерированные вопросы ({{ aiQuestions.length }})</h4>
 
-      <a-list
+      <a-alert
+        message="Вопросы готовы! Теперь вы можете начать собеседование."
+        type="success"
+        show-icon
+        style="margin-bottom: 16px;"
+      />
 
+      <a-list
         :data-source="aiQuestions"
         item-layout="vertical"
         class="preview-list"
@@ -250,6 +270,9 @@ function clearQuestions() {
         </template>
       </a-list>
     </div>
+
+    <!-- Инструкция по настройке API -->
+    <!-- <AIInstructions v-if="aiStatus === 'fallback'" /> -->
   </div>
 </template>
 

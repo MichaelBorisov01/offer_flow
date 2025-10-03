@@ -76,6 +76,7 @@ export const useInterviewStore = defineStore('interview', () => {
   const interviewSettings = ref({
     showProgress: true,
     showQuestionMeta: true,
+    enableEvaluation: false,
   })
 
   // Геттеры
@@ -210,7 +211,7 @@ export const useInterviewStore = defineStore('interview', () => {
     error.value = null
   }
 
-  const startInterview = async () => {
+  const startInterview = async (settings?: any) => {
     if (questions.value.length === 0) {
       message.error('Добавьте вопросы для начала собеседования')
       return
@@ -219,10 +220,20 @@ export const useInterviewStore = defineStore('interview', () => {
     isInterviewStarted.value = true
     currentQuestionIndex.value = 0
 
+    // Обновляем настройки если переданы
+    if (settings) {
+      interviewSettings.value = { ...interviewSettings.value, ...settings }
+    }
+
+    // Создаем сессию
     currentSession.value = {
       questions: [...questions.value],
+      userAnswers: [],
       createdAt: new Date(),
     }
+
+    // Очищаем предыдущие ответы
+    clearUserAnswers()
   }
 
   const isGeneratingAnswer = ref(false)
