@@ -14,6 +14,8 @@ const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex)
 const progress = computed(() => interviewStore.progress)
 const isEvaluating = computed(() => interviewStore.isEvaluating)
 const showAIAnswer = ref(false)
+const interviewSettings = computed(() => interviewStore.interviewSettings)
+const isLastQuestion = computed(() => interviewStore.isLastQuestion)
 
 // Вычисляем текущий ответ пользователя
 const currentUserAnswer = computed(() => {
@@ -59,6 +61,14 @@ function getDifficultyColor(difficulty: string) {
 function getDifficultyLabel(difficulty: string) {
   const labels = { junior: 'Junior', middle: 'Middle', senior: 'Senior' }
   return labels[difficulty as keyof typeof labels] || difficulty
+}
+
+function nextQuestion() {
+  interviewStore.nextQuestion()
+}
+
+function previousQuestion() {
+  interviewStore.previousQuestion()
 }
 
 function getCategoryColor(category: string) {
@@ -166,7 +176,7 @@ onMounted(() => {
   <div class="ai-interview-session">
     <a-card title="Собеседование с ИИ" class="session-card">
       <!-- Прогресс бар -->
-      <div class="progress-section">
+      <div v-if="interviewSettings.showProgress" class="progress-section">
         <a-progress
           :percent="progress"
           :show-info="false"
@@ -215,6 +225,7 @@ onMounted(() => {
 
       <!-- Компонент оценки ответа -->
       <AnswerEvaluation
+        v-if="interviewSettings.enableAnswerInput"
         :question-id="currentQuestion.id!"
         :question-text="currentQuestion.text"
         :evaluating="isEvaluating"
@@ -225,6 +236,37 @@ onMounted(() => {
         @edit="handleEditAnswer"
         @show-ai-answer="handleShowAIAnswer"
       />
+
+      <!-- Навигация -->
+      <div v-else class="navigation-section">
+        <a-space>
+          <a-button
+            :disabled="currentQuestionIndex === 0"
+            size="large"
+            @click="previousQuestion"
+          >
+            ← Предыдущий вопрос
+          </a-button>
+
+          <a-button
+            v-if="!isLastQuestion"
+            type="primary"
+            size="large"
+            @click="nextQuestion"
+          >
+            Следующий вопрос →
+          </a-button>
+
+          <a-button
+            v-else
+            type="primary"
+            size="large"
+            @click="finishInterview"
+          >
+            Завершить собеседование
+          </a-button>
+        </a-space>
+      </div>
 
       <!-- Ответ ИИ (по требованию) -->
       <AIAnswerCard

@@ -179,7 +179,7 @@ function goToQuestion(index: number) {
       </div>
 
       <!-- Инструкция -->
-      <div class="instruction-section">
+      <div v-if="interviewSettings.showQuestionMeta" class="instruction-section">
         <a-alert
           message="Режим подготовки"
           description="Отвечайте на вопросы устно. После ответа переходите к следующему вопросу."

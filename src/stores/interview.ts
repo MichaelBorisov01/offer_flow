@@ -77,6 +77,7 @@ export const useInterviewStore = defineStore('interview', () => {
     showProgress: true,
     showQuestionMeta: true,
     enableEvaluation: false,
+    enableAnswerInput: true,
   })
 
   // Геттеры

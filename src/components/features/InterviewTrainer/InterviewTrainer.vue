@@ -12,27 +12,15 @@ const interviewStore = useInterviewStore()
 const mode = ref<'manual' | 'ai'>('manual')
 const questions = computed(() => interviewStore.questions)
 const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
-
-const interviewSettings = ref({
-  showProgress: true,
-  showQuestionMeta: true,
-  enableEvaluation: true, // Для ИИ режима - оценка ответов
-})
+const interviewSettings = computed(() => interviewStore.interviewSettings)
 
 // Обработчик сгенерированных вопросов от ИИ
 function handleQuestionsGenerated() {
   message.success('Вопросы сгенерированы! Теперь можно начать собеседование.')
 }
 
-// Текст кнопки в зависимости от режима
 function getStartButtonText() {
-  const count = questions.value.length
-  if (mode.value === 'ai') {
-    return interviewSettings.value.enableEvaluation
-      ? `Начать собеседование с оценкой ИИ (${count})`
-      : `Начать подготовку (${count})`
-  }
-  return `Начать подготовку (${count})`
+  return `Начать подготовку`
 }
 
 function startInterview() {
@@ -112,14 +100,14 @@ watch(mode, () => {
             <!-- Дополнительные настройки для ИИ режима -->
             <div v-if="mode === 'ai'">
               <a-form-item>
-                <a-checkbox v-model:checked="interviewSettings.enableEvaluation">
-                  Включить оценку ответов ИИ
+                <a-checkbox v-model:checked="interviewSettings.enableAnswerInput">
+                  Включить ввод ответа на вопрос
                 </a-checkbox>
               </a-form-item>
 
               <a-alert
-                v-if="interviewSettings.enableEvaluation"
-                message="В режиме оценки ИИ вы сможете отвечать на вопросы и получать автоматическую оценку ваших ответов."
+                v-if="interviewSettings.enableAnswerInput"
+                message="В ИИ вы сможете отвечать на вопросы и получать автоматическую оценку ваших ответов."
                 type="info"
                 show-icon
                 style="margin-top: 8px;"

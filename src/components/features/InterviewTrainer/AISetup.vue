@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { AIService } from '@/services/aiService'
 import { useInterviewStore } from '@/stores/interview'
 
