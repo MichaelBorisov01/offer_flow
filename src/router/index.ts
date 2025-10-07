@@ -25,18 +25,30 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Если хранилище еще не инициализировано, ждем
-  if (authStore.isLoading) {
-    await new Promise(resolve => setTimeout(resolve, 100))
+  // Если хранилище еще не инициализировано, ждем инициализации
+  if (!authStore.isInitialized) {
+    console.log('🔄 Auth store not initialized, waiting...')
+
+    try {
+      await authStore.init()
+      console.log('✅ Auth store initialized')
+    }
+    catch (error) {
+      console.error('❌ Auth store initialization failed:', error)
+    }
   }
 
+  // Теперь проверяем аутентификацию
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    console.log('🔒 Route requires auth, redirecting to /auth')
     next('/auth')
   }
   else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    console.log('🚫 Route requires guest, redirecting to /')
     next('/')
   }
   else {
+    console.log('✅ Access granted to:', to.path)
     next()
   }
 })

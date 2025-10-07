@@ -1,29 +1,43 @@
 <script setup lang="ts">
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import ruRU from 'ant-design-vue/es/locale/ru_RU'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppError from '@/components/AppError.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const appName = 'OfferFlow'
 const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+const initializationError = ref<string | null>(null)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userDisplayName = computed(() => authStore.userDisplayName)
 const showHeader = computed(() => route.path !== '/auth')
 
+async function initializeApp() {
+  initializationError.value = null
+  console.log('🚀 Initializing app...')
+
+  try {
+    await authStore.init()
+    console.log('✅ App initialization completed')
+  }
+  catch (error: any) {
+    console.error('❌ App initialization failed:', error)
+    initializationError.value = `Не удалось загрузить приложение: ${error.message}`
+  }
+}
+
 onMounted(() => {
-  authStore.init()
+  initializeApp()
 })
 
 async function handleLogout() {
   try {
-    const success = await authStore.signOut()
-    if (success) {
-      router.push('/auth')
-    }
+    await authStore.signOut()
+    router.push('/auth')
   }
   catch (error) {
     console.error('Logout error:', error)
@@ -34,7 +48,20 @@ async function handleLogout() {
 <template>
   <a-config-provider :locale="ruRU">
     <div id="app">
-      <a-layout>
+      <!-- Ошибка инициализации -->
+      <AppError
+        v-if="initializationError"
+        :error-message="initializationError"
+        @retry="initializeApp"
+      />
+
+      <!-- Показываем loading пока auth инициализируется -->
+      <div v-if="authStore.isLoading && !authStore.isInitialized" class="global-loading">
+        <a-spin size="large" tip="Загрузка..." />
+      </div>
+
+      <!-- Основной контент когда auth инициализирован -->
+      <a-layout v-else>
         <a-layout-header v-if="showHeader" class="header">
           <div class="header-content">
             <h1>{{ appName }}</h1>
@@ -60,10 +87,7 @@ async function handleLogout() {
         </a-layout-header>
 
         <a-layout-content class="content">
-          <router-view v-if="!authStore.isLoading" />
-          <div v-else class="loading-spinner">
-            <a-spin size="large" />
-          </div>
+          <router-view />
         </a-layout-content>
       </a-layout>
     </div>
@@ -71,6 +95,18 @@ async function handleLogout() {
 </template>
 
 <style>
+#app {
+  min-height: 100vh;
+}
+
+.global-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f0f2f5;
+}
+
 .header {
   background: #001529;
   color: white;
@@ -99,22 +135,5 @@ async function handleLogout() {
   padding: 24px;
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
-}
-
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

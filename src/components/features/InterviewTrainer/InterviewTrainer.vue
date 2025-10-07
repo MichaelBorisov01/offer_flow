@@ -91,7 +91,7 @@ watch(mode, () => {
               </a-checkbox>
             </a-form-item>
 
-            <a-form-item>
+            <a-form-item v-if="mode === 'manual'">
               <a-checkbox v-model:checked="interviewSettings.showQuestionMeta">
                 Показывать метаданные вопросов
               </a-checkbox>

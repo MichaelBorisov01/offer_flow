@@ -20,6 +20,7 @@ interface AuthState {
   user: User | null
   userProfile: UserProfile | null
   isLoading: boolean
+  isInitialized: boolean // Добавляем флаг инициализации
   error: string | null
 }
 
@@ -28,24 +29,33 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     userProfile: null,
     isLoading: false,
+    isInitialized: false, // Инициализация не завершена
     error: null,
   }),
 
   actions: {
     async init() {
+      // Если уже инициализирован, выходим
+      if (this.isInitialized)
+        return
+
       this.isLoading = true
 
-      onAuthStateChanged(auth, async (user) => {
-        this.user = user
+      return new Promise<void>((resolve) => {
+        onAuthStateChanged(auth, async (user) => {
+          this.user = user
 
-        if (user) {
-          await this.loadUserProfile(user.uid)
-        }
-        else {
-          this.userProfile = null
-        }
+          if (user) {
+            await this.loadUserProfile(user.uid)
+          }
+          else {
+            this.userProfile = null
+          }
 
-        this.isLoading = false
+          this.isLoading = false
+          this.isInitialized = true // Отмечаем что инициализация завершена
+          resolve()
+        })
       })
     },
 
