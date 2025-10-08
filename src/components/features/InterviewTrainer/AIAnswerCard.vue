@@ -44,7 +44,7 @@ function regenerateAnswer() {
 <template>
   <div class="ai-answer-card">
     <a-card
-      class="answer-card" :class="[answerType]"
+      class="answer-card" :class="[props.answer.type]"
       :title="cardTitle"
     >
       <template #extra>

@@ -38,6 +38,15 @@ const aiStatusMessage = computed(() => {
   return messages[aiStatus.value]
 })
 
+const aiStatusType = computed(() => {
+  const types = {
+    connected: 'success',
+    fallback: 'warning',
+    error: 'error',
+  }
+  return types[aiStatus.value]
+})
+
 const aiQuestions = ref<Question[]>([])
 
 // Технологии для разных специализаций
@@ -266,7 +275,7 @@ onMounted(() => {
         item-layout="vertical"
         class="preview-list"
       >
-        <template #renderItem="{ item, index }">
+        <template #renderItem="{ item }">
           <a-list-item class="preview-item">
             <a-list-item-meta>
               <template #title>
