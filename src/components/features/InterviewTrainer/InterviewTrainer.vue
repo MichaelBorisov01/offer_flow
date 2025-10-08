@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import type { InterviewMode } from '@/composables/useInterviewMode'
+import type { AISettings } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIInterviewSession from './AIInterviewSession.vue'
 import AISetup from './AISetup.vue'
@@ -9,18 +12,44 @@ import ManualSetup from './ManualSetup.vue'
 
 const interviewStore = useInterviewStore()
 
-const mode = ref<'manual' | 'ai'>('manual')
+const {
+  mode,
+  setMode,
+  aiSettings,
+  setAISettings,
+  interviewSettings,
+  setInterviewSettings,
+} = useInterviewMode()
+
 const questions = computed(() => interviewStore.questions)
 const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
-const interviewSettings = computed(() => interviewStore.interviewSettings)
 
 // Обработчик сгенерированных вопросов от ИИ
 function handleQuestionsGenerated() {
   message.success('Вопросы сгенерированы! Теперь можно начать собеседование.')
 }
 
+// Обработчик изменения настроек ИИ
+function handleAISettingsChanged(newSettings: AISettings) {
+  setAISettings(newSettings)
+}
+
+// Обработчик изменения режима - ИСПРАВЛЕННАЯ ВЕРСИЯ
+function handleModeChange(event: any) {
+  const newMode = event.target.value as InterviewMode
+  setMode(newMode)
+  // При смене режима очищаем вопросы
+  interviewStore.questions = []
+}
+
+// Обработчик изменения настроек
+function handleSettingsChange() {
+  setInterviewSettings({ ...interviewSettings.value })
+}
+
 function getStartButtonText() {
-  return `Начать подготовку`
+  const count = questions.value.length
+  return `Начать подготовку (${count})`
 }
 
 function startInterview() {
@@ -44,8 +73,11 @@ function exitInterview() {
   message.info('Собеседование прервано')
 }
 
-watch(mode, () => {
-  interviewStore.questions = []
+// Следим за изменением режима и очищаем вопросы
+watch(mode, (newMode, oldMode) => {
+  if (newMode !== oldMode) {
+    interviewStore.questions = []
+  }
 })
 </script>
 
@@ -67,7 +99,12 @@ watch(mode, () => {
         <p>Добро пожаловать в тренажер собеседований! Выберите режим работы:</p>
 
         <!-- Режимы работы -->
-        <a-radio-group v-model:value="mode" class="mode-selector" button-style="solid">
+        <a-radio-group
+          v-model:value="mode"
+          class="mode-selector"
+          button-style="solid"
+          @change="handleModeChange"
+        >
           <a-radio-button value="manual">
             Ручной режим
           </a-radio-button>
@@ -79,20 +116,34 @@ watch(mode, () => {
         <a-divider />
 
         <!-- Контент в зависимости от режима -->
-        <ManualSetup v-if="mode === 'manual'" />
-        <AISetup v-else @questions-generated="handleQuestionsGenerated" />
+        <ManualSetup
+          v-if="mode === 'manual'"
+        />
+
+        <AISetup
+          v-else
+          :initial-settings="aiSettings"
+          @questions-generated="handleQuestionsGenerated"
+          @settings-changed="handleAISettingsChanged"
+        />
 
         <!-- Настройки собеседования -->
         <a-card title="Настройки просмотра" style="margin-top: 24px;">
           <a-form layout="vertical">
             <a-form-item>
-              <a-checkbox v-model:checked="interviewSettings.showProgress">
+              <a-checkbox
+                v-model:checked="interviewSettings.showProgress"
+                @change="handleSettingsChange"
+              >
                 Показывать прогресс
               </a-checkbox>
             </a-form-item>
 
-            <a-form-item v-if="mode === 'manual'">
-              <a-checkbox v-model:checked="interviewSettings.showQuestionMeta">
+            <a-form-item>
+              <a-checkbox
+                v-model:checked="interviewSettings.showQuestionMeta"
+                @change="handleSettingsChange"
+              >
                 Показывать метаданные вопросов
               </a-checkbox>
             </a-form-item>
@@ -100,7 +151,10 @@ watch(mode, () => {
             <!-- Дополнительные настройки для ИИ режима -->
             <div v-if="mode === 'ai'">
               <a-form-item>
-                <a-checkbox v-model:checked="interviewSettings.enableAnswerInput">
+                <a-checkbox
+                  v-model:checked="interviewSettings.enableAnswerInput"
+                  @change="handleSettingsChange"
+                >
                   Включить ввод ответа на вопрос
                 </a-checkbox>
               </a-form-item>

@@ -1,21 +1,30 @@
 <script setup lang="ts">
 import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { AIService } from '@/services/aiService'
 import { useInterviewStore } from '@/stores/interview'
 
-const emit = defineEmits<{
-  (e: 'questions-generated'): void
-}>()
+interface Props {
+  initialSettings?: AISettings
+}
+
+interface Emits {
+  (e: 'questionsGenerated'): void
+  (e: 'settingsChanged', settings: AISettings): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+
 const interviewStore = useInterviewStore()
 const isGenerating = ref(false)
 
 const aiSettings = reactive<AISettings>({
-  field: 'frontend',
-  difficulty: 'middle',
-  questionsCount: 5,
-  technology: 'vue',
+  field: props.initialSettings?.field || 'frontend',
+  difficulty: props.initialSettings?.difficulty || 'middle',
+  questionsCount: props.initialSettings?.questionsCount || 5,
+  technology: props.initialSettings?.technology || 'vue',
 })
 
 const aiStatus = ref<'connected' | 'fallback' | 'error'>('fallback')
@@ -94,8 +103,7 @@ async function generateQuestions() {
     // Сохраняем вопросы в хранилище
     interviewStore.questions = questions
 
-    message.success(`Сгенерировано ${questions.length} вопросов!`)
-    emit('questions-generated') // Уведомляем родительский компонент
+    emit('questionsGenerated') // Уведомляем родительский компонент
   }
   catch (error) {
     console.error('Error generating questions:', error)
@@ -112,6 +120,21 @@ function clearQuestions() {
   interviewStore.questions = []
   message.info('Вопросы очищены')
 }
+
+// Отслеживаем изменения настроек и уведомляем родительский компонент
+watch(aiSettings, (newSettings) => {
+  emit('settingsChanged', { ...newSettings })
+}, { deep: true })
+
+// При монтировании применяем начальные настройки
+onMounted(() => {
+  if (props.initialSettings) {
+    Object.assign(aiSettings, props.initialSettings)
+  }
+  // Проверяем доступность AI
+  const hasApiKey = !!import.meta.env.VITE_HUGGING_FACE_API_KEY
+  aiStatus.value = hasApiKey ? 'connected' : 'fallback'
+})
 </script>
 
 <template>
@@ -270,9 +293,6 @@ function clearQuestions() {
         </template>
       </a-list>
     </div>
-
-    <!-- Инструкция по настройке API -->
-    <!-- <AIInstructions v-if="aiStatus === 'fallback'" /> -->
   </div>
 </template>
 

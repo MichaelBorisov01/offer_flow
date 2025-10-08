@@ -29,7 +29,7 @@ export interface AISettings {
   field: string
   difficulty: 'junior' | 'middle' | 'senior'
   questionsCount: number
-  technology?: string // конкретная технология (Vue, React, etc)
+  technology?: string
 }
 
 export interface AIQuestion extends Question {

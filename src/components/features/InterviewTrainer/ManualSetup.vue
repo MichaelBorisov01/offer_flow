@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 
 const interviewStore = useInterviewStore()
-const authStore = useAuthStore()
-const error = ref<string | null>(null)
 const editingQuestion = ref<Question | null>(null)
 const generatingAnswerId = ref<string | null>(null)
 
