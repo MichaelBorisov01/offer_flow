@@ -3,7 +3,6 @@ import type { QuestionForm } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useInterviewStore } from '@/stores/interview'
 
 const props = defineProps<{
   questionToEdit?: QuestionForm & { id?: string }
@@ -14,7 +13,6 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
-const interviewStore = useInterviewStore()
 const authStore = useAuthStore()
 const tagsInput = ref('')
 const isLoading = ref(false)

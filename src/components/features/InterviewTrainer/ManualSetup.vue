@@ -18,7 +18,7 @@ const {
   setQuestionsListCollapsed,
 } = useInterviewMode()
 
-const editingQuestion = ref<Question | null>(null)
+const editingQuestion = ref<Question>()
 const generatingAnswerId = ref<string | null>(null)
 
 // Используем сохраненное состояние из localStorage
@@ -67,7 +67,7 @@ async function addQuestion(questionData: QuestionForm) {
       await interviewStore.addQuestion(questionData)
       message.success('Вопрос добавлен!')
     }
-    editingQuestion.value = null
+    editingQuestion.value = undefined
     emit('questionsChanged')
   }
   catch (error: any) {
@@ -81,7 +81,7 @@ function startEditing(question: Question) {
 }
 
 function cancelEditing() {
-  editingQuestion.value = null
+  editingQuestion.value = undefined
 }
 
 async function removeQuestion(index: number) {
@@ -194,9 +194,6 @@ function formatDate(date: Date) {
 
 onMounted(() => {
   interviewStore.loadUserQuestions()
-  console.log('📋 Состояние списка вопросов:', {
-    collapsed: questionsListCollapsed.value,
-  })
 })
 </script>
 

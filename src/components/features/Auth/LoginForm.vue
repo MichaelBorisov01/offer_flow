@@ -5,6 +5,10 @@ import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+defineEmits<{
+  (e: 'switchToSignup'): void
+}>()
+
 interface FormState {
   email: string
   password: string
@@ -59,7 +63,7 @@ async function handleLogin() {
       </a-form-item>
 
       <div class="auth-footer">
-        Нет аккаунта? <a @click="$emit('switch-to-signup')">Зарегистрироваться</a>
+        Нет аккаунта? <a @click="$emit('switchToSignup')">Зарегистрироваться</a>
       </div>
     </a-form>
   </a-card>

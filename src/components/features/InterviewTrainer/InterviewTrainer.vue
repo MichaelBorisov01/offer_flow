@@ -2,7 +2,7 @@
 import type { InterviewMode } from '@/composables/useInterviewMode'
 import type { AISettings } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIInterviewSession from './AIInterviewSession.vue'

@@ -15,7 +15,7 @@ interface Emits {
   (e: 'skip'): void
   (e: 'next'): void
   (e: 'edit'): void
-  (e: 'show-ai-answer'): void
+  (e: 'showAiAnswer'): void
 }
 
 const props = defineProps<Props>()
@@ -70,7 +70,7 @@ function editAnswer() {
 }
 
 function showAIAnswer() {
-  emit('show-ai-answer')
+  emit('showAiAnswer')
 }
 </script>
 

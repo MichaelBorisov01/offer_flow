@@ -99,7 +99,7 @@ function getDifficultyColor(difficulty: string) {
 
 function handleFieldChange() {
   // Сбрасываем технологию при изменении специализации
-  aiSettings.technology = availableTechnologies.value[0]?.value
+  aiSettings.technology = availableTechnologies.value[0]?.value || ''
 }
 
 async function generateQuestions() {
