@@ -24,6 +24,11 @@ export function useInterviewMode() {
     enableAnswerInput: true,
   })
 
+  const { value: questionsListCollapsed, setValue: setQuestionsListCollapsed } = useLocalStorage(
+    'interview-trainer-questions-collapsed',
+    false,
+  )
+
   return {
     mode,
     setMode,
@@ -31,5 +36,7 @@ export function useInterviewMode() {
     setAISettings,
     interviewSettings,
     setInterviewSettings,
+    questionsListCollapsed,
+    setQuestionsListCollapsed,
   }
 }

@@ -1,20 +1,101 @@
 <script setup lang="ts">
-import type { Question } from '@/types/interview'
-import { BulbOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
+import type { Question, QuestionForm } from '@/types/interview'
+import { BulbOutlined, DeleteOutlined, DownOutlined, EditOutlined, UpOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, ref } from 'vue'
+import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 
+const emit = defineEmits<{
+  (e: 'questionsChanged'): void
+}>()
+
 const interviewStore = useInterviewStore()
+const {
+  questionsListCollapsed,
+  setQuestionsListCollapsed,
+} = useInterviewMode()
+
 const editingQuestion = ref<Question | null>(null)
 const generatingAnswerId = ref<string | null>(null)
+
+// Используем сохраненное состояние из localStorage
+const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
 
 const questions = computed(() => interviewStore.questions)
 const isLoading = computed(() => interviewStore.isLoading)
 
-async function generateAnswerForQuestion(question: any) {
+// Переключение состояния списка с сохранением в localStorage
+function toggleQuestionsList() {
+  const newState = !questionsListCollapsed.value
+  setQuestionsListCollapsed(newState)
+}
+
+// Развернуть список
+function expandQuestionsList() {
+  setQuestionsListCollapsed(false)
+}
+
+// Очистить все вопросы
+async function clearAllQuestions() {
+  if (questions.value.length === 0)
+    return
+
+  try {
+    // Удаляем все вопросы по одному (с конца чтобы индексы не сбивались)
+    for (let i = questions.value.length - 1; i >= 0; i--) {
+      await interviewStore.removeQuestion(i)
+    }
+    message.success('Все вопросы удалены')
+    emit('questionsChanged')
+  }
+  catch {
+    message.error('Ошибка при удалении вопросов')
+  }
+}
+
+// Существующие методы остаются без изменений
+async function addQuestion(questionData: QuestionForm) {
+  try {
+    if (editingQuestion.value?.id) {
+      await interviewStore.updateQuestion(editingQuestion.value.id, questionData)
+      message.success('Вопрос обновлен!')
+    }
+    else {
+      await interviewStore.addQuestion(questionData)
+      message.success('Вопрос добавлен!')
+    }
+    editingQuestion.value = null
+    emit('questionsChanged')
+  }
+  catch (error: any) {
+    console.error('Submit error:', error)
+    message.error('Ошибка при сохранении вопроса')
+  }
+}
+
+function startEditing(question: Question) {
+  editingQuestion.value = { ...question }
+}
+
+function cancelEditing() {
+  editingQuestion.value = null
+}
+
+async function removeQuestion(index: number) {
+  try {
+    await interviewStore.removeQuestion(index)
+    message.success('Вопрос удален')
+    emit('questionsChanged')
+  }
+  catch {
+    message.error('Ошибка при удалении вопроса')
+  }
+}
+
+async function generateAnswerForQuestion(question: Question) {
   if (!question.id)
     return
 
@@ -33,7 +114,7 @@ async function generateAnswerForQuestion(question: any) {
   }
 }
 
-function clearAnswer(question: any) {
+function clearAnswer(question: Question) {
   if (question.id) {
     const questionIndex = interviewStore.questions.findIndex(q => q.id === question.id)
     if (questionIndex !== -1) {
@@ -42,22 +123,23 @@ function clearAnswer(question: any) {
   }
 }
 
+// Вспомогательные методы с правильными типами
 function getDifficultyColor(difficulty: string) {
-  const colors = {
+  const colors: Record<string, string> = {
     junior: 'green',
     middle: 'orange',
     senior: 'red',
   }
-  return colors[difficulty as keyof typeof colors] || 'blue'
+  return colors[difficulty] || 'blue'
 }
 
 function getDifficultyLabel(difficulty: string) {
-  const labels = {
+  const labels: Record<string, string> = {
     junior: 'Junior',
     middle: 'Middle',
     senior: 'Senior',
   }
-  return labels[difficulty as keyof typeof labels] || difficulty
+  return labels[difficulty] || difficulty
 }
 
 function getTypeColor(type: string) {
@@ -110,62 +192,158 @@ function formatDate(date: Date) {
   }).format(date)
 }
 
-async function handleFormSubmit(questionData: any) {
-  try {
-    if (editingQuestion.value?.id) {
-      // Редактирование существующего вопроса
-      await interviewStore.updateQuestion(editingQuestion.value.id, questionData)
-      message.success('Вопрос обновлен!')
-    }
-    else {
-      // Добавление нового вопроса
-      await interviewStore.addQuestion(questionData)
-      message.success('Вопрос добавлен!')
-    }
-    editingQuestion.value = null
-  }
-  catch (error: any) {
-    console.error('Submit error:', error)
-    message.error('Ошибка при сохранении вопроса')
-  }
-}
-
-function startEditing(question: Question) {
-  editingQuestion.value = { ...question }
-}
-
-function cancelEditing() {
-  editingQuestion.value = null
-}
-
-async function removeQuestion(index: number) {
-  try {
-    await interviewStore.removeQuestion(index)
-    message.success('Вопрос удален')
-  }
-  catch {
-    message.error('Ошибка при удалении вопроса')
-  }
-}
-
 onMounted(() => {
   interviewStore.loadUserQuestions()
+  console.log('📋 Состояние списка вопросов:', {
+    collapsed: questionsListCollapsed.value,
+  })
 })
 </script>
 
 <template>
   <div class="manual-setup">
+    <h3>Добавьте свои вопросы</h3>
+
+    <!-- Форма добавления вопроса -->
     <EditQuestionForm
       :question-to-edit="editingQuestion"
-      @submit="handleFormSubmit"
+      @submit="addQuestion"
       @cancel="cancelEditing"
     />
 
     <a-divider />
 
     <!-- Список добавленных вопросов -->
-    <div class="questions-list">
-      <h4>Добавленные вопросы ({{ questions.length }})</h4>
+    <div class="questions-list-section">
+      <div class="questions-list-header">
+        <h4>Добавленные вопросы ({{ questions.length }})</h4>
+
+        <!-- Кнопки управления списком -->
+        <div v-if="questions.length > 0" class="list-controls">
+          <a-button
+            type="link"
+            size="small"
+            class="collapse-button"
+            @click="toggleQuestionsList"
+          >
+            <template #icon>
+              <UpOutlined v-if="!isQuestionsListCollapsed" />
+              <DownOutlined v-else />
+            </template>
+            {{ isQuestionsListCollapsed ? 'Развернуть' : 'Свернуть' }}
+          </a-button>
+
+          <a-button
+            type="link"
+            size="small"
+            danger
+            class="clear-button"
+            @click="clearAllQuestions"
+          >
+            <DeleteOutlined />
+            Очистить все
+          </a-button>
+        </div>
+      </div>
+
+      <!-- Сообщение когда список свернут -->
+      <a-alert
+        v-if="isQuestionsListCollapsed && questions.length > 0"
+        :message="`Список свернут. Доступно вопросов: ${questions.length}`"
+        type="info"
+        show-icon
+        class="collapsed-alert"
+      >
+        <template #action>
+          <a-button size="small" type="link" @click="expandQuestionsList">
+            Показать вопросы
+          </a-button>
+        </template>
+      </a-alert>
+
+      <!-- Список вопросов -->
+      <div v-if="!isQuestionsListCollapsed">
+        <a-list
+          :data-source="questions"
+          item-layout="vertical"
+          :loading="isLoading"
+          class="questions-list"
+        >
+          <template #renderItem="{ item, index }">
+            <a-list-item class="question-item">
+              <template #actions>
+                <a-button type="link" danger size="small" @click="removeQuestion(index)">
+                  <DeleteOutlined /> Удалить
+                </a-button>
+                <a-button type="link" size="small" @click="startEditing(item)">
+                  <EditOutlined /> Редактировать
+                </a-button>
+                <a-button
+                  type="link"
+                  :loading="item.id === generatingAnswerId"
+                  size="small"
+                  @click="generateAnswerForQuestion(item)"
+                >
+                  <BulbOutlined />
+                  Ответ ИИ
+                </a-button>
+              </template>
+
+              <a-list-item-meta>
+                <template #title>
+                  <div class="question-header">
+                    <span class="question-text">{{ item.text }}</span>
+                    <div class="question-badges">
+                      <a-tag :color="getDifficultyColor(item.difficulty)">
+                        {{ getDifficultyLabel(item.difficulty) }}
+                      </a-tag>
+                      <a-tag :color="getTypeColor(item.type)">
+                        {{ getTypeLabel(item.type) }}
+                      </a-tag>
+                    </div>
+                  </div>
+                </template>
+
+                <template #description>
+                  <div class="question-meta">
+                    <a-tag :color="getCategoryColor(item.category)" class="category-tag">
+                      {{ getCategoryLabel(item.category) }}
+                    </a-tag>
+
+                    <span v-if="item.tags && item.tags.length" class="tags-section">
+                      <a-tag
+                        v-for="(tag, tagIndex) in item.tags"
+                        :key="tagIndex"
+                        color="purple"
+                        size="small"
+                      >
+                        {{ tag }}
+                      </a-tag>
+                    </span>
+
+                    <span v-if="item.createdAt" class="question-date">
+                      Добавлен: {{ formatDate(item.createdAt) }}
+                    </span>
+                    <span v-if="item.updatedAt && item.updatedAt !== item.createdAt" class="question-date">
+                      • Обновлен: {{ formatDate(item.updatedAt) }}
+                    </span>
+                  </div>
+                </template>
+              </a-list-item-meta>
+
+              <!-- Ответ ИИ -->
+              <AIAnswerCard
+                v-if="item.aiAnswer"
+                :answer="item.aiAnswer"
+                :loading="item.id === generatingAnswerId"
+                style="margin-top: 12px;"
+                @regenerate="() => generateAnswerForQuestion(item)"
+                @close="clearAnswer(item)"
+              />
+            </a-list-item>
+          </template>
+        </a-list>
+      </div>
 
       <a-alert
         v-if="questions.length === 0 && !isLoading"
@@ -173,88 +351,6 @@ onMounted(() => {
         type="info"
         show-icon
       />
-
-      <a-list
-        :data-source="questions"
-        item-layout="vertical"
-        :loading="isLoading"
-      >
-        <template #renderItem="{ item, index }">
-          <a-list-item class="question-item">
-            <template #actions>
-              <a-button type="link" danger size="small" @click="removeQuestion(index)">
-                <DeleteOutlined /> Удалить
-              </a-button>
-              <a-button type="link" size="small" @click="startEditing(item)">
-                <EditOutlined /> Редактировать
-              </a-button>
-
-              <!-- Кнопка для генерации ответа ИИ -->
-              <a-button
-                type="link"
-                :loading="item.id === generatingAnswerId"
-                size="small"
-                @click="generateAnswerForQuestion(item)"
-              >
-                <BulbOutlined />
-                Ответ ИИ
-              </a-button>
-            </template>
-
-            <a-list-item-meta>
-              <template #title>
-                <div class="question-header">
-                  <span class="question-text">{{ item.text }}</span>
-                  <div class="question-badges">
-                    <a-tag :color="getDifficultyColor(item.difficulty)">
-                      {{ getDifficultyLabel(item.difficulty) }}
-                    </a-tag>
-                    <a-tag :color="getTypeColor(item.type)">
-                      {{ getTypeLabel(item.type) }}
-                    </a-tag>
-                  </div>
-                </div>
-              </template>
-
-              <template #description>
-                <div class="question-meta">
-                  <a-tag :color="getCategoryColor(item.category)" class="category-tag">
-                    {{ getCategoryLabel(item.category) }}
-                  </a-tag>
-
-                  <span v-if="item.tags && item.tags.length" class="tags-section">
-                    <a-tag
-                      v-for="(tag, tagIndex) in item.tags"
-                      :key="tagIndex"
-                      color="purple"
-                      size="small"
-                    >
-                      {{ tag }}
-                    </a-tag>
-                  </span>
-
-                  <span v-if="item.createdAt" class="question-date">
-                    Добавлен: {{ formatDate(item.createdAt) }}
-                  </span>
-                  <span v-if="item.updatedAt && item.updatedAt !== item.createdAt" class="question-date">
-                    • Обновлен: {{ formatDate(item.updatedAt) }}
-                  </span>
-                </div>
-              </template>
-            </a-list-item-meta>
-
-            <!-- Ответ ИИ -->
-            <AIAnswerCard
-              v-if="item.aiAnswer"
-              :answer="item.aiAnswer"
-              :loading="item.id === generatingAnswerId"
-              style="margin-top: 12px;"
-              @regenerate="() => generateAnswerForQuestion(item)"
-              @close="clearAnswer(item)"
-            />
-          </a-list-item>
-        </template>
-      </a-list>
     </div>
   </div>
 </template>
@@ -263,6 +359,46 @@ onMounted(() => {
 .manual-setup {
   max-width: 900px;
   margin: 0 auto;
+}
+
+.questions-list-section {
+  margin-top: 24px;
+}
+
+.questions-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.questions-list-header h4 {
+  margin: 0;
+  color: #262626;
+}
+
+.list-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.collapse-button,
+.clear-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collapsed-alert {
+  margin-bottom: 16px;
+}
+
+.questions-list {
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .question-item {
@@ -327,5 +463,17 @@ onMounted(() => {
 
 :deep(.ant-list-item-action li) {
   padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+  .questions-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>

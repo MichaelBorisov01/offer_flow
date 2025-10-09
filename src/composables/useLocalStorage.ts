@@ -7,6 +7,9 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
   // Функция для получения значения из localStorage
   const getStoredValue = (): T => {
     try {
+      if (typeof window === 'undefined')
+        return defaultValue
+
       const item = window.localStorage.getItem(key)
       return item ? JSON.parse(item) : defaultValue
     }
@@ -23,7 +26,9 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
   const setValue = (newValue: T) => {
     try {
       value.value = newValue
-      window.localStorage.setItem(key, JSON.stringify(newValue))
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(newValue))
+      }
     }
     catch (error) {
       console.warn(`Error setting localStorage key "${key}":`, error)
@@ -33,7 +38,9 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
   // Следим за изменениями и сохраняем в localStorage
   watch(value, (newValue) => {
     try {
-      window.localStorage.setItem(key, JSON.stringify(newValue))
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(newValue))
+      }
     }
     catch (error) {
       console.warn(`Error saving to localStorage key "${key}":`, error)

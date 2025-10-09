@@ -180,6 +180,16 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
+  const finishInterview = () => {
+    isInterviewStarted.value = false
+
+    if (currentSession.value) {
+      currentSession.value.completedAt = new Date()
+    }
+
+    message.success('Собеседование завершено!')
+  }
+
   const nextQuestion = () => {
     if (isLastQuestion.value) {
       finishInterview()
@@ -193,16 +203,6 @@ export const useInterviewStore = defineStore('interview', () => {
     if (currentQuestionIndex.value > 0) {
       currentQuestionIndex.value--
     }
-  }
-
-  const finishInterview = () => {
-    isInterviewStarted.value = false
-
-    if (currentSession.value) {
-      currentSession.value.completedAt = new Date()
-    }
-
-    message.success('Собеседование завершено!')
   }
 
   const resetInterview = () => {
