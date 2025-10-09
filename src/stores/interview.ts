@@ -19,6 +19,8 @@ export const useInterviewStore = defineStore('interview', () => {
   const isEvaluating = ref(false)
   const currentUserAnswer = ref('')
 
+  const errorMessage = ref<string>('')
+
   const submitAnswer = async (questionId: string, questionText: string, answer: string) => {
     if (!answer.trim()) {
       message.error('Введите ответ перед отправкой')
@@ -110,15 +112,11 @@ export const useInterviewStore = defineStore('interview', () => {
     try {
       await QuestionService.updateQuestion(questionId, updates)
 
-      // Обновляем локальное состояние
-      const index = questions.value.findIndex(q => q.id === questionId)
-      if (index !== -1) {
-        questions.value[index] = {
-          ...questions.value[index],
-          ...updates,
-          updatedAt: new Date(),
-        }
-      }
+      questions.value = questions.value.map(q =>
+        q.id === questionId
+          ? { ...q, ...updates, updatedAt: new Date() }
+          : q,
+      )
 
       editingQuestionId.value = null
     }
@@ -132,11 +130,16 @@ export const useInterviewStore = defineStore('interview', () => {
     isLoading.value = true
     try {
       const userQuestions = await QuestionService.getQuestions()
-      questions.value = userQuestions
+      const transformedQuestions = userQuestions.map(question => ({
+        ...question,
+        tags: question.tags || [],
+      })) as Question[]
+
+      questions.value = transformedQuestions
     }
     catch (error) {
       console.error('Error loading questions:', error)
-      error.value = 'Не удалось загрузить вопросы'
+      errorMessage.value = 'Не удалось загрузить вопросы'
     }
     finally {
       isLoading.value = false
@@ -249,11 +252,7 @@ export const useInterviewStore = defineStore('interview', () => {
     try {
       const aiAnswer = await AIService.generateAnswer(question.text, userAnswer)
 
-      // Обновляем вопрос с ответом ИИ
-      const questionIndex = questions.value.findIndex(q => q.id === questionId)
-      if (questionIndex !== -1) {
-        questions.value[questionIndex].aiAnswer = aiAnswer
-      }
+      question.aiAnswer = aiAnswer
 
       return aiAnswer
     }

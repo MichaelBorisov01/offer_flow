@@ -2,7 +2,7 @@ export interface QuestionForm {
   text: string
   type: 'text' | 'code'
   category: string
-  difficulty: 'junior' | 'middle' | 'senior'
+  difficulty: string
   tags: string[]
 }
 
@@ -19,7 +19,7 @@ export interface InterviewSession {
   userId?: string
   questions: Question[]
   score?: number
-  totalTime: number
+  totalTime?: number
   userAnswers: UserAnswer[]
   completedAt?: Date
   createdAt?: Date
@@ -27,7 +27,7 @@ export interface InterviewSession {
 
 export interface AISettings {
   field: string
-  difficulty: 'junior' | 'middle' | 'senior'
+  difficulty: string
   questionsCount: number
   technology: string
 }

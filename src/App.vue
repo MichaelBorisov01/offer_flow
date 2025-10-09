@@ -18,11 +18,9 @@ const showHeader = computed(() => route.path !== '/auth')
 
 async function initializeApp() {
   initializationError.value = null
-  console.log('🚀 Initializing app...')
 
   try {
     await authStore.init()
-    console.log('✅ App initialization completed')
   }
   catch (error: any) {
     console.error('❌ App initialization failed:', error)

@@ -137,10 +137,10 @@ ${technology ? `Основная технология: ${technology}` : ''}
         return line.length > 15 // Минимальная длина вопроса
           && !line.match(/^(?:\d+[.)]?|[\-*>])\s/) // Убираем нумерацию и маркеры
           && !line.match(/^(?:вопрос|пример|система|user|assistant)/i) // Убираем служебные строки
-          && line.match(/[а-яА-Яa-zA-Z]/) // Должны быть буквы
+          && line.match(/\p{L}/u) // Должны быть любые буквы (Unicode property)
       })
       .map((line) => {
-        // Убираем кавычки если есть
+      // Убираем кавычки если есть
         return line.replace(/^["'](.*)["']$/, '$1').trim()
       })
       .slice(0, 20) // Ограничиваем количество
@@ -267,13 +267,6 @@ ${technology ? `Основная технология: ${technology}` : ''}
 
       // Проверяем, является ли ответ ерундой (если есть)
       const isAnswerGibberish = userAnswer ? this.isGibberish(userAnswer) : false
-
-      console.log('🔍 Анализ текста:', {
-        question,
-        userAnswer,
-        isQuestionGibberish,
-        isAnswerGibberish,
-      })
 
       // Генерируем шутку ТОЛЬКО если вопрос ИЛИ ответ - явная ерунда
       const shouldGenerateJoke = isQuestionGibberish || isAnswerGibberish
@@ -404,8 +397,8 @@ ${technology ? `Основная технология: ${technology}` : ''}
     const hasMeaningfulPatterns = meaningfulPatterns.some(pattern => pattern.test(text))
 
     // Проверяем структуру предложения
-    const hasSentenceStructure = /[.!?]\s+[А-ЯA-Z]/.test(text) // Новое предложение с большой буквы
-      || /\b[А-ЯA-Z][а-яa-z]+\s+[а-яa-z]/.test(text) // Слова разделенные пробелами
+    const hasSentenceStructure = /[.!?]\s+\p{Lu}/u.test(text) // Новое предложение с большой буквы
+      || /\b\p{Lu}\p{Ll}+\s+\p{Ll}+/u.test(text) // Слова разделенные пробелами
 
     return hasMeaningfulPatterns || hasSentenceStructure
   }
@@ -536,7 +529,7 @@ ${technology ? `Основная технология: ${technology}` : ''}
       /^(.)\1{4,}$/,
 
       // Только спецсимволы (3+ символа)
-      /^[^\w\sа-яА-Я]{3,}$/,
+      /^[^\w\s\p{L}]{3,}$/u,
 
       // Клавиатурные комбинации (полные ряды)
       /^(йцукенгшщзхъ|фывапролджэ|ячсмитьбю|qwertyuiop|asdfghjkl|zxcvbnm)$/i,

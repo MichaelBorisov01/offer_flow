@@ -18,7 +18,7 @@ export interface Question {
   text: string
   type: 'text' | 'code'
   category: string
-  difficulty: 'junior' | 'middle' | 'senior'
+  difficulty: string
   tags?: string[]
   createdAt?: Date
   updatedAt?: Date
@@ -32,7 +32,6 @@ export const QuestionService = {
       const userId = authStore.user?.uid
 
       if (!userId) {
-        console.log('User not authenticated, returning empty array')
         return []
       }
 
@@ -66,7 +65,6 @@ export const QuestionService = {
         } as Question
       })
 
-      console.log('Loaded questions:', questions)
       return questions
     }
     catch (error) {
@@ -94,8 +92,6 @@ export const QuestionService = {
         updatedAt: Timestamp.now(),
       }
 
-      console.log('Saving question with data:', questionData)
-
       const docRef = await addDoc(collection(db, 'questions'), questionData)
       return docRef.id
     }
@@ -118,8 +114,6 @@ export const QuestionService = {
         updatedAt: Timestamp.now(),
       }
 
-      console.log('Updating question:', id, updateData)
-
       await updateDoc(doc(db, 'questions', id), updateData)
     }
     catch (error) {
@@ -129,11 +123,6 @@ export const QuestionService = {
   },
 
   async deleteQuestion(id: string): Promise<void> {
-    try {
-      await deleteDoc(doc(db, 'questions', id))
-    }
-    catch (error) {
-      throw error
-    }
+    await deleteDoc(doc(db, 'questions', id))
   },
 }

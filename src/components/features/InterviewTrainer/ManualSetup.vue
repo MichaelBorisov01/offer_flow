@@ -116,9 +116,9 @@ async function generateAnswerForQuestion(question: Question) {
 
 function clearAnswer(question: Question) {
   if (question.id) {
-    const questionIndex = interviewStore.questions.findIndex(q => q.id === question.id)
-    if (questionIndex !== -1) {
-      interviewStore.questions[questionIndex].aiAnswer = undefined
+    const questionToUpdate = interviewStore.questions.find(q => q.id === question.id)
+    if (questionToUpdate) {
+      questionToUpdate.aiAnswer = undefined
     }
   }
 }
