@@ -463,7 +463,6 @@ onMounted(() => {
   transition: box-shadow 0.2s;
   overflow: hidden;
 }
-
 .question-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -496,14 +495,6 @@ onMounted(() => {
   gap: 6px;
   flex-shrink: 0;
   flex-wrap: wrap;
-}
-
-.question-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
 }
 
 .category-tag {
@@ -566,12 +557,6 @@ onMounted(() => {
     -webkit-line-clamp: 4;
     line-clamp: inherit;
     width: 100%;
-  }
-
-  .question-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
   }
 
   .tags-section {

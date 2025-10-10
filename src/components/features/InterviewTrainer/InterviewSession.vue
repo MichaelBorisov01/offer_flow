@@ -14,11 +14,11 @@ const progress = computed(() => interviewStore.progress)
 const interviewSettings = computed(() => interviewStore.interviewSettings)
 const isLastQuestion = computed(() => interviewStore.isLastQuestion)
 
-const showAnswer = ref(false)
-const isGeneratingAnswer = ref(false)
+const answerVisible = ref(false)
+const answerGenerating = ref(false)
 
-async function toggleAnswer() {
-  if (showAnswer.value) {
+async function toggleAnswerVisibility() {
+  if (answerVisible.value) {
     hideAnswer()
   }
   else {
@@ -27,15 +27,15 @@ async function toggleAnswer() {
 }
 
 function hideAnswer() {
-  showAnswer.value = false
+  answerVisible.value = false
 }
 
 async function generateAIAnswer() {
   if (!currentQuestion.value?.id)
     return
 
-  isGeneratingAnswer.value = true
-  showAnswer.value = true
+  answerGenerating.value = true
+  answerVisible.value = true
 
   try {
     await interviewStore.generateAnswerForQuestion(currentQuestion.value.id)
@@ -46,7 +46,7 @@ async function generateAIAnswer() {
     message.error('Не удалось сгенерировать ответ')
   }
   finally {
-    isGeneratingAnswer.value = false
+    answerGenerating.value = false
   }
 }
 
@@ -92,19 +92,19 @@ function getCategoryLabel(category: string) {
   return labels[category] || category
 }
 
-function nextQuestion() {
+function navigateToNextQuestion() {
   interviewStore.nextQuestion()
 }
 
-function previousQuestion() {
+function navigateToPreviousQuestion() {
   interviewStore.previousQuestion()
 }
 
-function finishInterview() {
+function completeInterview() {
   interviewStore.finishInterview()
 }
 
-function goToQuestion(index: number) {
+function navigateToQuestion(index: number) {
   if (index >= 0 && index < questions.value.length) {
     interviewStore.currentQuestionIndex = index
   }
@@ -114,7 +114,6 @@ function goToQuestion(index: number) {
 <template>
   <div class="interview-session">
     <a-card title="Режим собеседования" class="session-card">
-      <!-- Прогресс бар -->
       <div v-if="interviewSettings.showProgress" class="progress-section">
         <a-progress
           :percent="progress"
@@ -128,7 +127,6 @@ function goToQuestion(index: number) {
         </div>
       </div>
 
-      <!-- Текущий вопрос -->
       <div class="question-section">
         <a-card :title="`Вопрос ${currentQuestionIndex + 1}`" class="question-card">
           <template #extra>
@@ -139,46 +137,46 @@ function goToQuestion(index: number) {
               <a-tag :color="getCategoryColor(currentQuestion?.category)">
                 {{ getCategoryLabel(currentQuestion?.category) }}
               </a-tag>
-              <!-- Кнопка развернуть ответ -->
               <a-button
                 type="link"
-                :loading="isGeneratingAnswer"
+                :loading="answerGenerating"
                 size="small"
-                @click="toggleAnswer"
+                @click="toggleAnswerVisibility"
               >
                 <BulbOutlined />
-                {{ showAnswer ? 'Скрыть ответ' : 'Развернуть ответ' }}
+                {{ answerVisible ? 'Скрыть ответ' : 'Развернуть ответ' }}
               </a-button>
             </a-space>
           </template>
 
-          <p class="question-text">
-            {{ currentQuestion?.text }}
-          </p>
+          <div class="question-content">
+            <p class="question-text">
+              {{ currentQuestion?.text }}
+            </p>
 
-          <div v-if="currentQuestion?.tags && currentQuestion?.tags.length" class="question-meta">
-            <a-tag
-              v-for="(tag, index) in currentQuestion?.tags"
-              :key="index"
-              color="blue"
-              size="small"
-            >
-              {{ tag }}
-            </a-tag>
+            <div v-if="currentQuestion?.tags && currentQuestion.tags.length" class="question-tags">
+              <a-tag
+                v-for="(tag, index) in currentQuestion.tags"
+                :key="index"
+                color="blue"
+                size="small"
+                class="tag-item"
+              >
+                {{ tag }}
+              </a-tag>
+            </div>
           </div>
         </a-card>
 
-        <!-- Ответ ИИ -->
         <AIAnswerCard
-          v-if="showAnswer && currentQuestion.aiAnswer"
+          v-if="answerVisible && currentQuestion.aiAnswer"
           :answer="currentQuestion.aiAnswer"
-          :loading="isGeneratingAnswer"
+          :loading="answerGenerating"
           @regenerate="generateAIAnswer"
           @close="hideAnswer"
         />
       </div>
 
-      <!-- Инструкция -->
       <div v-if="interviewSettings.showQuestionMeta" class="instruction-section">
         <a-alert
           message="Режим подготовки"
@@ -188,13 +186,12 @@ function goToQuestion(index: number) {
         />
       </div>
 
-      <!-- Навигация -->
       <div class="navigation-section">
         <a-space>
           <a-button
             :disabled="currentQuestionIndex === 0"
             size="large"
-            @click="previousQuestion"
+            @click="navigateToPreviousQuestion"
           >
             ← Предыдущий вопрос
           </a-button>
@@ -203,7 +200,7 @@ function goToQuestion(index: number) {
             v-if="!isLastQuestion"
             type="primary"
             size="large"
-            @click="nextQuestion"
+            @click="navigateToNextQuestion"
           >
             Следующий вопрос →
           </a-button>
@@ -212,14 +209,13 @@ function goToQuestion(index: number) {
             v-else
             type="primary"
             size="large"
-            @click="finishInterview"
+            @click="completeInterview"
           >
             Завершить собеседование
           </a-button>
         </a-space>
       </div>
 
-      <!-- Быстрая навигация по вопросам -->
       <div v-if="interviewSettings.showProgress" class="quick-navigation">
         <a-divider />
         <h4>Быстрая навигация:</h4>
@@ -229,7 +225,7 @@ function goToQuestion(index: number) {
             :key="index"
             :type="currentQuestionIndex === index ? 'primary' : 'default'"
             size="small"
-            @click="goToQuestion(index)"
+            @click="navigateToQuestion(index)"
           >
             {{ index + 1 }}
           </a-button>
@@ -272,26 +268,45 @@ function goToQuestion(index: number) {
 
 .question-section {
   margin-bottom: 24px;
-  position: relative;
-}
-
-:deep(.question-card .ant-card-extra) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .question-card {
   background: #fafafa;
   border: 2px solid #e8f4ff;
+  overflow: hidden;
+}
+
+.question-content {
+  min-width: 0;
 }
 
 .question-text {
   font-size: 18px;
   line-height: 1.6;
-  margin: 0;
+  margin: 0 0 16px 0;
   color: #262626;
   font-weight: 500;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.question-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tag-item {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .instruction-section {
@@ -311,5 +326,31 @@ function goToQuestion(index: number) {
 .quick-navigation h4 {
   margin-bottom: 12px;
   color: #8c8c8c;
+}
+
+@media (max-width: 768px) {
+  .interview-session {
+    padding: 12px;
+  }
+
+  .question-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .tag-item {
+    max-width: 120px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .question-text {
+    font-size: 15px;
+  }
+
+  .tag-item {
+    max-width: 100px;
+  }
 }
 </style>
