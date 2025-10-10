@@ -6,6 +6,7 @@ import {
   DownOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  SwapOutlined,
   UpOutlined,
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -27,9 +28,8 @@ const {
 
 const editingQuestion = ref<Question>()
 const generatingAnswerId = ref<string | null>(null)
-const editFormRef = ref<HTMLElement>() // Ref для формы редактирования
+const editFormRef = ref<HTMLElement>()
 
-// Используем сохраненное состояние из localStorage
 const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
 
 const questions = computed(() => interviewStore.questions)
@@ -37,7 +37,6 @@ const isLoading = computed(() => interviewStore.isLoading)
 
 const clearConfirmationVisible = ref(false)
 
-// Функция для показа подтверждения
 function showClearConfirmation() {
   if (questions.value.length === 0) {
     message.info('Нет вопросов для удаления')
@@ -46,13 +45,10 @@ function showClearConfirmation() {
   clearConfirmationVisible.value = true
 }
 
-// Очистить все вопросы (после подтверждения)
 async function clearAllQuestions() {
   try {
-    // Закрываем модальное окно
     clearConfirmationVisible.value = false
 
-    // Удаляем все вопросы по одному (с конца чтобы индексы не сбивались)
     for (let i = questions.value.length - 1; i >= 0; i--) {
       await interviewStore.removeQuestion(i)
     }
@@ -64,18 +60,15 @@ async function clearAllQuestions() {
   }
 }
 
-// Переключение состояния списка с сохранением в localStorage
 function toggleQuestionsList() {
   const newState = !questionsListCollapsed.value
   setQuestionsListCollapsed(newState)
 }
 
-// Развернуть список
 function expandQuestionsList() {
   setQuestionsListCollapsed(false)
 }
 
-// Автоматический скролл к форме редактирования
 function scrollToEditForm() {
   nextTick(() => {
     if (editFormRef.value) {
@@ -108,7 +101,7 @@ async function addQuestion(questionData: QuestionForm) {
 
 function startEditing(question: Question) {
   editingQuestion.value = { ...question }
-  scrollToEditForm() // Добавляем скролл при начале редактирования
+  scrollToEditForm()
 }
 
 function cancelEditing() {
@@ -154,7 +147,6 @@ function clearAnswer(question: Question) {
   }
 }
 
-// Вспомогательные методы с правильными типами
 function getDifficultyColor(difficulty: string) {
   const colors: Record<string, string> = {
     junior: 'green',
@@ -223,6 +215,10 @@ function formatDate(date: Date) {
   }).format(date)
 }
 
+function shuffleQuestions() {
+  interviewStore.shuffleQuestions()
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -232,7 +228,6 @@ onMounted(() => {
   <div class="manual-setup">
     <h3>Добавьте свои вопросы</h3>
 
-    <!-- Форма добавления вопроса с ref -->
     <div ref="editFormRef">
       <EditQuestionForm
         :question-to-edit="editingQuestion"
@@ -243,12 +238,10 @@ onMounted(() => {
 
     <a-divider />
 
-    <!-- Список добавленных вопросов -->
     <div class="questions-list-section">
       <div class="questions-list-header">
         <h4>Добавленные вопросы ({{ questions.length }})</h4>
 
-        <!-- Кнопки управления списком -->
         <div v-if="questions.length > 0" class="list-controls">
           <a-button
             type="link"
@@ -266,6 +259,15 @@ onMounted(() => {
           <a-button
             type="link"
             size="small"
+            @click="shuffleQuestions"
+          >
+            <SwapOutlined />
+            Перемешать
+          </a-button>
+
+          <a-button
+            type="link"
+            size="small"
             danger
             class="clear-button"
             @click="showClearConfirmation"
@@ -276,7 +278,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Сообщение когда список свернут -->
       <a-alert
         v-if="isQuestionsListCollapsed && questions.length > 0"
         :message="`Список свернут. Доступно вопросов: ${questions.length}`"
@@ -291,7 +292,6 @@ onMounted(() => {
         </template>
       </a-alert>
 
-      <!-- Список вопросов -->
       <div v-if="!isQuestionsListCollapsed">
         <a-list
           :data-source="questions"
@@ -361,7 +361,6 @@ onMounted(() => {
                 </template>
               </a-list-item-meta>
 
-              <!-- Ответ ИИ -->
               <AIAnswerCard
                 v-if="item.aiAnswer"
                 :answer="item.aiAnswer"
@@ -383,7 +382,6 @@ onMounted(() => {
       />
     </div>
 
-    <!-- Модальное окно подтверждения удаления -->
     <a-modal
       v-model:visible="clearConfirmationVisible"
       title="Подтверждение удаления"

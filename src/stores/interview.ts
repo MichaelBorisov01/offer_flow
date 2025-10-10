@@ -146,6 +146,16 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
+  function shuffleQuestions() {
+    const shuffled: Question[] = [...questions.value]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!]
+    }
+    questions.value = shuffled
+    currentQuestionIndex.value = 0
+  }
+
   const addQuestion = async (questionData: QuestionForm) => {
     try {
       const newQuestion: Omit<Question, 'id'> = {
@@ -305,5 +315,6 @@ export const useInterviewStore = defineStore('interview', () => {
     submitAnswer,
     getUserAnswer,
     clearUserAnswers,
+    shuffleQuestions,
   }
 })
