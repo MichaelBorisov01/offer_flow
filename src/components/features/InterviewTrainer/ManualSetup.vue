@@ -9,7 +9,7 @@ import {
   UpOutlined,
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
@@ -27,6 +27,7 @@ const {
 
 const editingQuestion = ref<Question>()
 const generatingAnswerId = ref<string | null>(null)
+const editFormRef = ref<HTMLElement>() // Ref для формы редактирования
 
 // Используем сохраненное состояние из localStorage
 const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
@@ -44,6 +45,7 @@ function showClearConfirmation() {
   }
   clearConfirmationVisible.value = true
 }
+
 // Очистить все вопросы (после подтверждения)
 async function clearAllQuestions() {
   try {
@@ -73,7 +75,18 @@ function expandQuestionsList() {
   setQuestionsListCollapsed(false)
 }
 
-// Существующие методы остаются без изменений
+// Автоматический скролл к форме редактирования
+function scrollToEditForm() {
+  nextTick(() => {
+    if (editFormRef.value) {
+      editFormRef.value.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  })
+}
+
 async function addQuestion(questionData: QuestionForm) {
   try {
     if (editingQuestion.value?.id) {
@@ -95,6 +108,7 @@ async function addQuestion(questionData: QuestionForm) {
 
 function startEditing(question: Question) {
   editingQuestion.value = { ...question }
+  scrollToEditForm() // Добавляем скролл при начале редактирования
 }
 
 function cancelEditing() {
@@ -218,12 +232,14 @@ onMounted(() => {
   <div class="manual-setup">
     <h3>Добавьте свои вопросы</h3>
 
-    <!-- Форма добавления вопроса -->
-    <EditQuestionForm
-      :question-to-edit="editingQuestion"
-      @submit="addQuestion"
-      @cancel="cancelEditing"
-    />
+    <!-- Форма добавления вопроса с ref -->
+    <div ref="editFormRef">
+      <EditQuestionForm
+        :question-to-edit="editingQuestion"
+        @submit="addQuestion"
+        @cancel="cancelEditing"
+      />
+    </div>
 
     <a-divider />
 
