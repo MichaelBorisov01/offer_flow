@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import type { Question, QuestionForm } from '@/types/interview'
-import { BulbOutlined, DeleteOutlined, DownOutlined, EditOutlined, UpOutlined } from '@ant-design/icons-vue'
+import {
+  BulbOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  UpOutlined,
+} from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, ref } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
@@ -27,23 +34,22 @@ const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
 const questions = computed(() => interviewStore.questions)
 const isLoading = computed(() => interviewStore.isLoading)
 
-// Переключение состояния списка с сохранением в localStorage
-function toggleQuestionsList() {
-  const newState = !questionsListCollapsed.value
-  setQuestionsListCollapsed(newState)
-}
+const clearConfirmationVisible = ref(false)
 
-// Развернуть список
-function expandQuestionsList() {
-  setQuestionsListCollapsed(false)
-}
-
-// Очистить все вопросы
-async function clearAllQuestions() {
-  if (questions.value.length === 0)
+// Функция для показа подтверждения
+function showClearConfirmation() {
+  if (questions.value.length === 0) {
+    message.info('Нет вопросов для удаления')
     return
-
+  }
+  clearConfirmationVisible.value = true
+}
+// Очистить все вопросы (после подтверждения)
+async function clearAllQuestions() {
   try {
+    // Закрываем модальное окно
+    clearConfirmationVisible.value = false
+
     // Удаляем все вопросы по одному (с конца чтобы индексы не сбивались)
     for (let i = questions.value.length - 1; i >= 0; i--) {
       await interviewStore.removeQuestion(i)
@@ -54,6 +60,17 @@ async function clearAllQuestions() {
   catch {
     message.error('Ошибка при удалении вопросов')
   }
+}
+
+// Переключение состояния списка с сохранением в localStorage
+function toggleQuestionsList() {
+  const newState = !questionsListCollapsed.value
+  setQuestionsListCollapsed(newState)
+}
+
+// Развернуть список
+function expandQuestionsList() {
+  setQuestionsListCollapsed(false)
 }
 
 // Существующие методы остаются без изменений
@@ -235,7 +252,7 @@ onMounted(() => {
             size="small"
             danger
             class="clear-button"
-            @click="clearAllQuestions"
+            @click="showClearConfirmation"
           >
             <DeleteOutlined />
             Очистить все
@@ -349,6 +366,29 @@ onMounted(() => {
         show-icon
       />
     </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <a-modal
+      v-model:visible="clearConfirmationVisible"
+      title="Подтверждение удаления"
+      ok-text="Да, удалить все"
+      cancel-text="Отмена"
+      ok-type="danger"
+      @ok="clearAllQuestions"
+      @cancel="clearConfirmationVisible = false"
+    >
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <ExclamationCircleOutlined style="font-size: 24px; color: #faad14;" />
+        <div>
+          <p style="margin: 0; font-weight: 500;">
+            Вы уверены, что хотите удалить все вопросы?
+          </p>
+          <p style="margin: 8px 0 0 0; color: rgba(0, 0, 0, 0.45);">
+            Будет удалено <strong>{{ questions.length }}</strong> вопросов. Это действие нельзя отменить.
+          </p>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 

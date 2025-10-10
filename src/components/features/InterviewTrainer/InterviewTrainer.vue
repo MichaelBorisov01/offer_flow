@@ -139,7 +139,7 @@ watch(mode, (newMode, oldMode) => {
               </a-checkbox>
             </a-form-item>
 
-            <a-form-item>
+            <a-form-item v-if="mode === 'manual'">
               <a-checkbox
                 v-model:checked="interviewSettings.showQuestionMeta"
                 @change="handleSettingsChange"
