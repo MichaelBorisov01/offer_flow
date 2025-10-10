@@ -461,6 +461,7 @@ onMounted(() => {
   padding: 16px;
   background: white;
   transition: box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .question-item:hover {
@@ -473,6 +474,7 @@ onMounted(() => {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .question-text {
@@ -480,12 +482,20 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: inherit;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
 }
 
 .question-badges {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .question-meta {
@@ -493,21 +503,34 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  min-width: 0;
 }
 
 .category-tag {
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .tags-section {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.tags-section :deep(.ant-tag) {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .question-date {
   color: #8c8c8c;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 :deep(.ant-list-item-action) {
@@ -528,5 +551,64 @@ onMounted(() => {
     width: 100%;
     justify-content: flex-end;
   }
+
+  .question-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .question-badges {
+    align-self: flex-start;
+  }
+
+  .question-text {
+    -webkit-line-clamp: 4;
+    line-clamp: inherit;
+    width: 100%;
+  }
+
+  .question-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .tags-section {
+    width: 100%;
+  }
+
+  .tags-section :deep(.ant-tag) {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .question-item {
+    padding: 12px;
+  }
+
+  .question-text {
+    font-size: 14px;
+    -webkit-line-clamp: 4;
+    line-clamp: inherit;
+  }
+
+  .tags-section :deep(.ant-tag) {
+    max-width: 100px;
+    font-size: 11px;
+  }
+}
+
+:deep(.edit-question-form) {
+  min-width: 0;
+}
+
+:deep(.edit-question-form .ant-form-item) {
+  min-width: 0;
+}
+
+:deep(.edit-question-form .ant-card) {
+  overflow: hidden;
 }
 </style>

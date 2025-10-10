@@ -240,9 +240,31 @@ async function handleSubmit() {
 }
 
 .tags-preview {
-  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.tags-preview :deep(.ant-tag) {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+}
+
+@media (max-width: 768px) {
+  .tags-preview :deep(.ant-tag) {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tags-preview :deep(.ant-tag) {
+    max-width: 100px;
+    font-size: 11px;
+  }
 }
 </style>
