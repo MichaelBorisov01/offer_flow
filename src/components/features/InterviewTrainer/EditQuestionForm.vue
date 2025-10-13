@@ -27,7 +27,6 @@ const formState = ref<QuestionForm>({
   tags: [],
 })
 
-// Следим за изменением вопроса для редактирования
 watch(() => props.questionToEdit, (newQuestion) => {
   if (newQuestion) {
     formState.value = {
@@ -54,7 +53,9 @@ function handleTagsBlur() {
 }
 
 function removeTag(index: number) {
-  formState.value.tags.splice(index, 1)
+  const newTags = [...formState.value.tags]
+  newTags.splice(index, 1)
+  formState.value.tags = newTags
 }
 
 function resetForm() {
@@ -105,7 +106,6 @@ async function handleSubmit() {
     <a-form :model="formState" layout="vertical" @finish="handleSubmit">
       <a-form-item label="Вопрос" required>
         <a-textarea
-
           v-model:value="formState.text"
           placeholder="Введите вопрос для собеседования"
           :rows="3"
@@ -195,12 +195,13 @@ async function handleSubmit() {
         <div v-if="formState.tags.length > 0" class="tags-preview">
           <a-tag
             v-for="(tag, index) in formState.tags"
-            :key="index"
+            :key="`${tag}-${index}`"
             closable
             color="blue"
+            class="tag-item"
             @close="removeTag(index)"
           >
-            {{ tag }}
+            <span class="tag-text">{{ tag }}</span>
           </a-tag>
         </div>
       </a-form-item>
@@ -247,24 +248,60 @@ async function handleSubmit() {
   min-width: 0;
 }
 
-.tags-preview :deep(.ant-tag) {
-  max-width: 150px;
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 180px;
+  height: 28px;
+  padding: 0 8px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 4px;
+}
+
+.tag-text {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 1;
+  font-size: 12px;
+  line-height: 26px;
+  max-width: 140px;
+}
+
+.tag-item :deep(.anticon-close) {
+  flex-shrink: 0;
+  margin-left: 2px;
+  font-size: 10px;
+  color: #1890ff;
+  cursor: pointer;
+}
+
+.tag-item :deep(.anticon-close:hover) {
+  color: #ff4d4f;
 }
 
 @media (max-width: 768px) {
-  .tags-preview :deep(.ant-tag) {
-    max-width: 120px;
+  .tag-item {
+    max-width: 150px;
+  }
+
+  .tag-text {
+    max-width: 110px;
   }
 }
 
 @media (max-width: 480px) {
-  .tags-preview :deep(.ant-tag) {
-    max-width: 100px;
+  .tag-item {
+    max-width: 120px;
+    height: 24px;
+  }
+
+  .tag-text {
+    max-width: 80px;
     font-size: 11px;
+    line-height: 22px;
   }
 }
 </style>

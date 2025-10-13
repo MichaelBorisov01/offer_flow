@@ -383,7 +383,7 @@ onMounted(() => {
     </div>
 
     <a-modal
-      v-model:visible="clearConfirmationVisible"
+      v-model:open="clearConfirmationVisible"
       title="Подтверждение удаления"
       ok-text="Да, удалить все"
       cancel-text="Отмена"
@@ -428,6 +428,8 @@ onMounted(() => {
 .questions-list-header h4 {
   margin: 0;
   color: #262626;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .list-controls {
@@ -441,6 +443,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 13px;
 }
 
 .collapsed-alert {
@@ -458,11 +461,13 @@ onMounted(() => {
   margin-bottom: 12px;
   padding: 16px;
   background: white;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s ease;
   overflow: hidden;
 }
+
 .question-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #d9d9d9;
 }
 
 .question-header {
@@ -470,7 +475,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   min-width: 0;
 }
 
@@ -478,7 +483,7 @@ onMounted(() => {
   flex: 1;
   font-size: 16px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.5;
   min-width: 0;
   overflow: hidden;
   display: -webkit-box;
@@ -486,6 +491,8 @@ onMounted(() => {
   line-clamp: inherit;
   -webkit-box-orient: vertical;
   word-break: break-word;
+  color: #262626;
+  margin: 0;
 }
 
 .question-badges {
@@ -495,17 +502,36 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
+.question-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 0;
+}
+
 .category-tag {
-  font-weight: 500;
+  font-weight: 600;
   flex-shrink: 0;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  border: none;
+  font-size: 12px;
 }
 
 .tags-section {
   display: flex;
-  flex-wrap: wrap;
   gap: 4px;
   min-width: 0;
   flex: 1;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .tags-section :deep(.ant-tag) {
@@ -514,20 +540,50 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 1;
+  margin: 0;
+  border: none;
+  font-size: 11px;
+  height: 22px;
+  line-height: 20px;
 }
 
 .question-date {
   color: #8c8c8c;
   font-size: 12px;
   flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
 :deep(.ant-list-item-action) {
-  margin-top: 12px;
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 :deep(.ant-list-item-action li) {
-  padding: 0 4px;
+  padding: 0;
+}
+
+:deep(.ant-list-item-action .ant-btn) {
+  height: 28px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.edit-question-form) {
+  min-width: 0;
+}
+
+:deep(.edit-question-form .ant-form-item) {
+  min-width: 0;
+}
+
+:deep(.edit-question-form .ant-card) {
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
@@ -555,18 +611,42 @@ onMounted(() => {
     -webkit-line-clamp: 4;
     line-clamp: inherit;
     width: 100%;
+    font-size: 15px;
+  }
+
+  .question-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .tags-section {
     width: 100%;
+    justify-content: flex-start;
   }
 
   .tags-section :deep(.ant-tag) {
-    max-width: 120px;
+    max-width: 130px;
+  }
+
+  .category-tag {
+    max-width: 100%;
+  }
+
+  .question-date {
+    align-self: flex-start;
+  }
+
+  :deep(.ant-list-item-action) {
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 480px) {
+  .manual-setup {
+    padding: 0 8px;
+  }
+
   .question-item {
     padding: 12px;
   }
@@ -578,20 +658,25 @@ onMounted(() => {
   }
 
   .tags-section :deep(.ant-tag) {
-    max-width: 100px;
+    max-width: 110px;
+    font-size: 10px;
+    height: 20px;
+    line-height: 18px;
+  }
+
+  .category-tag {
+    font-size: 11px;
+    max-width: 110px;
+  }
+
+  .question-date {
     font-size: 11px;
   }
-}
 
-:deep(.edit-question-form) {
-  min-width: 0;
-}
-
-:deep(.edit-question-form .ant-form-item) {
-  min-width: 0;
-}
-
-:deep(.edit-question-form .ant-card) {
-  overflow: hidden;
+  :deep(.ant-list-item-action .ant-btn) {
+    font-size: 12px;
+    height: 26px;
+    padding: 0 8px;
+  }
 }
 </style>
