@@ -1,3 +1,4 @@
+import type { InterviewSettings } from '@/types/interview'
 import { useLocalStorage } from './useLocalStorage'
 
 export type InterviewMode = 'manual' | 'ai'
@@ -18,10 +19,11 @@ export function useInterviewMode() {
     technology: 'vue',
   })
 
-  const { value: interviewSettings, setValue: setInterviewSettings } = useLocalStorage('interview-trainer-settings', {
+  const { value: interviewSettings, setValue: setInterviewSettings } = useLocalStorage<InterviewSettings>('interview-trainer-settings', {
     showProgress: true,
     showQuestionMeta: true,
     enableAnswerInput: true,
+    filterByStatus: '',
   })
 
   const { value: questionsListCollapsed, setValue: setQuestionsListCollapsed } = useLocalStorage(

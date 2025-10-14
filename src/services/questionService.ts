@@ -20,6 +20,7 @@ export interface Question {
   category: string
   difficulty: string
   tags?: string[]
+  status?: 'known' | 'repeat' | 'hard'
   createdAt?: Date
   updatedAt?: Date
   userId?: string
@@ -59,6 +60,7 @@ export const QuestionService = {
           category: data.category || 'general',
           difficulty: data.difficulty || 'middle',
           tags: data.tags || [],
+          status: data.status || '',
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
           userId: data.userId,
@@ -86,7 +88,8 @@ export const QuestionService = {
         type: question.type,
         category: question.category,
         difficulty: question.difficulty,
-        tags: question.tags,
+        tags: question.tags || [],
+        status: question.status || '',
         userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
@@ -114,7 +117,11 @@ export const QuestionService = {
         updatedAt: Timestamp.now(),
       }
 
-      await updateDoc(doc(db, 'questions', id), updateData)
+      const cleanUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== undefined),
+      )
+
+      await updateDoc(doc(db, 'questions', id), cleanUpdateData)
     }
     catch (error) {
       console.error('Error updating question:', error)

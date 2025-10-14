@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { InterviewMode } from '@/composables/useInterviewMode'
-import type { AISettings } from '@/types/interview'
+import type { AISettings, InterviewSettings } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
@@ -34,7 +34,6 @@ function handleAISettingsChanged(newSettings: AISettings) {
   setAISettings(newSettings)
 }
 
-// Обработчик изменения режима - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function handleModeChange(event: any) {
   const newMode = event.target.value as InterviewMode
   setMode(newMode)
@@ -58,10 +57,12 @@ function startInterview() {
     return
   }
 
-  // Обновляем настройки в хранилище
+  // Обновляем настройки в хранилище с правильной типизацией
   interviewStore.interviewSettings = {
-    ...interviewStore.interviewSettings,
-    ...interviewSettings.value,
+    showProgress: interviewSettings.value.showProgress,
+    showQuestionMeta: interviewSettings.value.showQuestionMeta,
+    enableAnswerInput: interviewSettings.value.enableAnswerInput,
+    filterByStatus: interviewSettings.value.filterByStatus || '',
   }
 
   interviewStore.startInterview()
@@ -79,6 +80,14 @@ watch(mode, (newMode, oldMode) => {
     interviewStore.questions = []
   }
 })
+
+function updateQuestionFilter(selectedStatuses: 'known' | 'repeat' | 'hard') {
+  const newSettings: InterviewSettings = {
+    ...interviewSettings.value,
+    filterByStatus: selectedStatuses,
+  }
+  setInterviewSettings(newSettings)
+}
 </script>
 
 <template>
@@ -146,6 +155,23 @@ watch(mode, (newMode, oldMode) => {
               >
                 Показывать метаданные вопросов
               </a-checkbox>
+            </a-form-item>
+
+            <a-form-item v-if="mode === 'manual'" label="Фильтр по статусам:">
+              <a-checkbox-group
+                :value="interviewSettings.filterByStatus || ''"
+                @change="updateQuestionFilter"
+              >
+                <a-checkbox value="known">
+                  Знаю
+                </a-checkbox>
+                <a-checkbox value="repeat">
+                  Повторить
+                </a-checkbox>
+                <a-checkbox value="hard">
+                  Сложно
+                </a-checkbox>
+              </a-checkbox-group>
             </a-form-item>
 
             <!-- Дополнительные настройки для ИИ режима -->

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BulbOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, CheckOutlined, ExclamationOutlined, RedoOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
@@ -16,6 +16,21 @@ const isLastQuestion = computed(() => interviewStore.isLastQuestion)
 
 const answerVisible = ref(false)
 const answerGenerating = ref(false)
+
+async function setQuestionStatus(status: 'known' | 'repeat' | 'hard') {
+  if (!currentQuestion.value?.id) {
+    return
+  }
+
+  try {
+    await interviewStore.updateQuestionStatus(currentQuestion.value.id, status)
+    await interviewStore.loadUserQuestions()
+  }
+  catch (error) {
+    console.error('Error updating status:', error)
+    message.error('Ошибка при обновлении статуса вопроса')
+  }
+}
 
 async function toggleAnswerVisibility() {
   if (answerVisible.value) {
@@ -168,6 +183,37 @@ function navigateToQuestion(index: number) {
           </div>
         </a-card>
 
+        <!-- Кнопки статусов вопроса -->
+        <div class="status-actions">
+          <a-button
+            :type="currentQuestion?.status === 'known' ? 'primary' : 'default'"
+            :ghost="currentQuestion?.status !== 'known'"
+            class="status-button"
+            @click="() => setQuestionStatus('known')"
+          >
+            <CheckOutlined />
+            Знаю
+          </a-button>
+          <a-button
+            :type="currentQuestion?.status === 'repeat' ? 'primary' : 'default'"
+            :ghost="currentQuestion?.status !== 'repeat'"
+            class="status-button"
+            @click="() => setQuestionStatus('repeat')"
+          >
+            <RedoOutlined />
+            Повторить
+          </a-button>
+          <a-button
+            :type="currentQuestion?.status === 'hard' ? 'primary' : 'default'"
+            :ghost="currentQuestion?.status !== 'hard'"
+            class="status-button"
+            @click="() => setQuestionStatus('hard')"
+          >
+            <ExclamationOutlined />
+            Сложно
+          </a-button>
+        </div>
+
         <AIAnswerCard
           v-if="answerVisible && currentQuestion.aiAnswer"
           :answer="currentQuestion.aiAnswer"
@@ -180,7 +226,7 @@ function navigateToQuestion(index: number) {
       <div v-if="interviewSettings.showQuestionMeta" class="instruction-section">
         <a-alert
           message="Режим подготовки"
-          description="Отвечайте на вопросы устно. После ответа переходите к следующему вопросу."
+          description="Отвечайте на вопросы устно и отмечайте свой уровень знания каждого вопроса."
           type="info"
           show-icon
         />
@@ -224,6 +270,7 @@ function navigateToQuestion(index: number) {
             v-for="(question, index) in questions"
             :key="index"
             :type="currentQuestionIndex === index ? 'primary' : 'default'"
+            :class="`question-button ${question.status ? `status-${question.status}` : ''}`"
             size="small"
             @click="navigateToQuestion(index)"
           >
@@ -309,6 +356,34 @@ function navigateToQuestion(index: number) {
   flex-shrink: 1;
 }
 
+.status-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.status-button {
+  min-width: 100px;
+  height: 40px;
+  font-weight: 500;
+}
+
+.status-button:not(.ant-btn-primary) {
+  background-color: white;
+  border-color: #d9d9d9;
+  color: #595959;
+}
+
+.status-button:not(.ant-btn-primary):hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
 .instruction-section {
   margin-bottom: 24px;
 }
@@ -341,6 +416,16 @@ function navigateToQuestion(index: number) {
   .tag-item {
     max-width: 120px;
     font-size: 11px;
+  }
+
+  .status-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .status-button {
+    min-width: auto;
+    width: 100%;
   }
 }
 

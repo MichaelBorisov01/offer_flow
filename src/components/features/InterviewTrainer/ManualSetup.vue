@@ -219,6 +219,16 @@ function shuffleQuestions() {
   interviewStore.shuffleQuestions()
 }
 
+function getStatusColor(status: string) {
+  const colors = { known: 'green', repeat: 'orange', hard: 'red' }
+  return colors[status as keyof typeof colors] || 'blue'
+}
+
+function getStatusLabel(status: string) {
+  const labels = { known: 'Знаю', repeat: 'Повторить', hard: 'Сложно' }
+  return labels[status as keyof typeof labels] || status
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -338,6 +348,15 @@ onMounted(() => {
                   <div class="question-meta">
                     <a-tag :color="getCategoryColor(item.category)" class="category-tag">
                       {{ getCategoryLabel(item.category) }}
+                    </a-tag>
+
+                    <!-- Отображение статуса -->
+                    <a-tag
+                      v-if="item.status"
+                      :color="getStatusColor(item.status)"
+                      class="status-tag"
+                    >
+                      {{ getStatusLabel(item.status) }}
                     </a-tag>
 
                     <span v-if="item.tags && item.tags.length" class="tags-section">

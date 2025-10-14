@@ -1,4 +1,4 @@
-import type { InterviewSession, Question, QuestionForm, UserAnswer } from '@/types/interview'
+import type { InterviewSession, InterviewSettings, Question, QuestionForm, UserAnswer } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -75,11 +75,11 @@ export const useInterviewStore = defineStore('interview', () => {
     userAnswers.value = []
   }
 
-  const interviewSettings = ref({
+  const interviewSettings = ref<InterviewSettings>({
     showProgress: true,
     showQuestionMeta: true,
-    enableEvaluation: false,
-    enableAnswerInput: true,
+    enableAnswerInput: false,
+    filterByStatus: '',
   })
 
   // Геттеры
@@ -225,12 +225,26 @@ export const useInterviewStore = defineStore('interview', () => {
     error.value = null
   }
 
+  function getFilteredQuestions() {
+    const filter = interviewSettings.value.filterByStatus
+    if (!filter || filter.length === 0) {
+      return questions.value
+    }
+    return questions.value.filter(question =>
+      question.status && filter.includes(question.status),
+    )
+  }
+
+  const filteredQuestions = computed(() => getFilteredQuestions())
+
   const startInterview = async (settings?: any) => {
-    if (questions.value.length === 0) {
-      message.error('Добавьте вопросы для начала собеседования')
+    const filtered = getFilteredQuestions()
+    if (filtered.length === 0) {
+      message.error('Нет вопросов для выбранных фильтров')
       return
     }
 
+    questions.value = filtered
     isInterviewStarted.value = true
     currentQuestionIndex.value = 0
 
@@ -241,7 +255,7 @@ export const useInterviewStore = defineStore('interview', () => {
 
     // Создаем сессию
     currentSession.value = {
-      questions: [...questions.value],
+      questions: [...filtered],
       userAnswers: [],
       createdAt: new Date(),
     }
@@ -275,6 +289,28 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
+  // Метод для обновления статуса вопроса
+  const updateQuestionStatus = async (questionId: string, status: 'known' | 'repeat' | 'hard') => {
+    const question = questions.value.find(q => q.id === questionId)
+    if (question) {
+      try {
+        // Сохраняем статус в базе данных
+        await QuestionService.updateQuestion(questionId, { status })
+
+        // Обновляем локальное состояние
+        question.status = status
+        question.updatedAt = new Date()
+      }
+      catch (error) {
+        console.error('Error saving question status:', error)
+        message.error('Ошибка при сохранении статуса')
+      }
+    }
+    else {
+      console.error('Question not found:', questionId)
+    }
+  }
+
   // Загружаем вопросы при инициализации
   loadUserQuestions()
 
@@ -293,6 +329,7 @@ export const useInterviewStore = defineStore('interview', () => {
     userAnswers,
     isEvaluating,
     currentUserAnswer,
+    filteredQuestions,
 
     // Getters
     currentQuestion,
@@ -316,5 +353,6 @@ export const useInterviewStore = defineStore('interview', () => {
     getUserAnswer,
     clearUserAnswers,
     shuffleQuestions,
+    updateQuestionStatus,
   }
 })

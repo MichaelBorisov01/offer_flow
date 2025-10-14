@@ -12,6 +12,7 @@ export interface Question extends QuestionForm {
   updatedAt?: Date
   userId?: string
   aiAnswer?: AIAnswer
+  status?: 'known' | 'repeat' | 'hard'
 }
 
 export interface InterviewSession {
@@ -56,4 +57,11 @@ export interface AnswerEvaluation {
   feedback: string
   suggestions: string[]
   evaluatedAt: Date
+}
+
+export interface InterviewSettings {
+  showProgress: boolean
+  showQuestionMeta: boolean
+  enableAnswerInput?: boolean
+  filterByStatus?: 'known' | 'repeat' | 'hard' | ''
 }
