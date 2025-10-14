@@ -15,6 +15,7 @@ import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
+import StatusProgressBar from './StatusProgressBar.vue'
 
 const emit = defineEmits<{
   (e: 'questionsChanged'): void
@@ -287,6 +288,12 @@ onMounted(() => {
           </a-button>
         </div>
       </div>
+
+      <StatusProgressBar
+        v-if="questions.length > 0"
+        :questions="questions"
+        class="inline-progress"
+      />
 
       <a-alert
         v-if="isQuestionsListCollapsed && questions.length > 0"
@@ -697,5 +704,9 @@ onMounted(() => {
     height: 26px;
     padding: 0 8px;
   }
+}
+
+.inline-progress {
+  margin-bottom: 16px;
 }
 </style>
