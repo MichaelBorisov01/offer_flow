@@ -77,7 +77,6 @@ export const useInterviewStore = defineStore('interview', () => {
 
   const interviewSettings = ref<InterviewSettings>({
     showProgress: true,
-    showQuestionMeta: true,
     enableAnswerInput: false,
     filterByStatus: '',
   })

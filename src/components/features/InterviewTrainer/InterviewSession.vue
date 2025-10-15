@@ -223,15 +223,6 @@ function navigateToQuestion(index: number) {
         />
       </div>
 
-      <div v-if="interviewSettings.showQuestionMeta" class="instruction-section">
-        <a-alert
-          message="Режим подготовки"
-          description="Отвечайте на вопросы устно и отмечайте свой уровень знания каждого вопроса."
-          type="info"
-          show-icon
-        />
-      </div>
-
       <div class="navigation-section">
         <a-space>
           <a-button

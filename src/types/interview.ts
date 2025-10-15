@@ -61,7 +61,6 @@ export interface AnswerEvaluation {
 
 export interface InterviewSettings {
   showProgress: boolean
-  showQuestionMeta: boolean
   enableAnswerInput?: boolean
   filterByStatus?: 'known' | 'repeat' | 'hard' | ''
 }

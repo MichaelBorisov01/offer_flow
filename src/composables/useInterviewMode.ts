@@ -21,7 +21,6 @@ export function useInterviewMode() {
 
   const { value: interviewSettings, setValue: setInterviewSettings } = useLocalStorage<InterviewSettings>('interview-trainer-settings', {
     showProgress: true,
-    showQuestionMeta: true,
     enableAnswerInput: true,
     filterByStatus: '',
   })

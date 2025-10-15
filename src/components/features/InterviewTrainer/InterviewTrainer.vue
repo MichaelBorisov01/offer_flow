@@ -60,7 +60,6 @@ function startInterview() {
   // Обновляем настройки в хранилище с правильной типизацией
   interviewStore.interviewSettings = {
     showProgress: interviewSettings.value.showProgress,
-    showQuestionMeta: interviewSettings.value.showQuestionMeta,
     enableAnswerInput: interviewSettings.value.enableAnswerInput,
     filterByStatus: interviewSettings.value.filterByStatus || '',
   }
@@ -145,15 +144,6 @@ function updateQuestionFilter(selectedStatuses: 'known' | 'repeat' | 'hard') {
                 @change="handleSettingsChange"
               >
                 Показывать прогресс
-              </a-checkbox>
-            </a-form-item>
-
-            <a-form-item v-if="mode === 'manual'">
-              <a-checkbox
-                v-model:checked="interviewSettings.showQuestionMeta"
-                @change="handleSettingsChange"
-              >
-                Показывать метаданные вопросов
               </a-checkbox>
             </a-form-item>
 
