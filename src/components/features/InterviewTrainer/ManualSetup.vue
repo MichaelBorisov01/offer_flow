@@ -272,7 +272,7 @@ onMounted(() => {
             </a-button>
           </Tooltip>
 
-          <Tooltip title="Очистить все вопросы">
+          <Tooltip title="Удалить все вопросы">
             <a-button
               type="text"
               size="small"
@@ -364,21 +364,17 @@ onMounted(() => {
                     <span class="question-text">{{ item.text }}</span>
                     <div class="question-meta-icons">
                       <!-- Сложность -->
-                      <Tooltip :title="`Уровень сложности: ${getDifficultyLabel(item.difficulty)}`">
-                        <span
-                          class="difficulty-badge"
-                          :style="{ color: getDifficultyColor(item.difficulty) }"
-                        >
-                          {{ getDifficultyLabel(item.difficulty) }}
-                        </span>
-                      </Tooltip>
+                      <span
+                        class="difficulty-badge"
+                        :style="{ color: getDifficultyColor(item.difficulty) }"
+                      >
+                        {{ getDifficultyLabel(item.difficulty) }}
+                      </span>
 
                       <!-- Категория -->
-                      <Tooltip :title="`Категория: ${getCategoryLabel(item.category)}`">
-                        <span class="category-badge">
-                          {{ getCategoryLabel(item.category) }}
-                        </span>
-                      </Tooltip>
+                      <span class="category-badge">
+                        {{ getCategoryLabel(item.category) }}
+                      </span>
                     </div>
                   </div>
                 </template>
