@@ -403,6 +403,66 @@ function navigateToQuestion(index: number) {
   color: #8c8c8c;
 }
 
+/* Базовые стили для кнопок навигации по вопросам */
+:deep(.question-button.status-known) {
+  background-color: #f6ffed;
+  border-color: #b7eb8f;
+  color: #52c41a;
+}
+
+:deep(.question-button.status-repeat) {
+  background-color: #fff7e6;
+  border-color: #ffd591;
+  color: #fa8c16;
+}
+
+:deep(.question-button.status-hard) {
+  background-color: #fff2f0;
+  border-color: #ffccc7;
+  color: #ff4d4f;
+}
+
+/* Стили для активной кнопки навигации */
+:deep(.question-button.ant-btn-primary.status-known) {
+  background-color: #52c41a;
+  border-color: #52c41a;
+  color: white;
+}
+
+:deep(.question-button.ant-btn-primary.status-repeat) {
+  background-color: #fa8c16;
+  border-color: #fa8c16;
+  color: white;
+}
+
+:deep(.question-button.ant-btn-primary.status-hard) {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+  color: white;
+}
+
+:deep(.question-button.ant-btn-primary) {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+  transform: scale(1.05);
+}
+
+:deep(.question-button.ant-btn-primary) {
+  position: relative;
+}
+
+:deep(.question-button.ant-btn-primary::after) {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid currentColor;
+  border-radius: 6px;
+  opacity: 0.3;
+}
+
 @media (max-width: 768px) {
   .interview-session {
     padding: 12px;
