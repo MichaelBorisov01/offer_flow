@@ -2,14 +2,18 @@
 import type { Question, QuestionForm } from '@/types/interview'
 import {
   BulbOutlined,
+  CalendarOutlined,
+  CodeOutlined,
   DeleteOutlined,
   DownOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  FileTextOutlined,
   SwapOutlined,
+  TagOutlined,
   UpOutlined,
 } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Tooltip } from 'ant-design-vue'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
@@ -150,11 +154,11 @@ function clearAnswer(question: Question) {
 
 function getDifficultyColor(difficulty: string) {
   const colors: Record<string, string> = {
-    junior: 'green',
-    middle: 'orange',
-    senior: 'red',
+    junior: '#52c41a',
+    middle: '#fa8c16',
+    senior: '#ff4d4f',
   }
-  return colors[difficulty] || 'blue'
+  return colors[difficulty] || '#d9d9d9'
 }
 
 function getDifficultyLabel(difficulty: string) {
@@ -166,36 +170,20 @@ function getDifficultyLabel(difficulty: string) {
   return labels[difficulty] || difficulty
 }
 
-function getTypeColor(type: string) {
-  return type === 'code' ? 'volcano' : 'geekblue'
+function getTypeIcon(type: string) {
+  return type === 'code' ? CodeOutlined : FileTextOutlined
 }
 
 function getTypeLabel(type: string) {
   return type === 'code' ? 'Код' : 'Текст'
 }
 
-function getCategoryColor(category: string) {
-  const colors: Record<string, string> = {
-    'javascript': 'gold',
-    'vue': 'green',
-    'react': 'blue',
-    'typescript': 'geekblue',
-    'html-css': 'purple',
-    'algorithms': 'orange',
-    'database': 'red',
-    'system-design': 'cyan',
-    'soft-skills': 'lime',
-    'nodejs': 'green',
-  }
-  return colors[category] || 'default'
-}
-
 function getCategoryLabel(category: string) {
   const labels: Record<string, string> = {
-    'javascript': 'JavaScript',
-    'vue': 'Vue.js',
+    'javascript': 'JS',
+    'vue': 'Vue',
     'react': 'React',
-    'typescript': 'TypeScript',
+    'typescript': 'TS',
     'html-css': 'HTML/CSS',
     'algorithms': 'Алгоритмы',
     'database': 'Базы данных',
@@ -211,8 +199,6 @@ function formatDate(date: Date) {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   }).format(date)
 }
 
@@ -220,14 +206,30 @@ function shuffleQuestions() {
   interviewStore.shuffleQuestions()
 }
 
-function getStatusColor(status: string) {
-  const colors = { known: 'green', repeat: 'orange', hard: 'red' }
-  return colors[status as keyof typeof colors] || 'blue'
+// Функция для получения цвета карточки в зависимости от статуса
+function getCardBorderColor(question: Question): string {
+  if (!question.status)
+    return '#f0f0f0'
+
+  const colors = {
+    known: '#b7eb8f',
+    repeat: '#ffd591',
+    hard: '#ffccc7',
+  }
+  return colors[question.status as keyof typeof colors] || '#f0f0f0'
 }
 
-function getStatusLabel(status: string) {
-  const labels = { known: 'Знаю', repeat: 'Повторить', hard: 'Сложно' }
-  return labels[status as keyof typeof labels] || status
+// Функция для получения фона карточки в зависимости от статуса
+function getCardBackgroundColor(question: Question): string {
+  if (!question.status)
+    return '#ffffff'
+
+  const colors = {
+    known: '#f6ffed',
+    repeat: '#fff7e6',
+    hard: '#fff2f0',
+  }
+  return colors[question.status as keyof typeof colors] || '#ffffff'
 }
 
 onMounted(() => {
@@ -254,38 +256,41 @@ onMounted(() => {
         <h4>Добавленные вопросы ({{ questions.length }})</h4>
 
         <div v-if="questions.length > 0" class="list-controls">
-          <a-button
-            type="link"
-            size="small"
-            class="collapse-button"
-            @click="toggleQuestionsList"
-          >
-            <template #icon>
-              <UpOutlined v-if="!isQuestionsListCollapsed" />
-              <DownOutlined v-else />
-            </template>
-            {{ isQuestionsListCollapsed ? 'Развернуть' : 'Свернуть' }}
-          </a-button>
+          <Tooltip title="Свернуть/развернуть список">
+            <a-button
+              type="text"
+              size="small"
+              class="collapse-button"
+              @click="toggleQuestionsList"
+            >
+              <template #icon>
+                <UpOutlined v-if="!isQuestionsListCollapsed" />
+                <DownOutlined v-else />
+              </template>
+            </a-button>
+          </Tooltip>
 
-          <a-button
-            type="link"
-            size="small"
-            @click="shuffleQuestions"
-          >
-            <SwapOutlined />
-            Перемешать
-          </a-button>
+          <Tooltip title="Перемешать вопросы">
+            <a-button
+              type="text"
+              size="small"
+              @click="shuffleQuestions"
+            >
+              <SwapOutlined />
+            </a-button>
+          </Tooltip>
 
-          <a-button
-            type="link"
-            size="small"
-            danger
-            class="clear-button"
-            @click="showClearConfirmation"
-          >
-            <DeleteOutlined />
-            Очистить все
-          </a-button>
+          <Tooltip title="Очистить все вопросы">
+            <a-button
+              type="text"
+              size="small"
+              danger
+              class="clear-button"
+              @click="showClearConfirmation"
+            >
+              <DeleteOutlined />
+            </a-button>
+          </Tooltip>
         </div>
       </div>
 
@@ -317,72 +322,99 @@ onMounted(() => {
           class="questions-list"
         >
           <template #renderItem="{ item, index }">
-            <a-list-item class="question-item">
+            <a-list-item
+              class="question-item"
+              :style="{
+                borderLeftColor: getCardBorderColor(item),
+                backgroundColor: getCardBackgroundColor(item),
+              }"
+            >
               <template #actions>
-                <a-button type="link" danger size="small" @click="removeQuestion(index)">
-                  <DeleteOutlined /> Удалить
-                </a-button>
-                <a-button type="link" size="small" @click="startEditing(item)">
-                  <EditOutlined /> Редактировать
-                </a-button>
-                <a-button
-                  type="link"
-                  :loading="item.id === generatingAnswerId"
-                  size="small"
-                  @click="generateAnswerForQuestion(item)"
-                >
-                  <BulbOutlined />
-                  Ответ ИИ
-                </a-button>
+                <Tooltip title="Удалить вопрос">
+                  <a-button
+                    type="text"
+                    danger
+                    size="small"
+                    class="action-button"
+                    @click="removeQuestion(index)"
+                  >
+                    <DeleteOutlined />
+                  </a-button>
+                </Tooltip>
+
+                <Tooltip title="Редактировать вопрос">
+                  <a-button
+                    type="text"
+                    size="small"
+                    class="action-button"
+                    @click="startEditing(item)"
+                  >
+                    <EditOutlined />
+                  </a-button>
+                </Tooltip>
+
+                <Tooltip title="Сгенерировать ответ ИИ">
+                  <a-button
+                    type="text"
+                    :loading="item.id === generatingAnswerId"
+                    size="small"
+                    class="action-button"
+                    @click="generateAnswerForQuestion(item)"
+                  >
+                    <BulbOutlined />
+                  </a-button>
+                </Tooltip>
               </template>
 
               <a-list-item-meta>
                 <template #title>
                   <div class="question-header">
                     <span class="question-text">{{ item.text }}</span>
-                    <div class="question-badges">
-                      <a-tag :color="getDifficultyColor(item.difficulty)">
-                        {{ getDifficultyLabel(item.difficulty) }}
-                      </a-tag>
-                      <a-tag :color="getTypeColor(item.type)">
-                        {{ getTypeLabel(item.type) }}
-                      </a-tag>
+                    <div class="question-meta-icons">
+                      <!-- Сложность -->
+                      <Tooltip :title="`Уровень сложности: ${getDifficultyLabel(item.difficulty)}`">
+                        <span
+                          class="difficulty-badge"
+                          :style="{ color: getDifficultyColor(item.difficulty) }"
+                        >
+                          {{ getDifficultyLabel(item.difficulty) }}
+                        </span>
+                      </Tooltip>
+
+                      <!-- Тип вопроса -->
+                      <Tooltip :title="`Тип вопроса: ${getTypeLabel(item.type)}`">
+                        <component
+                          :is="getTypeIcon(item.type)"
+                          class="type-icon"
+                          :style="{ color: item.type === 'code' ? '#cf1322' : '#1890ff' }"
+                        />
+                      </Tooltip>
+
+                      <!-- Категория -->
+                      <Tooltip :title="`Категория: ${getCategoryLabel(item.category)}`">
+                        <span class="category-badge">
+                          {{ getCategoryLabel(item.category) }}
+                        </span>
+                      </Tooltip>
                     </div>
                   </div>
                 </template>
 
                 <template #description>
-                  <div class="question-meta">
-                    <a-tag :color="getCategoryColor(item.category)" class="category-tag">
-                      {{ getCategoryLabel(item.category) }}
-                    </a-tag>
+                  <div class="question-footer">
+                    <!-- Теги компактно -->
+                    <div v-if="item.tags && item.tags.length" class="tags-compact">
+                      <TagOutlined class="tags-icon" />
+                      <span class="tags-count">{{ item.tags.length }} тег(ов)</span>
+                    </div>
 
-                    <!-- Отображение статуса -->
-                    <a-tag
-                      v-if="item.status"
-                      :color="getStatusColor(item.status)"
-                      class="status-tag"
-                    >
-                      {{ getStatusLabel(item.status) }}
-                    </a-tag>
-
-                    <span v-if="item.tags && item.tags.length" class="tags-section">
-                      <a-tag
-                        v-for="(tag, tagIndex) in item.tags"
-                        :key="tagIndex"
-                        color="purple"
-                        size="small"
-                      >
-                        {{ tag }}
-                      </a-tag>
-                    </span>
-
-                    <span v-if="item.createdAt" class="question-date">
-                      Добавлен: {{ formatDate(item.createdAt) }}
-                    </span>
-                    <span v-if="item.updatedAt && item.updatedAt !== item.createdAt" class="question-date">
-                      • Обновлен: {{ formatDate(item.updatedAt) }}
-                    </span>
+                    <!-- Дата -->
+                    <Tooltip v-if="item.createdAt" :title="`Добавлен: ${formatDate(item.createdAt)}`">
+                      <div class="date-info">
+                        <CalendarOutlined />
+                        <span>{{ formatDate(item.createdAt) }}</span>
+                      </div>
+                    </Tooltip>
                   </div>
                 </template>
               </a-list-item-meta>
@@ -391,7 +423,7 @@ onMounted(() => {
                 v-if="item.aiAnswer"
                 :answer="item.aiAnswer"
                 :loading="item.id === generatingAnswerId"
-                style="margin-top: 12px;"
+                class="ai-answer-card"
                 @regenerate="() => generateAnswerForQuestion(item)"
                 @close="clearAnswer(item)"
               />
@@ -460,7 +492,7 @@ onMounted(() => {
 
 .list-controls {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
 }
 
@@ -468,8 +500,8 @@ onMounted(() => {
 .clear-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  font-size: 13px;
 }
 
 .collapsed-alert {
@@ -483,6 +515,7 @@ onMounted(() => {
 
 .question-item {
   border: 1px solid #f0f0f0;
+  border-left: 4px solid #f0f0f0;
   border-radius: 8px;
   margin-bottom: 12px;
   padding: 16px;
@@ -492,7 +525,7 @@ onMounted(() => {
 }
 
 .question-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-color: #d9d9d9;
 }
 
@@ -507,97 +540,100 @@ onMounted(() => {
 
 .question-text {
   flex: 1;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.5;
   min-width: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: inherit;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
   color: #262626;
   margin: 0;
 }
 
-.question-badges {
+.question-meta-icons {
   display: flex;
-  gap: 6px;
+  gap: 12px;
   flex-shrink: 0;
-  flex-wrap: wrap;
+  align-items: center;
 }
 
-.question-meta {
+.difficulty-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+}
+
+.type-icon {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.category-badge {
+  font-size: 11px;
+  color: #8c8c8c;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.question-footer {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 16px;
   align-items: center;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
   padding: 4px 0;
 }
 
-.category-tag {
-  font-weight: 600;
-  flex-shrink: 0;
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-  border: none;
-  font-size: 12px;
-}
-
-.tags-section {
+.tags-compact {
   display: flex;
-  gap: 4px;
-  min-width: 0;
-  flex: 1;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.tags-section :deep(.ant-tag) {
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-shrink: 1;
-  margin: 0;
-  border: none;
-  font-size: 11px;
-  height: 22px;
-  line-height: 20px;
-}
-
-.question-date {
-  color: #8c8c8c;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
-  flex-shrink: 0;
-  white-space: nowrap;
-  line-height: 1.4;
+  color: #8c8c8c;
+}
+
+.tags-icon {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.tags-count {
+  font-size: 11px;
+}
+
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #8c8c8c;
 }
 
 :deep(.ant-list-item-action) {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
 }
 
 :deep(.ant-list-item-action li) {
   padding: 0;
 }
 
-:deep(.ant-list-item-action .ant-btn) {
-  height: 28px;
-  font-size: 13px;
+.action-button {
+  min-width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  border: none;
+  box-shadow: none;
+}
+
+.ai-answer-card {
+  margin-top: 12px;
 }
 
 :deep(.edit-question-form) {
@@ -629,42 +665,19 @@ onMounted(() => {
     gap: 8px;
   }
 
-  .question-badges {
+  .question-meta-icons {
     align-self: flex-start;
   }
 
   .question-text {
-    -webkit-line-clamp: 4;
-    line-clamp: inherit;
+    font-size: 14px;
     width: 100%;
-    font-size: 15px;
   }
 
-  .question-meta {
+  .question-footer {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
-  }
-
-  .tags-section {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .tags-section :deep(.ant-tag) {
-    max-width: 130px;
-  }
-
-  .category-tag {
-    max-width: 100%;
-  }
-
-  .question-date {
-    align-self: flex-start;
-  }
-
-  :deep(.ant-list-item-action) {
-    justify-content: flex-start;
+    gap: 8px;
   }
 }
 
@@ -679,30 +692,15 @@ onMounted(() => {
 
   .question-text {
     font-size: 14px;
-    -webkit-line-clamp: 4;
-    line-clamp: inherit;
   }
 
-  .tags-section :deep(.ant-tag) {
-    max-width: 110px;
+  .question-meta-icons {
+    gap: 8px;
+  }
+
+  .difficulty-badge {
     font-size: 10px;
-    height: 20px;
-    line-height: 18px;
-  }
-
-  .category-tag {
-    font-size: 11px;
-    max-width: 110px;
-  }
-
-  .question-date {
-    font-size: 11px;
-  }
-
-  :deep(.ant-list-item-action .ant-btn) {
-    font-size: 12px;
-    height: 26px;
-    padding: 0 8px;
+    padding: 1px 4px;
   }
 }
 
