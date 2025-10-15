@@ -2,6 +2,7 @@ import type { InterviewSession, InterviewSettings, Question, QuestionForm, UserA
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { useInterviewMode } from '@/composables/useInterviewMode'
 import { AIService } from '@/services/aiService'
 import { QuestionService } from '@/services/questionService'
 
@@ -236,14 +237,29 @@ export const useInterviewStore = defineStore('interview', () => {
 
   const filteredQuestions = computed(() => getFilteredQuestions())
 
-  const startInterview = async (settings?: any) => {
-    const filtered = getFilteredQuestions()
-    if (filtered.length === 0) {
-      message.error('Нет вопросов для выбранных фильтров')
-      return
+  const startInterview = async (settings?: InterviewSettings) => {
+    const { mode } = useInterviewMode()
+
+    let questionsToUse: Question[]
+    if (mode.value === 'ai') {
+    // AI режим - все вопросы без фильтрации
+      if (questions.value.length === 0) {
+        message.error('Нет вопросов для начала собеседования')
+        return
+      }
+      questionsToUse = [...questions.value]
+    }
+    else {
+    // Manual режим - фильтрация по статусам
+      const filtered = getFilteredQuestions()
+      if (filtered.length === 0) {
+        message.error('Нет вопросов для выбранных фильтров')
+        return
+      }
+      questionsToUse = filtered
     }
 
-    questions.value = filtered
+    // Общая логика для обоих режимов
     isInterviewStarted.value = true
     currentQuestionIndex.value = 0
 
@@ -254,15 +270,19 @@ export const useInterviewStore = defineStore('interview', () => {
 
     // Создаем сессию
     currentSession.value = {
-      questions: [...filtered],
+      questions: questionsToUse,
       userAnswers: [],
       createdAt: new Date(),
     }
 
     // Очищаем предыдущие ответы
     clearUserAnswers()
-  }
 
+    // Для manual режима обновляем локальные вопросы
+    if (mode.value === 'manual') {
+      questions.value = questionsToUse
+    }
+  }
   const isGeneratingAnswer = ref(false)
 
   const generateAnswerForQuestion = async (questionId: string, userAnswer?: string) => {
