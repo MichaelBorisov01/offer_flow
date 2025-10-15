@@ -16,6 +16,7 @@ import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
+import QuestionFilters from './Manual/QuestionFilters.vue'
 import ConfirmClearAllModal from './modal/ConfirmClearAllModal.vue'
 import StatusProgressBar from './StatusProgressBar.vue'
 
@@ -35,13 +36,43 @@ const editFormRef = ref<HTMLElement>()
 
 const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
 
-const questions = computed(() => interviewStore.questions)
+const allQuestions = computed(() => interviewStore.questions)
 const isLoading = computed(() => interviewStore.isLoading)
 
 const clearConfirmationVisible = ref(false)
 
+const filteredQuestions = ref<Question[]>([])
+
+onMounted(() => {
+  filteredQuestions.value = [...allQuestions.value]
+})
+
+// Обработчик изменения фильтров
+function handleFilterChange(filters: any) {
+  let filtered = [...allQuestions.value]
+
+  // Фильтрация по сложности
+  if (filters.difficulties.length > 0) {
+    filtered = filtered.filter(q => filters.difficulties.includes(q.difficulty))
+  }
+
+  // Фильтрация по категориям
+  if (filters.categories.length > 0) {
+    filtered = filtered.filter(q => filters.categories.includes(q.category))
+  }
+
+  // Фильтрация по тегам
+  if (filters.tags.length > 0) {
+    filtered = filtered.filter(q =>
+      q.tags?.some(tag => filters.tags.includes(tag)),
+    )
+  }
+
+  filteredQuestions.value = filtered
+}
+
 function showClearConfirmation() {
-  if (questions.value.length === 0) {
+  if (allQuestions.value.length === 0) {
     message.info('Нет вопросов для удаления')
     return
   }
@@ -52,7 +83,7 @@ async function clearAllQuestions() {
   try {
     clearConfirmationVisible.value = false
 
-    for (let i = questions.value.length - 1; i >= 0; i--) {
+    for (let i = allQuestions.value.length - 1; i >= 0; i--) {
       await interviewStore.removeQuestion(i)
     }
     message.success('Все вопросы удалены')
@@ -245,9 +276,9 @@ onMounted(() => {
 
     <div class="questions-list-section">
       <div class="questions-list-header">
-        <h4>Добавленные вопросы ({{ questions.length }})</h4>
+        <h4>Добавленные вопросы ({{ filteredQuestions.length }}/{{ allQuestions.length }})</h4>
 
-        <div v-if="questions.length > 0" class="list-controls">
+        <div v-if="allQuestions.length > 0" class="list-controls">
           <Tooltip title="Свернуть/развернуть список">
             <a-button
               type="text"
@@ -286,15 +317,20 @@ onMounted(() => {
         </div>
       </div>
 
+      <QuestionFilters
+        :questions="allQuestions"
+        @filter-change="handleFilterChange"
+      />
+
       <StatusProgressBar
-        v-if="questions.length > 0"
-        :questions="questions"
+        v-if="allQuestions.length > 0"
+        :questions="filteredQuestions"
         class="inline-progress"
       />
 
       <a-alert
-        v-if="isQuestionsListCollapsed && questions.length > 0"
-        :message="`Список свернут. Доступно вопросов: ${questions.length}`"
+        v-if="isQuestionsListCollapsed && filteredQuestions.length > 0"
+        :message="`Список свернут. Доступно вопросов: ${filteredQuestions.length}`"
         type="info"
         show-icon
         class="collapsed-alert"
@@ -308,7 +344,7 @@ onMounted(() => {
 
       <div v-if="!isQuestionsListCollapsed">
         <a-list
-          :data-source="questions"
+          :data-source="filteredQuestions"
           item-layout="vertical"
           :loading="isLoading"
           class="questions-list"
@@ -412,16 +448,16 @@ onMounted(() => {
       </div>
 
       <a-alert
-        v-if="questions.length === 0 && !isLoading"
-        message="Пока нет добавленных вопросов"
-        type="info"
+        v-if="filteredQuestions.length === 0 && !isLoading"
+        message="Нет вопросов, соответствующих выбранным фильтрам"
+        type="warning"
         show-icon
       />
     </div>
 
     <ConfirmClearAllModal
       :open="clearConfirmationVisible"
-      :questions-count="questions.length"
+      :questions-count="allQuestions.length"
       @ok="clearAllQuestions"
       @cancel="handleClearCancel"
     />
