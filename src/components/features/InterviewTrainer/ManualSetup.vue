@@ -3,12 +3,10 @@ import type { Question, QuestionForm } from '@/types/interview'
 import {
   BulbOutlined,
   CalendarOutlined,
-  CodeOutlined,
   DeleteOutlined,
   DownOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
-  FileTextOutlined,
   SwapOutlined,
   TagOutlined,
   UpOutlined,
@@ -168,14 +166,6 @@ function getDifficultyLabel(difficulty: string) {
     senior: 'Senior',
   }
   return labels[difficulty] || difficulty
-}
-
-function getTypeIcon(type: string) {
-  return type === 'code' ? CodeOutlined : FileTextOutlined
-}
-
-function getTypeLabel(type: string) {
-  return type === 'code' ? 'Код' : 'Текст'
 }
 
 function getCategoryLabel(category: string) {
@@ -379,15 +369,6 @@ onMounted(() => {
                         >
                           {{ getDifficultyLabel(item.difficulty) }}
                         </span>
-                      </Tooltip>
-
-                      <!-- Тип вопроса -->
-                      <Tooltip :title="`Тип вопроса: ${getTypeLabel(item.type)}`">
-                        <component
-                          :is="getTypeIcon(item.type)"
-                          class="type-icon"
-                          :style="{ color: item.type === 'code' ? '#cf1322' : '#1890ff' }"
-                        />
                       </Tooltip>
 
                       <!-- Категория -->

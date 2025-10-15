@@ -115,18 +115,6 @@ async function handleSubmit() {
 
       <a-row :gutter="16">
         <a-col :span="8">
-          <a-form-item label="Тип вопроса" required>
-            <a-select v-model:value="formState.type" size="large">
-              <a-select-option value="text">
-                Текстовый
-              </a-select-option>
-              <a-select-option value="code">
-                Программирование
-              </a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
-        <a-col :span="8">
           <a-form-item label="Сложность" required>
             <a-select v-model:value="formState.difficulty" size="large">
               <a-select-option value="junior">
