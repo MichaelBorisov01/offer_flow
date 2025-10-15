@@ -6,7 +6,6 @@ import {
   DeleteOutlined,
   DownOutlined,
   EditOutlined,
-  ExclamationCircleOutlined,
   SwapOutlined,
   TagOutlined,
   UpOutlined,
@@ -17,6 +16,7 @@ import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
+import ConfirmClearAllModal from './modal/ConfirmClearAllModal.vue'
 import StatusProgressBar from './StatusProgressBar.vue'
 
 const emit = defineEmits<{
@@ -61,6 +61,10 @@ async function clearAllQuestions() {
   catch {
     message.error('Ошибка при удалении вопросов')
   }
+}
+
+function handleClearCancel() {
+  clearConfirmationVisible.value = false
 }
 
 function toggleQuestionsList() {
@@ -196,7 +200,6 @@ function shuffleQuestions() {
   interviewStore.shuffleQuestions()
 }
 
-// Функция для получения цвета карточки в зависимости от статуса
 function getCardBorderColor(question: Question): string {
   if (!question.status)
     return '#f0f0f0'
@@ -209,7 +212,6 @@ function getCardBorderColor(question: Question): string {
   return colors[question.status as keyof typeof colors] || '#f0f0f0'
 }
 
-// Функция для получения фона карточки в зависимости от статуса
 function getCardBackgroundColor(question: Question): string {
   if (!question.status)
     return '#ffffff'
@@ -421,27 +423,12 @@ onMounted(() => {
       />
     </div>
 
-    <a-modal
-      v-model:open="clearConfirmationVisible"
-      title="Подтверждение удаления"
-      ok-text="Да, удалить все"
-      cancel-text="Отмена"
-      ok-type="danger"
+    <ConfirmClearAllModal
+      :open="clearConfirmationVisible"
+      :questions-count="questions.length"
       @ok="clearAllQuestions"
-      @cancel="clearConfirmationVisible = false"
-    >
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <ExclamationCircleOutlined style="font-size: 24px; color: #faad14;" />
-        <div>
-          <p style="margin: 0; font-weight: 500;">
-            Вы уверены, что хотите удалить все вопросы?
-          </p>
-          <p style="margin: 8px 0 0 0; color: rgba(0, 0, 0, 0.45);">
-            Будет удалено <strong>{{ questions.length }}</strong> вопросов. Это действие нельзя отменить.
-          </p>
-        </div>
-      </div>
-    </a-modal>
+      @cancel="handleClearCancel"
+    />
   </div>
 </template>
 
