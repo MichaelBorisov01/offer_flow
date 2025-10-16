@@ -73,11 +73,29 @@ const availableFilters = computed(() => {
     }
   })
 
+  // Кастомная сортировка для определенного порядка
+  const difficultyOrder = ['junior', 'middle', 'senior']
+  const statusOrder = ['known', 'repeat', 'hard']
+
+  const sortByOrder = (arr: string[], order: string[]) => {
+    return arr.sort((a, b) => {
+      const indexA = order.indexOf(a)
+      const indexB = order.indexOf(b)
+      if (indexA !== -1 && indexB !== -1)
+        return indexA - indexB
+      if (indexA !== -1)
+        return -1
+      if (indexB !== -1)
+        return 1
+      return a.localeCompare(b)
+    })
+  }
+
   return {
-    difficulties: Array.from(difficulties),
-    categories: Array.from(categories),
-    tags: Array.from(tags),
-    statuses: Array.from(statuses),
+    difficulties: sortByOrder(Array.from(difficulties), difficultyOrder),
+    categories: Array.from(categories).sort((a, b) => a.localeCompare(b)),
+    tags: Array.from(tags).sort((a, b) => a.localeCompare(b)),
+    statuses: sortByOrder(Array.from(statuses), statusOrder),
   }
 })
 
