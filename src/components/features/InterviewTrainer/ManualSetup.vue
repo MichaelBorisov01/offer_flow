@@ -11,7 +11,7 @@ import {
   UpOutlined,
 } from '@ant-design/icons-vue'
 import { message, Tooltip } from 'ant-design-vue'
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
@@ -47,9 +47,20 @@ onMounted(() => {
   filteredQuestions.value = [...allQuestions.value]
 })
 
+watch(allQuestions, (newQuestions) => {
+  filteredQuestions.value = [...newQuestions]
+}, { immediate: true })
+
 // Обработчик изменения фильтров
 function handleFilterChange(filters: any) {
   let filtered = [...allQuestions.value]
+
+  // Фильтрация по статусам
+  if (filters.statuses.length > 0) {
+    filtered = filtered.filter(q =>
+      q.status && filters.statuses.includes(q.status),
+    )
+  }
 
   // Фильтрация по сложности
   if (filters.difficulties.length > 0) {
@@ -275,6 +286,17 @@ onMounted(() => {
     <a-divider />
 
     <div class="questions-list-section">
+      <QuestionFilters
+        :questions="allQuestions"
+        @filter-change="handleFilterChange"
+      />
+
+      <StatusProgressBar
+        v-if="allQuestions.length > 0"
+        :questions="filteredQuestions"
+        class="inline-progress"
+      />
+
       <div class="questions-list-header">
         <h4>Добавленные вопросы ({{ filteredQuestions.length }}/{{ allQuestions.length }})</h4>
 
@@ -316,17 +338,6 @@ onMounted(() => {
           </Tooltip>
         </div>
       </div>
-
-      <QuestionFilters
-        :questions="allQuestions"
-        @filter-change="handleFilterChange"
-      />
-
-      <StatusProgressBar
-        v-if="allQuestions.length > 0"
-        :questions="filteredQuestions"
-        class="inline-progress"
-      />
 
       <a-alert
         v-if="isQuestionsListCollapsed && filteredQuestions.length > 0"

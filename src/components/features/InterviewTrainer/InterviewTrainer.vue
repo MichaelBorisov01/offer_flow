@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { InterviewMode } from '@/composables/useInterviewMode'
-import type { AISettings, InterviewSettings } from '@/types/interview'
+import type { AISettings } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
@@ -61,7 +61,6 @@ function startInterview() {
   interviewStore.interviewSettings = {
     showProgress: interviewSettings.value.showProgress,
     enableAnswerInput: interviewSettings.value.enableAnswerInput,
-    filterByStatus: interviewSettings.value.filterByStatus || '',
   }
 
   interviewStore.startInterview()
@@ -79,14 +78,6 @@ watch(mode, (newMode, oldMode) => {
     interviewStore.questions = []
   }
 })
-
-function updateQuestionFilter(selectedStatuses: 'known' | 'repeat' | 'hard') {
-  const newSettings: InterviewSettings = {
-    ...interviewSettings.value,
-    filterByStatus: selectedStatuses,
-  }
-  setInterviewSettings(newSettings)
-}
 </script>
 
 <template>
@@ -145,23 +136,6 @@ function updateQuestionFilter(selectedStatuses: 'known' | 'repeat' | 'hard') {
               >
                 Показывать прогресс
               </a-checkbox>
-            </a-form-item>
-
-            <a-form-item v-if="mode === 'manual'" label="Фильтр по статусам:">
-              <a-checkbox-group
-                :value="interviewSettings.filterByStatus || ''"
-                @change="updateQuestionFilter"
-              >
-                <a-checkbox value="known">
-                  Знаю
-                </a-checkbox>
-                <a-checkbox value="repeat">
-                  Повторить
-                </a-checkbox>
-                <a-checkbox value="hard">
-                  Сложно
-                </a-checkbox>
-              </a-checkbox-group>
             </a-form-item>
 
             <!-- Дополнительные настройки для ИИ режима -->

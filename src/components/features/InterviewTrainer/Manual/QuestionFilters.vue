@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
 import { ClearOutlined, FilterOutlined } from '@ant-design/icons-vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Props {
   questions: Question[]
@@ -15,35 +15,69 @@ interface FilterState {
   difficulties: string[]
   categories: string[]
   tags: string[]
+  statuses: string[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const filterState = ref<FilterState>({
-  difficulties: [],
-  categories: [],
-  tags: [],
-})
+// Загружаем фильтры из localStorage
+function loadFiltersFromStorage(): FilterState {
+  try {
+    const saved = localStorage.getItem('question-filters')
+    return saved
+      ? JSON.parse(saved)
+      : {
+          difficulties: [],
+          categories: [],
+          tags: [],
+          statuses: [],
+        }
+  }
+  catch {
+    return {
+      difficulties: [],
+      categories: [],
+      tags: [],
+      statuses: [],
+    }
+  }
+}
 
-const activeCollapseKeys = ref<string[]>(['1'])
+// Сохраняем фильтры в localStorage
+function saveFiltersToStorage(filters: FilterState) {
+  try {
+    localStorage.setItem('question-filters', JSON.stringify(filters))
+  }
+  catch (error) {
+    console.error('Failed to save filters:', error)
+  }
+}
+
+const filterState = ref<FilterState>(loadFiltersFromStorage())
+const activeCollapseKeys = ref<string[]>(['1']) // По умолчанию развернуто
 
 // Получаем все уникальные значения для фильтров
 const availableFilters = computed(() => {
   const difficulties = new Set<string>()
   const categories = new Set<string>()
   const tags = new Set<string>()
+  const statuses = new Set<string>()
 
   props.questions.forEach((question) => {
     difficulties.add(question.difficulty)
     categories.add(question.category)
     question.tags?.forEach(tag => tags.add(tag))
+    if (question.status) {
+      statuses.add(question.status)
+    }
   })
 
   return {
     difficulties: Array.from(difficulties),
     categories: Array.from(categories),
     tags: Array.from(tags),
+    statuses: Array.from(statuses),
   }
 })
 
@@ -72,7 +106,26 @@ function getCategoryLabel(category: string) {
   return labels[category] || category
 }
 
+function getStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    known: 'Знаю',
+    repeat: 'Повторить',
+    hard: 'Сложно',
+  }
+  return labels[status] || status
+}
+
+function getStatusColor(status: string) {
+  const colors: Record<string, string> = {
+    known: '#52c41a',
+    repeat: '#fa8c16',
+    hard: '#ff4d4f',
+  }
+  return colors[status] || '#d9d9d9'
+}
+
 function handleFilterChange() {
+  saveFiltersToStorage(filterState.value)
   emit('filterChange', { ...filterState.value })
 }
 
@@ -81,7 +134,9 @@ function clearFilters() {
     difficulties: [],
     categories: [],
     tags: [],
+    statuses: [],
   }
+  saveFiltersToStorage(filterState.value)
   emit('filterChange', { ...filterState.value })
 }
 
@@ -89,9 +144,17 @@ function getActiveFiltersCount() {
   return filterState.value.difficulties.length
     + filterState.value.categories.length
     + filterState.value.tags.length
+    + filterState.value.statuses.length
 }
 
 const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
+
+// Автоматически применяем сохраненные фильтры при загрузке
+watch(() => props.questions, () => {
+  if (props.questions.length > 0) {
+    handleFilterChange()
+  }
+}, { immediate: true })
 </script>
 
 <template>
@@ -131,6 +194,26 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
         </template>
 
         <div class="filters-grid">
+          <!-- Фильтр по статусам -->
+          <div class="filter-group">
+            <h4>Статус</h4>
+            <a-checkbox-group
+              v-model:value="filterState.statuses"
+              class="filter-options"
+              @change="handleFilterChange"
+            >
+              <a-checkbox
+                v-for="status in availableFilters.statuses"
+                :key="status"
+                :value="status"
+                class="filter-option status-option"
+                :style="{ color: getStatusColor(status) }"
+              >
+                {{ getStatusLabel(status) }}
+              </a-checkbox>
+            </a-checkbox-group>
+          </div>
+
           <!-- Фильтр по сложности -->
           <div class="filter-group">
             <h4>Сложность</h4>
@@ -197,12 +280,26 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
       </a-collapse-panel>
     </a-collapse>
 
-    <!-- Активные фильтры (красивые чипы) -->
+    <!-- Активные фильтры -->
     <div v-if="hasActiveFilters" class="active-filters">
       <div class="active-filters-header">
         <span class="active-filters-title">Активные фильтры:</span>
       </div>
       <div class="active-filters-grid">
+        <!-- Статусы -->
+        <div
+          v-for="status in filterState.statuses"
+          :key="`status-${status}`"
+          class="active-filter-item"
+          :class="`status-${status}`"
+          :style="{ borderLeftColor: getStatusColor(status) }"
+        >
+          <span class="filter-label">Статус</span>
+          <span class="filter-value">{{ getStatusLabel(status) }}</span>
+          <ClearOutlined class="filter-remove" @click="filterState.statuses = filterState.statuses.filter(s => s !== status); handleFilterChange()" />
+        </div>
+
+        <!-- Сложности -->
         <div
           v-for="difficulty in filterState.difficulties"
           :key="`difficulty-${difficulty}`"
@@ -214,6 +311,7 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
           <ClearOutlined class="filter-remove" @click="filterState.difficulties = filterState.difficulties.filter(d => d !== difficulty); handleFilterChange()" />
         </div>
 
+        <!-- Категории -->
         <div
           v-for="category in filterState.categories"
           :key="`category-${category}`"
@@ -224,6 +322,7 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
           <ClearOutlined class="filter-remove" @click="filterState.categories = filterState.categories.filter(c => c !== category); handleFilterChange()" />
         </div>
 
+        <!-- Теги -->
         <div
           v-for="tag in filterState.tags"
           :key="`tag-${tag}`"
@@ -254,7 +353,6 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
 }
 
 .filters-icon {
@@ -320,6 +418,10 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
   }
 }
 
+.status-option {
+  font-weight: 500;
+}
+
 .tags-select {
   width: 100%;
 }
@@ -339,7 +441,6 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
   font-weight: 500;
 }
 
-/* Активные фильтры - улучшенный дизайн */
 .active-filters {
   background: #f8f9fa;
   border-radius: 8px;
@@ -421,8 +522,20 @@ const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
   border-left: 3px solid #722ed1;
 }
 
+.active-filter-item.status-known {
+  border-left: 3px solid #52c41a;
+}
+
+.active-filter-item.status-repeat {
+  border-left: 3px solid #fa8c16;
+}
+
+.active-filter-item.status-hard {
+  border-left: 3px solid #ff4d4f;
+}
+
 :deep(.ant-collapse-content-box) {
-  padding: 16px 20px !important;
+  padding: 5px 20px !important;
 }
 
 :deep(.ant-collapse-header) {
