@@ -155,6 +155,15 @@ watch(() => props.questions, () => {
     handleFilterChange()
   }
 }, { immediate: true })
+
+watch(
+  () => interviewStore.getCurrentFilters(),
+  (newFilters) => {
+    // Синхронизируем локальное состояние с store
+    filterState.value = { ...newFilters }
+  },
+  { deep: true },
+)
 </script>
 
 <template>

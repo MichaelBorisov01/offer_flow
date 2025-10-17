@@ -157,26 +157,6 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
-  const loadUserQuestions = async () => {
-    isLoading.value = true
-    try {
-      const userQuestions = await QuestionService.getQuestions()
-      const transformedQuestions = userQuestions.map(question => ({
-        ...question,
-        tags: question.tags || [],
-      })) as Question[]
-
-      questions.value = transformedQuestions
-    }
-    catch (error) {
-      console.error('Error loading questions:', error)
-      errorMessage.value = 'Не удалось загрузить вопросы'
-    }
-    finally {
-      isLoading.value = false
-    }
-  }
-
   function shuffleQuestions() {
     const shuffled: Question[] = [...questions.value]
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -289,6 +269,109 @@ export const useInterviewStore = defineStore('interview', () => {
     error.value = null
   }
 
+  const resetQuestionFilters = () => {
+    questionFilters.value = {
+      statuses: [],
+      difficulties: [],
+      categories: [],
+      tags: [],
+    }
+  }
+
+  // Метод для получения доступных значений фильтров на основе текущих вопросов
+  const getAvailableFilterValues = () => {
+    const difficulties = new Set<string>()
+    const categories = new Set<string>()
+    const tags = new Set<string>()
+    const statuses = new Set<string>()
+
+    questions.value.forEach((question) => {
+      difficulties.add(question.difficulty)
+      categories.add(question.category)
+      question.tags?.forEach(tag => tags.add(tag))
+      if (question.status) {
+        statuses.add(question.status)
+      }
+    })
+
+    return {
+      difficulties: Array.from(difficulties),
+      categories: Array.from(categories),
+      tags: Array.from(tags),
+      statuses: Array.from(statuses),
+    }
+  }
+
+  const checkAndResetFiltersIfNeeded = () => {
+    if (questionFilters.value.statuses.length === 0
+      && questionFilters.value.difficulties.length === 0
+      && questionFilters.value.categories.length === 0
+      && questionFilters.value.tags.length === 0) {
+      return
+    }
+
+    const availableFilters = getAvailableFilterValues()
+    const newFilters = { ...questionFilters.value }
+
+    // Удаляем значения фильтров, которых больше нет в доступных вопросах
+    newFilters.statuses = newFilters.statuses.filter(status =>
+      availableFilters.statuses.includes(status),
+    )
+    newFilters.difficulties = newFilters.difficulties.filter(difficulty =>
+      availableFilters.difficulties.includes(difficulty),
+    )
+    newFilters.categories = newFilters.categories.filter(category =>
+      availableFilters.categories.includes(category),
+    )
+    newFilters.tags = newFilters.tags.filter(tag =>
+      availableFilters.tags.includes(tag),
+    )
+
+    // Проверяем, остались ли вопросы после обновления фильтров
+    const filteredWithUpdated = applyQuestionFilters(questions.value, newFilters)
+
+    if (filteredWithUpdated.length === 0) {
+    // Полностью сбрасываем фильтры
+      resetQuestionFilters()
+      message.info('Фильтры сброшены, так как нет соответствующих вопросов')
+    }
+    else if (
+      newFilters.statuses.length !== questionFilters.value.statuses.length
+      || newFilters.difficulties.length !== questionFilters.value.difficulties.length
+      || newFilters.categories.length !== questionFilters.value.categories.length
+      || newFilters.tags.length !== questionFilters.value.tags.length
+    ) {
+    // Частично обновляем фильтры (удаляем несуществующие значения)
+      questionFilters.value = newFilters
+      message.info('Фильтры обновлены: удалены неактуальные значения')
+    }
+  }
+
+  const loadUserQuestions = async () => {
+    isLoading.value = true
+    try {
+      const userQuestions = await QuestionService.getQuestions()
+      const transformedQuestions = userQuestions.map(question => ({
+        ...question,
+        tags: question.tags || [],
+      })) as Question[]
+
+      questions.value = transformedQuestions
+
+      // Проверяем актуальность фильтров после загрузки
+      if (!isSessionActive.value) {
+        checkAndResetFiltersIfNeeded()
+      }
+    }
+    catch (error) {
+      console.error('Error loading questions:', error)
+      errorMessage.value = 'Не удалось загрузить вопросы'
+    }
+    finally {
+      isLoading.value = false
+    }
+  }
+
   // Метод для применения фильтров
   function applyQuestionFilters(questions: Question[], filters: QuestionFilters): Question[] {
     let filtered = [...questions]
@@ -346,15 +429,6 @@ export const useInterviewStore = defineStore('interview', () => {
   // Метод для получения текущих фильтров
   const getCurrentFilters = () => {
     return { ...questionFilters.value }
-  }
-
-  const resetQuestionFilters = () => {
-    questionFilters.value = {
-      statuses: [],
-      difficulties: [],
-      categories: [],
-      tags: [],
-    }
   }
 
   const filteredQuestions = computed(() => getFilteredQuestions())
@@ -526,5 +600,6 @@ export const useInterviewStore = defineStore('interview', () => {
     resetQuestionFilters,
     applyQuestionFilters,
     forceFinishInterview,
+    checkAndResetFiltersIfNeeded,
   }
 })
