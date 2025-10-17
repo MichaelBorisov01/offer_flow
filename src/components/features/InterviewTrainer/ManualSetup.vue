@@ -42,6 +42,7 @@ const isLoading = computed(() => interviewStore.isLoading)
 const clearConfirmationVisible = ref(false)
 
 const filteredQuestions = ref<Question[]>([])
+const currentFilters = ref<any>(null)
 
 onMounted(() => {
   filteredQuestions.value = [...allQuestions.value]
@@ -49,7 +50,11 @@ onMounted(() => {
 
 watch(allQuestions, (newQuestions) => {
   filteredQuestions.value = [...newQuestions]
-}, { immediate: true })
+
+  if (currentFilters.value) {
+    handleFilterChange(currentFilters.value)
+  }
+}, { immediate: true, deep: true })
 
 // Обработчик изменения фильтров
 function handleFilterChange(filters: any) {
