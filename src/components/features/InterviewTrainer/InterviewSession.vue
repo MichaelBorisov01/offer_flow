@@ -186,27 +186,21 @@ function navigateToQuestion(index: number) {
         <!-- Кнопки статусов вопроса -->
         <div class="status-actions">
           <a-button
-            :type="currentQuestion?.status === 'known' ? 'primary' : 'default'"
-            :ghost="currentQuestion?.status !== 'known'"
-            class="status-button"
+            class="status-button status-known" :class="[{ active: currentQuestion?.status === 'known' }]"
             @click="() => setQuestionStatus('known')"
           >
             <CheckOutlined />
             Знаю
           </a-button>
           <a-button
-            :type="currentQuestion?.status === 'repeat' ? 'primary' : 'default'"
-            :ghost="currentQuestion?.status !== 'repeat'"
-            class="status-button"
+            class="status-button status-repeat" :class="[{ active: currentQuestion?.status === 'repeat' }]"
             @click="() => setQuestionStatus('repeat')"
           >
             <RedoOutlined />
             Повторить
           </a-button>
           <a-button
-            :type="currentQuestion?.status === 'hard' ? 'primary' : 'default'"
-            :ghost="currentQuestion?.status !== 'hard'"
-            class="status-button"
+            class="status-button status-hard" :class="[{ active: currentQuestion?.status === 'hard' }]"
             @click="() => setQuestionStatus('hard')"
           >
             <ExclamationOutlined />
@@ -340,28 +334,81 @@ function navigateToQuestion(index: number) {
 }
 
 .status-actions {
-   display: flex;
-  gap: 8px;
+  display: flex;
+  gap: 12px;
   justify-content: center;
   flex-shrink: 0;
   margin-bottom: 16px;
 }
 
 .status-button {
-  min-width: 100px;
-  height: 40px;
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
+  color: #595959;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 8px 16px;
+  height: auto;
   font-weight: 500;
 }
 
-.status-button:not(.ant-btn-primary) {
-  background-color: white;
-  border-color: #d9d9d9;
-  color: #595959;
+/* Статус "Знаю" - зеленый */
+.status-known {
+  border-color: #b7eb8f;
+  color: #389e0d;
 }
 
-.status-button:not(.ant-btn-primary):hover {
-  border-color: #1890ff;
-  color: #1890ff;
+.status-known:hover {
+  border-color: #73d13d;
+  background: #f6ffed;
+  color: #237804;
+}
+
+.status-known.active {
+  background: #f6ffed;
+  border-color: #52c41a;
+  color: #135200;
+}
+
+/* Статус "Повторить" - оранжевый */
+.status-repeat {
+  border-color: #ffd591;
+  color: #d46b08;
+}
+
+.status-repeat:hover {
+  border-color: #ffa940;
+  background: #fff7e6;
+  color: #ad4e00;
+}
+
+.status-repeat.active {
+  background: #fff7e6;
+  border-color: #fa8c16;
+  color: #873800;
+}
+
+/* Статус "Сложно" - красный */
+.status-hard {
+  border-color: #ffccc7;
+  color: #cf1322;
+}
+
+.status-hard:hover {
+  border-color: #ff7875;
+  background: #fff2f0;
+  color: #a8071a;
+}
+
+.status-hard.active {
+  background: #fff2f0;
+  border-color: #ff4d4f;
+  color: #820014;
+}
+
+.status-button :deep(.anticon) {
+  margin-right: 6px;
+  font-size: 14px;
 }
 
 .instruction-section {
@@ -494,6 +541,12 @@ function navigateToQuestion(index: number) {
 @media (max-width: 768px) {
   .status-actions {
     flex-direction: column;
+    gap: 8px;
+  }
+
+   .status-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .fixed-navigation-section {
