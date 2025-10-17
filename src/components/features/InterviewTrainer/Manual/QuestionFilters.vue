@@ -2,6 +2,7 @@
 import type { Question } from '@/types/interview'
 import { ClearOutlined, FilterOutlined } from '@ant-design/icons-vue'
 import { computed, ref, watch } from 'vue'
+import { useInterviewStore } from '@/stores/interview'
 
 interface Props {
   questions: Question[]
@@ -21,37 +22,16 @@ interface FilterState {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-// Загружаем фильтры из localStorage
+const interviewStore = useInterviewStore()
+
+// Загружаем фильтры из store
 function loadFiltersFromStorage(): FilterState {
-  try {
-    const saved = localStorage.getItem('question-filters')
-    return saved
-      ? JSON.parse(saved)
-      : {
-          difficulties: [],
-          categories: [],
-          tags: [],
-          statuses: [],
-        }
-  }
-  catch {
-    return {
-      difficulties: [],
-      categories: [],
-      tags: [],
-      statuses: [],
-    }
-  }
+  return interviewStore.getCurrentFilters()
 }
 
-// Сохраняем фильтры в localStorage
+// Сохраняем фильтры в store
 function saveFiltersToStorage(filters: FilterState) {
-  try {
-    localStorage.setItem('question-filters', JSON.stringify(filters))
-  }
-  catch (error) {
-    console.error('Failed to save filters:', error)
-  }
+  interviewStore.setQuestionFilters(filters)
 }
 
 const filterState = ref<FilterState>(loadFiltersFromStorage())
@@ -142,11 +122,13 @@ function getStatusColor(status: string) {
   return colors[status] || '#d9d9d9'
 }
 
+// Обработчик изменения фильтров
 function handleFilterChange() {
   saveFiltersToStorage(filterState.value)
   emit('filterChange', { ...filterState.value })
 }
 
+// Очистка фильтров
 function clearFilters() {
   filterState.value = {
     difficulties: [],
@@ -154,7 +136,7 @@ function clearFilters() {
     tags: [],
     statuses: [],
   }
-  saveFiltersToStorage(filterState.value)
+  interviewStore.resetQuestionFilters()
   emit('filterChange', { ...filterState.value })
 }
 

@@ -53,33 +53,11 @@ watch(allQuestions, (newQuestions) => {
 
 // Обработчик изменения фильтров
 function handleFilterChange(filters: any) {
-  let filtered = [...allQuestions.value]
+  // Сохраняем фильтры в store
+  interviewStore.setQuestionFilters(filters)
 
-  // Фильтрация по статусам
-  if (filters.statuses.length > 0) {
-    filtered = filtered.filter(q =>
-      q.status && filters.statuses.includes(q.status),
-    )
-  }
-
-  // Фильтрация по сложности
-  if (filters.difficulties.length > 0) {
-    filtered = filtered.filter(q => filters.difficulties.includes(q.difficulty))
-  }
-
-  // Фильтрация по категориям
-  if (filters.categories.length > 0) {
-    filtered = filtered.filter(q => filters.categories.includes(q.category))
-  }
-
-  // Фильтрация по тегам
-  if (filters.tags.length > 0) {
-    filtered = filtered.filter(q =>
-      q.tags?.some(tag => filters.tags.includes(tag)),
-    )
-  }
-
-  filteredQuestions.value = filtered
+  // Применяем фильтрацию через store
+  filteredQuestions.value = interviewStore.filteredQuestions
 }
 
 function showClearConfirmation() {

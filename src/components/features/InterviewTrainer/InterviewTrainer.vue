@@ -46,11 +46,6 @@ function handleSettingsChange() {
   setInterviewSettings({ ...interviewSettings.value })
 }
 
-function getStartButtonText() {
-  const count = questions.value.length
-  return `Начать подготовку (${count})`
-}
-
 function startInterview() {
   if (questions.value.length === 0) {
     message.error('Добавьте вопросы для начала собеседования')
@@ -167,7 +162,7 @@ watch(mode, (newMode, oldMode) => {
           class="start-button"
           @click="startInterview"
         >
-          {{ getStartButtonText() }}
+          Начать подготовку
         </a-button>
       </div>
 

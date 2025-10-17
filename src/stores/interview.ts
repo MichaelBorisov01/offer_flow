@@ -1,4 +1,4 @@
-import type { InterviewSession, InterviewSettings, Question, QuestionForm, UserAnswer } from '@/types/interview'
+import type { InterviewSession, InterviewSettings, Question, QuestionFilters, QuestionForm, UserAnswer } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -21,6 +21,13 @@ export const useInterviewStore = defineStore('interview', () => {
   const currentUserAnswer = ref('')
 
   const errorMessage = ref<string>('')
+
+  const questionFilters = ref<QuestionFilters>({
+    statuses: [],
+    difficulties: [],
+    categories: [],
+    tags: [],
+  })
 
   const submitAnswer = async (questionId: string, questionText: string, answer: string) => {
     if (!answer.trim()) {
@@ -225,7 +232,46 @@ export const useInterviewStore = defineStore('interview', () => {
     error.value = null
   }
 
+  // Метод для применения фильтров
+  function applyQuestionFilters(questions: Question[], filters: QuestionFilters): Question[] {
+    let filtered = [...questions]
+
+    // Фильтрация по статусам
+    if (filters.statuses.length > 0) {
+      filtered = filtered.filter(q =>
+        q.status && filters.statuses.includes(q.status),
+      )
+    }
+
+    // Фильтрация по сложности
+    if (filters.difficulties.length > 0) {
+      filtered = filtered.filter(q => filters.difficulties.includes(q.difficulty))
+    }
+
+    // Фильтрация по категориям
+    if (filters.categories.length > 0) {
+      filtered = filtered.filter(q => filters.categories.includes(q.category))
+    }
+
+    // Фильтрация по тегам
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(q =>
+        q.tags?.some(tag => filters.tags.includes(tag)),
+      )
+    }
+
+    return filtered
+  }
+
   function getFilteredQuestions() {
+  // Для InterviewSession используем фильтры из questionFilters
+    if (questionFilters.value.statuses.length > 0
+      || questionFilters.value.difficulties.length > 0
+      || questionFilters.value.categories.length > 0
+      || questionFilters.value.tags.length > 0) {
+      return applyQuestionFilters(questions.value, questionFilters.value)
+    }
+
     const filter = interviewSettings.value.filterByStatus
     if (!filter || filter.length === 0) {
       return questions.value
@@ -233,6 +279,25 @@ export const useInterviewStore = defineStore('interview', () => {
     return questions.value.filter(question =>
       question.status && filter.includes(question.status),
     )
+  }
+
+  // Метод для установки фильтров
+  const setQuestionFilters = (filters: QuestionFilters) => {
+    questionFilters.value = filters
+  }
+
+  // Метод для получения текущих фильтров
+  const getCurrentFilters = () => {
+    return { ...questionFilters.value }
+  }
+
+  const resetQuestionFilters = () => {
+    questionFilters.value = {
+      statuses: [],
+      difficulties: [],
+      categories: [],
+      tags: [],
+    }
   }
 
   const filteredQuestions = computed(() => getFilteredQuestions())
@@ -349,6 +414,7 @@ export const useInterviewStore = defineStore('interview', () => {
     isEvaluating,
     currentUserAnswer,
     filteredQuestions,
+    questionFilters,
 
     // Getters
     currentQuestion,
@@ -373,5 +439,9 @@ export const useInterviewStore = defineStore('interview', () => {
     clearUserAnswers,
     shuffleQuestions,
     updateQuestionStatus,
+    setQuestionFilters,
+    getCurrentFilters,
+    resetQuestionFilters,
+    applyQuestionFilters,
   }
 })

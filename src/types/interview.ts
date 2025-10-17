@@ -64,3 +64,10 @@ export interface InterviewSettings {
   enableAnswerInput?: boolean
   filterByStatus?: 'known' | 'repeat' | 'hard' | ''
 }
+
+export interface QuestionFilters {
+  statuses: string[]
+  difficulties: string[]
+  categories: string[]
+  tags: string[]
+}
