@@ -223,7 +223,7 @@ function navigateToQuestion(index: number) {
         />
       </div>
 
-      <div class="navigation-section">
+      <div class="fixed-navigation-section">
         <a-space>
           <a-button
             :disabled="currentQuestionIndex === 0"
@@ -275,16 +275,17 @@ function navigateToQuestion(index: number) {
 
 <style scoped>
 .interview-session {
-  padding: 20px;
+   height: 100%;
 }
 
 .session-card {
-  max-width: 900px;
-  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .progress-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .progress-bar {
@@ -305,57 +306,45 @@ function navigateToQuestion(index: number) {
 }
 
 .question-section {
-  margin-bottom: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
 }
 
 .question-card {
-  background: #fafafa;
-  border: 2px solid #e8f4ff;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .question-content {
-  min-width: 0;
+  padding: 8px 0;
 }
 
 .question-text {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.6;
-  margin: 0 0 16px 0;
-  color: #262626;
-  font-weight: 500;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  max-width: 100%;
-  white-space: normal;
+  margin-bottom: 12px;
+  color: #333;
 }
 
 .question-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .tag-item {
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-shrink: 1;
+  margin: 0;
 }
 
 .status-actions {
-  display: flex;
-  gap: 12px;
+   display: flex;
+  gap: 8px;
   justify-content: center;
-  margin: 16px 0;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
+  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
 .status-button {
@@ -386,12 +375,24 @@ function navigateToQuestion(index: number) {
 }
 
 .quick-navigation {
-  margin-top: 24px;
+ flex-shrink: 0;
+  margin-top: 16px;
 }
 
 .quick-navigation h4 {
   margin-bottom: 12px;
   color: #8c8c8c;
+}
+
+.fixed-navigation-section {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 /* Базовые стили для кнопок навигации по вопросам */
@@ -487,6 +488,25 @@ function navigateToQuestion(index: number) {
 
   .tag-item {
     max-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .status-actions {
+    flex-direction: column;
+  }
+
+  .fixed-navigation-section {
+    padding: 12px 0;
+  }
+
+  .fixed-navigation-section .ant-space {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .fixed-navigation-section .ant-btn {
+    flex: 1;
   }
 }
 </style>
