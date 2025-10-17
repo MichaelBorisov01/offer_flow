@@ -63,6 +63,7 @@ function startInterview() {
 
 function exitInterview() {
   interviewStore.isInterviewStarted = false
+  interviewStore.isSessionActive = false
   interviewStore.clearUserAnswers()
   message.info('Собеседование прервано')
 }

@@ -1,7 +1,7 @@
 import type { InterviewSession, InterviewSettings, Question, QuestionFilters, QuestionForm, UserAnswer } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { AIService } from '@/services/aiService'
 import { QuestionService } from '@/services/questionService'
@@ -19,6 +19,8 @@ export const useInterviewStore = defineStore('interview', () => {
   const userAnswers = ref<UserAnswer[]>([])
   const isEvaluating = ref(false)
   const currentUserAnswer = ref('')
+  const sessionQuestions = ref<Question[]>([])
+  const isSessionActive = ref(false)
 
   const errorMessage = ref<string>('')
 
@@ -91,18 +93,40 @@ export const useInterviewStore = defineStore('interview', () => {
 
   // Геттеры
   const currentQuestion = computed(() => {
+    if (isSessionActive.value && sessionQuestions.value.length > 0) {
+      return sessionQuestions.value[currentQuestionIndex.value]
+    }
     return questions.value[currentQuestionIndex.value]
   })
 
   const isLastQuestion = computed(() => {
+    if (isSessionActive.value && sessionQuestions.value.length > 0) {
+      return currentQuestionIndex.value === sessionQuestions.value.length - 1
+    }
     return currentQuestionIndex.value === questions.value.length - 1
   })
 
-  const progress = computed(() =>
-    questions.value.length > 0
-      ? Math.round((currentQuestionIndex.value / questions.value.length) * 100)
-      : 0,
-  )
+  const progress = computed(() => {
+    let totalQuestions: number
+    let currentIndex: number
+
+    if (isSessionActive.value && sessionQuestions.value.length > 0) {
+      totalQuestions = sessionQuestions.value.length
+      currentIndex = currentQuestionIndex.value
+    }
+    else {
+      totalQuestions = questions.value.length
+      currentIndex = currentQuestionIndex.value
+    }
+
+    return totalQuestions > 0
+      ? Math.round((currentIndex / totalQuestions) * 100)
+      : 0
+  })
+
+  const sessionQuestionsList = computed(() => {
+    return isSessionActive.value ? sessionQuestions.value : questions.value
+  })
 
   const isEditing = computed(() => editingQuestionId.value !== null)
 
@@ -202,12 +226,45 @@ export const useInterviewStore = defineStore('interview', () => {
 
   const finishInterview = () => {
     isInterviewStarted.value = false
+    isSessionActive.value = false
+    sessionQuestions.value = []
+    currentQuestionIndex.value = 0
 
     if (currentSession.value) {
       currentSession.value.completedAt = new Date()
     }
 
     message.success('Собеседование завершено!')
+  }
+
+  const handleBeforeUnload = () => {
+    if (isSessionActive.value) {
+    // Можно показать предупреждение или просто завершить сессию
+      finishInterview()
+    }
+  }
+
+  const handlePopState = () => {
+    if (isSessionActive.value) {
+      finishInterview()
+      message.info('Сессия завершена из-за навигации')
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('popstate', handlePopState)
+  }
+
+  const forceFinishInterview = () => {
+    isInterviewStarted.value = false
+    isSessionActive.value = false
+    sessionQuestions.value = []
+    currentQuestionIndex.value = 0
+
+    if (currentSession.value) {
+      currentSession.value.completedAt = new Date()
+    }
   }
 
   const nextQuestion = () => {
@@ -315,7 +372,7 @@ export const useInterviewStore = defineStore('interview', () => {
       questionsToUse = [...questions.value]
     }
     else {
-    // Manual режим - фильтрация по статусам
+    // Manual режим - используем отфильтрованные вопросы
       const filtered = getFilteredQuestions()
       if (filtered.length === 0) {
         message.error('Нет вопросов для выбранных фильтров')
@@ -323,6 +380,10 @@ export const useInterviewStore = defineStore('interview', () => {
       }
       questionsToUse = filtered
     }
+
+    // Фиксируем вопросы для сессии
+    sessionQuestions.value = [...questionsToUse]
+    isSessionActive.value = true
 
     // Общая логика для обоих режимов
     isInterviewStarted.value = true
@@ -342,12 +403,8 @@ export const useInterviewStore = defineStore('interview', () => {
 
     // Очищаем предыдущие ответы
     clearUserAnswers()
-
-    // Для manual режима обновляем локальные вопросы
-    if (mode.value === 'manual') {
-      questions.value = questionsToUse
-    }
   }
+
   const isGeneratingAnswer = ref(false)
 
   const generateAnswerForQuestion = async (questionId: string, userAnswer?: string) => {
@@ -378,12 +435,28 @@ export const useInterviewStore = defineStore('interview', () => {
     const question = questions.value.find(q => q.id === questionId)
     if (question) {
       try {
-        // Сохраняем статус в базе данных
+      // Сохраняем статус в базе данных
         await QuestionService.updateQuestion(questionId, { status })
 
         // Обновляем локальное состояние
         question.status = status
         question.updatedAt = new Date()
+
+        // Если сессия активна, обновляем вопрос в sessionQuestions
+        if (isSessionActive.value) {
+          const sessionQuestionIndex = sessionQuestions.value.findIndex(q => q.id === questionId)
+          if (sessionQuestionIndex !== -1) {
+          // Используем Vue.set или прямую мутацию с проверкой
+            const sessionQuestion = sessionQuestions.value[sessionQuestionIndex]
+            if (sessionQuestion) {
+              sessionQuestions.value[sessionQuestionIndex] = {
+                ...sessionQuestion,
+                status,
+                updatedAt: new Date(),
+              }
+            }
+          }
+        }
       }
       catch (error) {
         console.error('Error saving question status:', error)
@@ -394,6 +467,13 @@ export const useInterviewStore = defineStore('interview', () => {
       console.error('Question not found:', questionId)
     }
   }
+
+  onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  })
 
   // Загружаем вопросы при инициализации
   loadUserQuestions()
@@ -415,11 +495,13 @@ export const useInterviewStore = defineStore('interview', () => {
     currentUserAnswer,
     filteredQuestions,
     questionFilters,
+    sessionQuestionsList,
 
     // Getters
     currentQuestion,
     isLastQuestion,
     progress,
+    isSessionActive,
 
     // Actions
     addQuestion,
@@ -443,5 +525,6 @@ export const useInterviewStore = defineStore('interview', () => {
     getCurrentFilters,
     resetQuestionFilters,
     applyQuestionFilters,
+    forceFinishInterview,
   }
 })

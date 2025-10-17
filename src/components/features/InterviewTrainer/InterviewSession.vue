@@ -7,7 +7,7 @@ import AIAnswerCard from './AIAnswerCard.vue'
 
 const interviewStore = useInterviewStore()
 
-const questions = computed(() => interviewStore.filteredQuestions)
+const questions = computed(() => interviewStore.sessionQuestionsList)
 const currentQuestion = computed(() => interviewStore.currentQuestion!)
 const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex)
 const progress = computed(() => interviewStore.progress)

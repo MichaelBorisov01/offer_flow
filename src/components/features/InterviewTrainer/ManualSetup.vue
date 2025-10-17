@@ -56,8 +56,10 @@ function handleFilterChange(filters: any) {
   // Сохраняем фильтры в store
   interviewStore.setQuestionFilters(filters)
 
-  // Применяем фильтрацию через store
-  filteredQuestions.value = interviewStore.filteredQuestions
+  // Применяем фильтрацию через store, но только если нет активной сессии
+  if (!interviewStore.isSessionActive) {
+    filteredQuestions.value = interviewStore.filteredQuestions
+  }
 }
 
 function showClearConfirmation() {
