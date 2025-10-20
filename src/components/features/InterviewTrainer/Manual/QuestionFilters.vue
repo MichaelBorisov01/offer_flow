@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
-import { ClearOutlined, FilterOutlined } from '@ant-design/icons-vue'
+import { ClearOutlined, FilterOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { computed, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 
@@ -78,6 +78,17 @@ const availableFilters = computed(() => {
     statuses: sortByOrder(Array.from(statuses), statusOrder),
   }
 })
+
+// Проверяем, есть ли вообще какие-либо фильтры
+const hasAnyFilters = computed(() => {
+  return availableFilters.value.difficulties.length > 0
+    || availableFilters.value.categories.length > 0
+    || availableFilters.value.tags.length > 0
+    || availableFilters.value.statuses.length > 0
+})
+
+// Проверяем, есть ли вопросы для фильтрации
+const hasQuestions = computed(() => props.questions.length > 0)
 
 function getDifficultyLabel(difficulty: string) {
   const labels: Record<string, string> = {
@@ -202,11 +213,34 @@ watch(
           </div>
         </template>
 
-        <div class="filters-grid">
+        <!-- Сообщение когда нет вопросов -->
+        <div v-if="!hasQuestions" class="empty-state">
+          <InfoCircleOutlined class="empty-icon" />
+          <div class="empty-content">
+            <h4>Нет вопросов для фильтрации</h4>
+            <p>Добавьте вопросы, чтобы использовать фильтры</p>
+          </div>
+        </div>
+
+        <!-- Сообщение когда нет доступных фильтров -->
+        <div v-else-if="!hasAnyFilters" class="empty-state">
+          <InfoCircleOutlined class="empty-icon" />
+          <div class="empty-content">
+            <h4>Нет доступных фильтров</h4>
+            <p>Добавьте вопросы с разными категориями, статусами или тегами</p>
+          </div>
+        </div>
+
+        <!-- Основные фильтры -->
+        <div v-else class="filters-grid">
           <!-- Фильтр по статусам -->
           <div class="filter-group">
             <h4>Статус</h4>
+            <div v-if="availableFilters.statuses.length === 0" class="filter-empty">
+              <span class="empty-text">Нет вопросов со статусами</span>
+            </div>
             <a-checkbox-group
+              v-else
               v-model:value="filterState.statuses"
               class="filter-options"
               @change="handleFilterChange"
@@ -226,7 +260,11 @@ watch(
           <!-- Фильтр по сложности -->
           <div class="filter-group">
             <h4>Сложность</h4>
+            <div v-if="availableFilters.difficulties.length === 0" class="filter-empty">
+              <span class="empty-text">Нет вопросов с разной сложностью</span>
+            </div>
             <a-checkbox-group
+              v-else
               v-model:value="filterState.difficulties"
               class="filter-options"
               @change="handleFilterChange"
@@ -247,7 +285,11 @@ watch(
           <!-- Фильтр по категориям -->
           <div class="filter-group">
             <h4>Категории</h4>
+            <div v-if="availableFilters.categories.length === 0" class="filter-empty">
+              <span class="empty-text">Нет вопросов с категориями</span>
+            </div>
             <a-checkbox-group
+              v-else
               v-model:value="filterState.categories"
               class="filter-options"
               @change="handleFilterChange"
@@ -266,7 +308,11 @@ watch(
           <!-- Фильтр по тегам -->
           <div class="filter-group">
             <h4>Теги</h4>
+            <div v-if="availableFilters.tags.length === 0" class="filter-empty">
+              <span class="empty-text">Нет вопросов с тегами</span>
+            </div>
             <a-select
+              v-else
               v-model:value="filterState.tags"
               mode="multiple"
               placeholder="Выберите теги"
@@ -375,16 +421,14 @@ watch(
   font-size: 14px;
 }
 
-.filters-badge {
-  :deep(.ant-badge-count) {
-    font-size: 11px;
-    font-weight: 500;
-    height: 18px;
-    line-height: 18px;
-    min-width: 18px;
-    padding: 0 4px;
-    box-shadow: 0 0 0 1px #fff;
-  }
+.filters-badge :deep(.ant-badge-count) {
+  font-size: 11px;
+  font-weight: 500;
+  height: 18px;
+  line-height: 18px;
+  min-width: 18px;
+  padding: 0 4px;
+  box-shadow: 0 0 0 1px #fff;
 }
 
 .clear-filters-btn {
@@ -393,6 +437,49 @@ watch(
   height: auto;
   padding: 0;
   margin-left: auto;
+}
+
+/* Стили для пустых состояний */
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin: 16px 0;
+}
+
+.empty-icon {
+  font-size: 20px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+}
+
+.empty-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.empty-content p {
+  margin: 0;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.filter-empty {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 12px;
+  color: #8c8c8c;
+  font-style: italic;
 }
 
 .filters-grid {
@@ -417,14 +504,14 @@ watch(
 
 .filter-option {
   margin: 0;
+}
 
-  :deep(.ant-checkbox-wrapper) {
-    align-items: center;
-  }
+.filter-option :deep(.ant-checkbox-wrapper) {
+  align-items: center;
+}
 
-  :deep(.ant-checkbox) {
-    margin-right: 8px;
-  }
+.filter-option :deep(.ant-checkbox) {
+  margin-right: 8px;
 }
 
 .status-option {
@@ -435,18 +522,19 @@ watch(
   width: 100%;
 }
 
-.difficulty-junior {
-  color: #52c41a;
+/* Цвета сложности - используем :deep для доступа к содержимому */
+.filter-option :deep(.difficulty-junior) {
+  color: #52c41a !important;
   font-weight: 500;
 }
 
-.difficulty-middle {
-  color: #fa8c16;
+.filter-option :deep(.difficulty-middle) {
+  color: #fa8c16 !important;
   font-weight: 500;
 }
 
-.difficulty-senior {
-  color: #ff4d4f;
+.filter-option :deep(.difficulty-senior) {
+  color: #ff4d4f !important;
   font-weight: 500;
 }
 
@@ -569,6 +657,12 @@ watch(
 
   .active-filter-item {
     justify-content: space-between;
+  }
+
+  .empty-state {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
   }
 }
 </style>
