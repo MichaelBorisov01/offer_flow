@@ -16,7 +16,7 @@ import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
-import QuestionFilters from './Manual/QuestionFilters.vue'
+import QuestionFilters from './manual/QuestionFilters.vue'
 import ConfirmClearAllModal from './modal/ConfirmClearAllModal.vue'
 import StatusProgressBar from './StatusProgressBar.vue'
 
@@ -251,6 +251,25 @@ function getCardBackgroundColor(question: Question): string {
   return colors[question.status as keyof typeof colors] || '#ffffff'
 }
 
+const hasActiveFilters = computed(() => {
+  const filters = interviewStore.getCurrentFilters()
+  return filters.statuses.length > 0
+    || filters.difficulties.length > 0
+    || filters.categories.length > 0
+    || filters.tags.length > 0
+})
+
+function clearAllFilters() {
+  currentFilters.value = {
+    statuses: [],
+    difficulties: [],
+    categories: [],
+    tags: [],
+  }
+  interviewStore.resetQuestionFilters()
+  handleFilterChange(currentFilters.value)
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -441,23 +460,61 @@ onMounted(() => {
             </a-list-item>
           </template>
         </a-list>
+
+        <!-- Сообщения когда нет вопросов -->
+        <div v-if="filteredQuestions.length === 0 && !isLoading" class="empty-states">
+          <!-- Когда вообще нет вопросов -->
+          <a-alert
+            v-if="allQuestions.length === 0"
+            message="Нет добавленных вопросов"
+            description="Добавьте первый вопрос, чтобы начать работу"
+            type="info"
+            show-icon
+            class="empty-alert"
+          >
+            <template #action>
+              <a-button size="small" type="primary" @click="scrollToEditForm">
+                Добавить вопрос
+              </a-button>
+            </template>
+          </a-alert>
+
+          <!-- Когда есть вопросы, но они не подходят под фильтры -->
+          <a-alert
+            v-else-if="hasActiveFilters"
+            message="Нет вопросов, соответствующих выбранным фильтрам"
+            description="Попробуйте изменить параметры фильтрации или очистить фильтры"
+            type="warning"
+            show-icon
+            class="empty-alert"
+          >
+            <template #action>
+              <a-button size="small" type="link" @click="clearAllFilters">
+                Очистить фильтры
+              </a-button>
+            </template>
+          </a-alert>
+
+          <!-- Когда вопросы есть, но filteredQuestions пуст по другой причине -->
+          <a-alert
+            v-else
+            message="Нет вопросов для отображения"
+            description="Попробуйте обновить страницу или проверить настройки"
+            type="warning"
+            show-icon
+            class="empty-alert"
+          />
+        </div>
       </div>
-
-      <a-alert
-        v-if="filteredQuestions.length === 0 && !isLoading"
-        message="Нет вопросов, соответствующих выбранным фильтрам"
-        type="warning"
-        show-icon
-      />
     </div>
-
-    <ConfirmClearAllModal
-      :open="clearConfirmationVisible"
-      :questions-count="allQuestions.length"
-      @ok="clearAllQuestions"
-      @cancel="handleClearCancel"
-    />
   </div>
+
+  <ConfirmClearAllModal
+    :open="clearConfirmationVisible"
+    :questions-count="allQuestions.length"
+    @ok="clearAllQuestions"
+    @cancel="handleClearCancel"
+  />
 </template>
 
 <style scoped>
@@ -630,6 +687,24 @@ onMounted(() => {
 
 .ai-answer-card {
   margin-top: 12px;
+}
+
+.empty-states {
+  margin-top: 20px;
+}
+
+.empty-alert {
+  border-radius: 8px;
+}
+
+.empty-alert :deep(.ant-alert-message) {
+  font-weight: 500;
+}
+
+.empty-alert :deep(.ant-alert-description) {
+  color: #666;
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 :deep(.edit-question-form) {
