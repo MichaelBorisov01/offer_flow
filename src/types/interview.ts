@@ -1,6 +1,6 @@
 export interface QuestionForm {
   text: string
-  type: 'text' | 'code'
+  type: 'text' | 'code' | 'ai'
   category: string
   difficulty: string
   tags: string[]
@@ -13,6 +13,7 @@ export interface Question extends QuestionForm {
   userId?: string
   aiAnswer?: AIAnswer
   status?: 'known' | 'repeat' | 'hard'
+  tempId?: string
 }
 
 export interface InterviewSession {
@@ -41,7 +42,6 @@ export interface AIQuestion extends Question {
 export interface AIAnswer {
   content: string
   type: 'serious' | 'joke'
-  generatedAt: Date
 }
 
 export interface UserAnswer {

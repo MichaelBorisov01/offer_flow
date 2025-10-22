@@ -29,13 +29,6 @@ const typeColor = computed(() => {
   return props.answer.type === 'joke' ? 'orange' : 'green'
 })
 
-function formatTime(date: Date) {
-  return new Intl.DateTimeFormat('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
-}
-
 function regenerateAnswer() {
   emit('regenerate')
 }
@@ -83,10 +76,6 @@ function regenerateAnswer() {
             <InfoCircleOutlined />
             <span>ИИ распознал это как творческий подход 😄</span>
           </div>
-
-          <span class="answer-time">
-            {{ formatTime(answer.generatedAt) }}
-          </span>
         </div>
 
         <div class="answer-text" :class="{ 'joke-text': answer.type === 'joke' }">
@@ -143,11 +132,6 @@ function regenerateAnswer() {
 
 .type-tag {
   font-weight: 500;
-}
-
-.answer-time {
-  font-size: 12px;
-  color: #8c8c8c;
 }
 
 .answer-text {

@@ -3,6 +3,7 @@ import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { AIService } from '@/services/aiService'
+import { QuestionService } from '@/services/questionService'
 import { useInterviewStore } from '@/stores/interview'
 
 interface Props {
@@ -19,6 +20,8 @@ const emit = defineEmits<Emits>()
 
 const interviewStore = useInterviewStore()
 const isGenerating = ref(false)
+const savingQuestionIds = ref<Set<string>>(new Set()) // Для отслеживания сохранения конкретных вопросов
+const isSavingAll = ref(false) // Отдельный флаг для сохранения всех вопросов
 
 const aiSettings = reactive<AISettings>({
   field: props.initialSettings?.field || 'frontend',
@@ -107,10 +110,14 @@ async function generateQuestions() {
 
   try {
     const questions = await AIService.generateQuestions(aiSettings)
-    aiQuestions.value = questions
+    // Добавляем временные ID для отслеживания сохранения
+    aiQuestions.value = questions.map((q, index) => ({
+      ...q,
+      tempId: `ai-${Date.now()}-${index}`, // Временный ID для отслеживания
+    }))
 
     // Сохраняем вопросы в хранилище
-    interviewStore.questions = questions
+    interviewStore.questions = aiQuestions.value
 
     emit('questionsGenerated') // Уведомляем родительский компонент
   }
@@ -127,7 +134,120 @@ async function generateQuestions() {
 function clearQuestions() {
   aiQuestions.value = []
   interviewStore.questions = []
+  savingQuestionIds.value.clear()
+  isSavingAll.value = false
   message.info('Вопросы очищены')
+}
+
+// Проверка на дубликаты - проверяем только сохраненные вопросы из БД
+function isDuplicateQuestion(question: Question): boolean {
+  // Получаем сохраненные вопросы из store (те, что уже в БД)
+  const savedQuestions = interviewStore.questions.filter(q => q.id && !q.tempId)
+
+  return savedQuestions.some(existingQuestion =>
+    existingQuestion.text.trim().toLowerCase() === question.text.trim().toLowerCase(),
+  )
+}
+
+// Сохранение отдельного вопроса в БД
+async function saveQuestionToDB(question: Question, tempId: string) {
+  if (savingQuestionIds.value.has(tempId)) {
+    return // Уже сохраняется
+  }
+
+  // Проверка на дубликаты
+  if (isDuplicateQuestion(question)) {
+    message.warning('Этот вопрос уже есть в вашей коллекции')
+    return
+  }
+
+  savingQuestionIds.value.add(tempId)
+
+  try {
+    // Сохраняем вопрос в базу данных
+    await QuestionService.addQuestion({
+      text: question.text,
+      type: 'text',
+      category: question.category,
+      difficulty: question.difficulty,
+      tags: [...(question.tags || []), 'ai-generated'],
+      createdAt: new Date(),
+    })
+
+    message.success('Вопрос сохранен в вашу коллекцию!')
+
+    // Обновляем локальный список вопросов в store
+    await interviewStore.loadUserQuestions()
+  }
+  catch (error) {
+    console.error('Error saving question:', error)
+    message.error('Ошибка при сохранении вопроса')
+    throw error
+  }
+  finally {
+    savingQuestionIds.value.delete(tempId)
+  }
+}
+
+// Сохранение всех вопросов
+async function saveAllQuestions() {
+  if (!hasQuestions.value)
+    return
+
+  isSavingAll.value = true
+
+  try {
+    let savedCount = 0
+    let skippedCount = 0
+
+    for (const question of aiQuestions.value) {
+      // Пропускаем уже сохраняемые вопросы
+      if (savingQuestionIds.value.has(question.tempId!)) {
+        skippedCount++
+        continue
+      }
+
+      // Проверка на дубликаты
+      if (isDuplicateQuestion(question)) {
+        skippedCount++
+        continue
+      }
+
+      savingQuestionIds.value.add(question.tempId!)
+
+      try {
+        await QuestionService.addQuestion({
+          text: question.text,
+          type: 'text',
+          category: question.category,
+          difficulty: question.difficulty,
+          tags: [...(question.tags || []), 'ai-generated'],
+          createdAt: new Date(),
+        })
+        savedCount++
+      }
+      finally {
+        savingQuestionIds.value.delete(question.tempId!)
+      }
+    }
+
+    // Обновляем локальный список вопросов в store
+    await interviewStore.loadUserQuestions()
+
+    if (savedCount > 0) {
+      message.success(`Сохранено вопросов: ${savedCount}${skippedCount > 0 ? `, пропущено дубликатов: ${skippedCount}` : ''}`)
+    }
+    else if (skippedCount > 0) {
+      message.info('Все вопросы уже есть в вашей коллекции')
+    }
+  }
+  catch (error) {
+    console.error('Error saving all questions:', error)
+    message.error('Ошибка при сохранении вопросов')
+  }
+  finally {
+    isSavingAll.value = false
+  }
 }
 
 // Отслеживаем изменения настроек и уведомляем родительский компонент
@@ -261,10 +381,21 @@ onMounted(() => {
     <div v-if="hasQuestions" class="questions-preview">
       <a-divider />
 
-      <h4>Сгенерированные вопросы ({{ aiQuestions.length }})</h4>
+      <div class="preview-header">
+        <h4>Сгенерированные вопросы ({{ aiQuestions.length }})</h4>
+        <a-button
+          type="primary"
+          size="small"
+          :loading="isSavingAll"
+          :disabled="isSavingAll"
+          @click="saveAllQuestions"
+        >
+          Сохранить все вопросы
+        </a-button>
+      </div>
 
       <a-alert
-        message="Вопросы готовы! Теперь вы можете начать собеседование."
+        message="Вопросы готовы! Вы можете сохранить их в свою коллекцию."
         type="success"
         show-icon
         style="margin-bottom: 16px;"
@@ -281,9 +412,20 @@ onMounted(() => {
               <template #title>
                 <div class="question-preview">
                   <span class="question-text">{{ item.text }}</span>
-                  <a-tag color="green">
-                    AI
-                  </a-tag>
+                  <div class="question-actions">
+                    <a-tag color="green">
+                      AI
+                    </a-tag>
+                    <a-button
+                      type="primary"
+                      size="small"
+                      :loading="savingQuestionIds.has(item.tempId!)"
+                      class="save-single-button"
+                      @click="saveQuestionToDB(item, item.tempId!)"
+                    >
+                      Сохранить
+                    </a-button>
+                  </div>
                 </div>
               </template>
 
@@ -295,6 +437,16 @@ onMounted(() => {
                   <a-tag color="blue">
                     {{ item.category }}
                   </a-tag>
+                  <div v-if="item.tags && item.tags.length" class="preview-tags">
+                    <a-tag
+                      v-for="tag in item.tags"
+                      :key="tag"
+                      color="default"
+                      size="small"
+                    >
+                      {{ tag }}
+                    </a-tag>
+                  </div>
                 </div>
               </template>
             </a-list-item-meta>
@@ -319,6 +471,13 @@ onMounted(() => {
   margin-top: 24px;
 }
 
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .preview-list {
   max-height: 400px;
   overflow-y: auto;
@@ -329,6 +488,12 @@ onMounted(() => {
   border-radius: 6px;
   margin-bottom: 8px;
   padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.preview-item:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
 }
 
 .question-preview {
@@ -343,9 +508,45 @@ onMounted(() => {
   line-height: 1.4;
 }
 
+.question-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.save-single-button {
+  background: #52c41a;
+  border-color: #52c41a;
+  color: white;
+  padding: 0 12px;
+  height: 28px;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.save-single-button:hover {
+  background: #73d13d;
+  border-color: #73d13d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(82, 196, 26, 0.3);
+}
+
+.save-single-button:active {
+  transform: translateY(0);
+}
+
 .preview-meta {
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.preview-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 </style>
