@@ -20,8 +20,10 @@ const emit = defineEmits<Emits>()
 
 const interviewStore = useInterviewStore()
 const isGenerating = ref(false)
-const savingQuestionIds = ref<Set<string>>(new Set()) // Для отслеживания сохранения конкретных вопросов
-const isSavingAll = ref(false) // Отдельный флаг для сохранения всех вопросов
+const savingQuestionIds = ref<Set<string>>(new Set())
+const isSavingAll = ref(false)
+const lastMessageTime = ref<number>(0) // Защита от спама сообщений
+const MESSAGE_COOLDOWN = 2000 // 2 секунды между сообщениями
 
 const aiSettings = reactive<AISettings>({
   field: props.initialSettings?.field || 'frontend',
@@ -100,8 +102,17 @@ function getDifficultyColor(difficulty: string) {
   return colors[difficulty as keyof typeof colors] || 'blue'
 }
 
+function showMessage(type: 'success' | 'warning' | 'error' | 'info', content: string, duration?: number) {
+  const now = Date.now()
+  if (now - lastMessageTime.value < MESSAGE_COOLDOWN) {
+    return // Пропускаем сообщение если не прошло достаточно времени
+  }
+
+  lastMessageTime.value = now
+  message[type](content, duration)
+}
+
 function handleFieldChange() {
-  // Сбрасываем технологию при изменении специализации
   aiSettings.technology = availableTechnologies.value[0]?.value || ''
 }
 
@@ -110,21 +121,18 @@ async function generateQuestions() {
 
   try {
     const questions = await AIService.generateQuestions(aiSettings)
-    // Добавляем временные ID для отслеживания сохранения
     aiQuestions.value = questions.map((q, index) => ({
       ...q,
-      tempId: `ai-${Date.now()}-${index}`, // Временный ID для отслеживания
+      tempId: `ai-${Date.now()}-${index}`,
     }))
 
-    // Сохраняем вопросы в хранилище
     interviewStore.questions = aiQuestions.value
-
-    emit('questionsGenerated') // Уведомляем родительский компонент
+    emit('questionsGenerated')
   }
   catch (error) {
     console.error('Error generating questions:', error)
     aiStatus.value = 'error'
-    message.error('Ошибка при генерации вопросов')
+    showMessage('error', 'Ошибка при генерации вопросов')
   }
   finally {
     isGenerating.value = false
@@ -136,12 +144,11 @@ function clearQuestions() {
   interviewStore.questions = []
   savingQuestionIds.value.clear()
   isSavingAll.value = false
-  message.info('Вопросы очищены')
+  showMessage('info', 'Вопросы очищены')
 }
 
-// Проверка на дубликаты - проверяем только сохраненные вопросы из БД
+// Проверка на дубликаты
 function isDuplicateQuestion(question: Question): boolean {
-  // Получаем сохраненные вопросы из store (те, что уже в БД)
   const savedQuestions = interviewStore.questions.filter(q => q.id && !q.tempId)
 
   return savedQuestions.some(existingQuestion =>
@@ -151,19 +158,20 @@ function isDuplicateQuestion(question: Question): boolean {
 
 // Сохранение отдельного вопроса в БД
 async function saveQuestionToDB(question: Question, tempId: string) {
+  // Быстрая проверка - если уже сохраняется, просто выходим
   if (savingQuestionIds.value.has(tempId)) {
-    return // Уже сохраняется
-  }
-
-  // Проверка на дубликаты
-  if (isDuplicateQuestion(question)) {
-    message.warning('Этот вопрос уже есть в вашей коллекции')
     return
   }
 
   savingQuestionIds.value.add(tempId)
 
   try {
+    // Проверка на дубликаты
+    if (isDuplicateQuestion(question)) {
+      showMessage('warning', 'Этот вопрос уже есть в вашей коллекции')
+      return
+    }
+
     // Сохраняем вопрос в базу данных
     await QuestionService.addQuestion({
       text: question.text,
@@ -174,15 +182,14 @@ async function saveQuestionToDB(question: Question, tempId: string) {
       createdAt: new Date(),
     })
 
-    message.success('Вопрос сохранен в вашу коллекцию!')
+    showMessage('success', 'Вопрос сохранен в вашу коллекцию!')
 
     // Обновляем локальный список вопросов в store
     await interviewStore.loadUserQuestions()
   }
   catch (error) {
     console.error('Error saving question:', error)
-    message.error('Ошибка при сохранении вопроса')
-    throw error
+    showMessage('error', 'Ошибка при сохранении вопроса')
   }
   finally {
     savingQuestionIds.value.delete(tempId)
@@ -193,6 +200,11 @@ async function saveQuestionToDB(question: Question, tempId: string) {
 async function saveAllQuestions() {
   if (!hasQuestions.value)
     return
+
+  // Быстрая проверка - если уже сохраняется, просто выходим
+  if (isSavingAll.value) {
+    return
+  }
 
   isSavingAll.value = true
 
@@ -234,16 +246,20 @@ async function saveAllQuestions() {
     // Обновляем локальный список вопросов в store
     await interviewStore.loadUserQuestions()
 
+    // Показываем одно итоговое сообщение
     if (savedCount > 0) {
-      message.success(`Сохранено вопросов: ${savedCount}${skippedCount > 0 ? `, пропущено дубликатов: ${skippedCount}` : ''}`)
+      showMessage('success', `Сохранено вопросов: ${savedCount}${skippedCount > 0 ? `, пропущено дубликатов: ${skippedCount}` : ''}`)
     }
     else if (skippedCount > 0) {
-      message.info('Все вопросы уже есть в вашей коллекции')
+      showMessage('info', 'Все вопросы уже есть в вашей коллекции')
+    }
+    else {
+      showMessage('info', 'Нет вопросов для сохранения')
     }
   }
   catch (error) {
     console.error('Error saving all questions:', error)
-    message.error('Ошибка при сохранении вопросов')
+    showMessage('error', 'Ошибка при сохранении вопросов')
   }
   finally {
     isSavingAll.value = false
@@ -260,7 +276,6 @@ onMounted(() => {
   if (props.initialSettings) {
     Object.assign(aiSettings, props.initialSettings)
   }
-  // Проверяем доступность AI
   const hasApiKey = !!import.meta.env.VITE_HUGGING_FACE_API_KEY
   aiStatus.value = hasApiKey ? 'connected' : 'fallback'
 })
@@ -343,7 +358,6 @@ onMounted(() => {
         </a-col>
       </a-row>
 
-      <!-- Динамические технологии в зависимости от специализации -->
       <a-form-item v-if="showTechnologySelect" label="Технология">
         <a-select v-model:value="aiSettings.technology" size="large">
           <a-select-option
@@ -377,7 +391,6 @@ onMounted(() => {
       </a-form-item>
     </a-form>
 
-    <!-- Предпросмотр сгенерированных вопросов -->
     <div v-if="hasQuestions" class="questions-preview">
       <a-divider />
 
