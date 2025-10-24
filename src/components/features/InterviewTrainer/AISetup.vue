@@ -519,6 +519,7 @@ onMounted(() => {
 .question-text {
   flex: 1;
   line-height: 1.4;
+  max-width: 550px;
 }
 
 .question-actions {
