@@ -79,13 +79,27 @@ async function clearAllQuestions() {
   try {
     clearConfirmationVisible.value = false
 
-    for (let i = allQuestions.value.length - 1; i >= 0; i--) {
-      await interviewStore.removeQuestion(i)
+    // Собираем ID всех вопросов до начала удаления
+    const questionIds = allQuestions.value.map(q => q.id).filter(Boolean) as string[]
+
+    if (questionIds.length === 0) {
+      message.info('Нет вопросов для удаления')
+      return
     }
+
+    // Создаем промисы для удаления по ID
+    const deletePromises = questionIds.map(id =>
+      interviewStore.removeQuestionById(id),
+    )
+
+    // Ждем завершения всех операций удаления
+    await Promise.all(deletePromises)
+
     message.success('Все вопросы удалены')
     emit('questionsChanged')
   }
-  catch {
+  catch (error) {
+    console.error('Error clearing questions:', error)
     message.error('Ошибка при удалении вопросов')
   }
 }

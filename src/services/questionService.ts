@@ -16,7 +16,7 @@ import { db } from './firebase'
 export interface Question {
   id?: string
   text: string
-  type: 'text' | 'code'
+  type: 'text' | 'code' | 'ai'
   category: string
   difficulty: string
   tags?: string[]

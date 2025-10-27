@@ -204,6 +204,17 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   }
 
+  const removeQuestionById = async (questionId: string) => {
+    try {
+      await QuestionService.deleteQuestion(questionId)
+      questions.value = questions.value.filter(q => q.id !== questionId)
+    }
+    catch (error) {
+      console.error('Error deleting question:', error)
+      throw error
+    }
+  }
+
   const finishInterview = () => {
     isInterviewStarted.value = false
     isSessionActive.value = false
@@ -601,5 +612,6 @@ export const useInterviewStore = defineStore('interview', () => {
     applyQuestionFilters,
     forceFinishInterview,
     checkAndResetFiltersIfNeeded,
+    removeQuestionById,
   }
 })
