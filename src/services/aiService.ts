@@ -22,13 +22,15 @@ export const AIService = {
         questions = await this.generateLocalQuestions(settings)
       }
 
+      const tags = this.generateSmartTags(settings)
+
       return questions.map((text, index) => ({
         id: `ai-${Date.now()}-${index}`,
         text: text.trim(),
         type: 'text' as const,
-        category: settings.field,
+        category: settings.specialty,
         difficulty: settings.difficulty,
-        tags: settings.technology ? [settings.technology] : [settings.field],
+        tags,
         generatedBy: 'ai' as const,
         createdAt: new Date(),
         source: isHuggingFaceConfigured ? 'hugging-face' : 'local',
@@ -38,19 +40,37 @@ export const AIService = {
       console.error('AI Service Error:', error)
 
       const localQuestions = await this.generateLocalQuestions(settings)
+      const tags = this.generateSmartTags(settings)
 
       return localQuestions.map((text, index) => ({
         id: `ai-fallback-${Date.now()}-${index}`,
         text,
         type: 'text' as const,
-        category: settings.field,
+        category: settings.specialty,
         difficulty: settings.difficulty,
-        tags: settings.technology ? [settings.technology] : [settings.field],
+        tags,
         generatedBy: 'ai' as const,
         createdAt: new Date(),
         source: 'local-fallback',
       }))
     }
+  },
+
+  /**
+   * Умное формирование тегов без дублирования с категорией
+   */
+  generateSmartTags(settings: AISettings): string[] {
+    if (settings.skill === 'soft') {
+      return []
+    }
+
+    const tags: string[] = []
+
+    if (settings.technology && settings.technology !== settings.specialty) {
+      tags.push(settings.technology)
+    }
+
+    return tags
   },
 
   /**
@@ -96,7 +116,7 @@ export const AIService = {
       },
     }
 
-    const fieldQuestions = questionsByField[settings.field as keyof typeof questionsByField] || questionsByField.frontend
+    const fieldQuestions = questionsByField[settings.specialty as keyof typeof questionsByField] || questionsByField.frontend
     const difficultyQuestions = fieldQuestions[settings.difficulty as keyof typeof fieldQuestions] || fieldQuestions.junior
 
     return difficultyQuestions.slice(0, settings.questionsCount)
@@ -127,7 +147,6 @@ export const AIService = {
       }
     }
 
-    // Fallback оценка
     return {
       score: Math.floor(Math.random() * 3) + 7,
       feedback: 'Для точной оценки подключите Hugging Face API',
@@ -184,13 +203,11 @@ export const AIService = {
         console.error('AI answer generation error:', error)
       }
     }
-    // Fallback ответ
     return {
       content: userAnswer
         ? 'Кажется, ваш ответ требует дополнительных разъяснений. Попробуйте сформулировать его более четко.'
         : 'Для получения развернутого ответа подключите Hugging Face API.',
       type: 'serious',
-      generatedAt: new Date(),
     }
   },
 }

@@ -22,14 +22,15 @@ const interviewStore = useInterviewStore()
 const isGenerating = ref(false)
 const savingQuestionIds = ref<Set<string>>(new Set())
 const isSavingAll = ref(false)
-const lastMessageTime = ref<number>(0) // Защита от спама сообщений
-const MESSAGE_COOLDOWN = 2000 // 2 секунды между сообщениями
+const lastMessageTime = ref<number>(0)
+const MESSAGE_COOLDOWN = 2000
 
 const aiSettings = reactive<AISettings>({
-  field: props.initialSettings?.field || 'frontend',
+  specialty: props.initialSettings?.specialty || 'frontend',
   difficulty: props.initialSettings?.difficulty || 'middle',
   questionsCount: props.initialSettings?.questionsCount || 5,
   technology: props.initialSettings?.technology || 'vue',
+  skill: props.initialSettings?.skill || 'hard',
 })
 
 const aiStatus = ref<'connected' | 'fallback' | 'error'>('fallback')
@@ -88,12 +89,15 @@ const technologies = {
 }
 
 const availableTechnologies = computed(() =>
-  technologies[aiSettings.field as keyof typeof technologies] || technologies.frontend,
+  technologies[aiSettings.specialty as keyof typeof technologies] || technologies.frontend,
 )
 
 const showTechnologySelect = computed(() =>
-  ['frontend', 'backend', 'fullstack', 'devops', 'mobile'].includes(aiSettings.field),
+  aiSettings.skill === 'hard'
+  && ['frontend', 'backend', 'fullstack', 'devops', 'mobile'].includes(aiSettings.specialty),
 )
+
+const showSpecialtyAndDifficulty = computed(() => aiSettings.skill === 'hard')
 
 const hasQuestions = computed(() => aiQuestions.value.length > 0)
 
@@ -105,11 +109,24 @@ function getDifficultyColor(difficulty: string) {
 function showMessage(type: 'success' | 'warning' | 'error' | 'info', content: string, duration?: number) {
   const now = Date.now()
   if (now - lastMessageTime.value < MESSAGE_COOLDOWN) {
-    return // Пропускаем сообщение если не прошло достаточно времени
+    return
   }
 
   lastMessageTime.value = now
   message[type](content, duration)
+}
+
+function handleSkillChange() {
+  if (aiSettings.skill === 'soft') {
+    aiSettings.specialty = 'soft-skills'
+    aiSettings.difficulty = 'middle'
+    aiSettings.technology = ''
+  }
+  else {
+    aiSettings.specialty = 'frontend'
+    aiSettings.difficulty = 'middle'
+    aiSettings.technology = 'vue'
+  }
 }
 
 function handleFieldChange() {
@@ -147,7 +164,6 @@ function clearQuestions() {
   showMessage('info', 'Вопросы очищены')
 }
 
-// Проверка на дубликаты
 function isDuplicateQuestion(question: Question): boolean {
   const savedQuestions = interviewStore.questions.filter(q => q.id && !q.tempId)
 
@@ -156,9 +172,7 @@ function isDuplicateQuestion(question: Question): boolean {
   )
 }
 
-// Сохранение отдельного вопроса в БД
 async function saveQuestionToDB(question: Question, tempId: string) {
-  // Быстрая проверка - если уже сохраняется, просто выходим
   if (savingQuestionIds.value.has(tempId)) {
     return
   }
@@ -166,13 +180,11 @@ async function saveQuestionToDB(question: Question, tempId: string) {
   savingQuestionIds.value.add(tempId)
 
   try {
-    // Проверка на дубликаты
     if (isDuplicateQuestion(question)) {
       showMessage('warning', 'Этот вопрос уже есть в вашей коллекции')
       return
     }
 
-    // Сохраняем вопрос в базу данных
     await QuestionService.addQuestion({
       text: question.text,
       type: 'text',
@@ -183,8 +195,6 @@ async function saveQuestionToDB(question: Question, tempId: string) {
     })
 
     showMessage('success', 'Вопрос сохранен в вашу коллекцию!')
-
-    // Обновляем локальный список вопросов в store
     await interviewStore.loadUserQuestions()
   }
   catch (error) {
@@ -196,12 +206,10 @@ async function saveQuestionToDB(question: Question, tempId: string) {
   }
 }
 
-// Сохранение всех вопросов
 async function saveAllQuestions() {
   if (!hasQuestions.value)
     return
 
-  // Быстрая проверка - если уже сохраняется, просто выходим
   if (isSavingAll.value) {
     return
   }
@@ -213,13 +221,11 @@ async function saveAllQuestions() {
     let skippedCount = 0
 
     for (const question of aiQuestions.value) {
-      // Пропускаем уже сохраняемые вопросы
       if (savingQuestionIds.value.has(question.tempId!)) {
         skippedCount++
         continue
       }
 
-      // Проверка на дубликаты
       if (isDuplicateQuestion(question)) {
         skippedCount++
         continue
@@ -243,10 +249,8 @@ async function saveAllQuestions() {
       }
     }
 
-    // Обновляем локальный список вопросов в store
     await interviewStore.loadUserQuestions()
 
-    // Показываем одно итоговое сообщение
     if (savedCount > 0) {
       showMessage('success', `Сохранено вопросов: ${savedCount}${skippedCount > 0 ? `, пропущено дубликатов: ${skippedCount}` : ''}`)
     }
@@ -266,12 +270,10 @@ async function saveAllQuestions() {
   }
 }
 
-// Отслеживаем изменения настроек и уведомляем родительский компонент
 watch(aiSettings, (newSettings) => {
   emit('settingsChanged', { ...newSettings })
 }, { deep: true })
 
-// При монтировании применяем начальные настройки
 onMounted(() => {
   if (props.initialSettings) {
     Object.assign(aiSettings, props.initialSettings)
@@ -295,11 +297,22 @@ onMounted(() => {
     <h3>Настройки генерации вопросов ИИ</h3>
 
     <a-form layout="vertical" class="ai-settings-form">
+      <a-form-item label="Тип навыков" required>
+        <a-radio-group v-model:value="aiSettings.skill" @change="handleSkillChange">
+          <a-radio value="hard">
+            Hard Skills (технические)
+          </a-radio>
+          <a-radio value="soft">
+            Soft Skills (социальные)
+          </a-radio>
+        </a-radio-group>
+      </a-form-item>
+
       <a-row :gutter="16">
-        <a-col :span="8">
+        <a-col v-if="showSpecialtyAndDifficulty" :span="8">
           <a-form-item label="Специализация" required>
             <a-select
-              v-model:value="aiSettings.field"
+              v-model:value="aiSettings.specialty"
               size="large"
               @change="handleFieldChange"
             >
@@ -322,7 +335,7 @@ onMounted(() => {
           </a-form-item>
         </a-col>
 
-        <a-col :span="8">
+        <a-col v-if="showSpecialtyAndDifficulty" :span="8">
           <a-form-item label="Уровень сложности" required>
             <a-select v-model:value="aiSettings.difficulty" size="large">
               <a-select-option value="junior">
@@ -338,7 +351,7 @@ onMounted(() => {
           </a-form-item>
         </a-col>
 
-        <a-col :span="8">
+        <a-col :span="showSpecialtyAndDifficulty ? 8 : 24">
           <a-form-item label="Количество вопросов" required>
             <a-select v-model:value="aiSettings.questionsCount" size="large">
               <a-select-option value="5">
@@ -408,7 +421,7 @@ onMounted(() => {
       </div>
 
       <a-alert
-        message="Вопросы готовы! Вы можете сохранить их в свою коллекцию."
+        :message="aiSettings.skill === 'hard' ? 'Вопросы готовы! Вы можете сохранить их в свою коллекцию.' : 'Soft skills вопросы готовы! Вы можете сохранить их в свою коллекцию.'"
         type="success"
         show-icon
         style="margin-bottom: 16px;"
@@ -450,16 +463,6 @@ onMounted(() => {
                   <a-tag color="blue">
                     {{ item.category }}
                   </a-tag>
-                  <div v-if="item.tags && item.tags.length" class="preview-tags">
-                    <a-tag
-                      v-for="tag in item.tags"
-                      :key="tag"
-                      color="default"
-                      size="small"
-                    >
-                      {{ tag }}
-                    </a-tag>
-                  </div>
                 </div>
               </template>
             </a-list-item-meta>

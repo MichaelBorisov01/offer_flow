@@ -124,6 +124,18 @@ function navigateToQuestion(index: number) {
     interviewStore.currentQuestionIndex = index
   }
 }
+
+const filteredTags = computed(() => {
+  if (!currentQuestion.value?.tags)
+    return []
+
+  const category = currentQuestion.value.category
+
+  return currentQuestion.value.tags.filter(tag =>
+    tag !== category
+    && !(category === 'soft-skills' && tag === 'soft-skills'),
+  )
+})
 </script>
 
 <template>
@@ -169,9 +181,9 @@ function navigateToQuestion(index: number) {
               {{ currentQuestion?.text }}
             </p>
 
-            <div v-if="currentQuestion?.tags && currentQuestion.tags.length" class="question-tags">
+            <div v-if="filteredTags.length" class="question-tags">
               <a-tag
-                v-for="(tag, index) in currentQuestion.tags"
+                v-for="(tag, index) in filteredTags"
                 :key="index"
                 color="blue"
                 size="small"
@@ -183,7 +195,6 @@ function navigateToQuestion(index: number) {
           </div>
         </a-card>
 
-        <!-- Кнопки статусов вопроса -->
         <div class="status-actions">
           <a-button
             class="status-button status-known" :class="[{ active: currentQuestion?.status === 'known' }]"

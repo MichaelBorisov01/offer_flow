@@ -28,10 +28,11 @@ export interface InterviewSession {
 }
 
 export interface AISettings {
-  field: string
+  specialty: string
   difficulty: string
   questionsCount: number
   technology: string
+  skill: string
 }
 
 export interface AIQuestion extends Question {
@@ -53,7 +54,7 @@ export interface UserAnswer {
 }
 
 export interface AnswerEvaluation {
-  score: number // 1-10
+  score: number
   feedback: string
   suggestions: string[]
   evaluatedAt: Date
