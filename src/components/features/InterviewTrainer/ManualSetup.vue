@@ -284,6 +284,18 @@ function clearAllFilters() {
   handleFilterChange(currentFilters.value)
 }
 
+function getTagsWord(count: number): string {
+  if (count % 10 === 1 && count % 100 !== 11) {
+    return 'тег'
+  }
+  else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return 'тега'
+  }
+  else {
+    return 'тегов'
+  }
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -446,13 +458,34 @@ onMounted(() => {
 
                 <template #description>
                   <div class="question-footer">
-                    <!-- Теги компактно -->
                     <div v-if="item.tags && item.tags.length" class="tags-compact">
                       <TagOutlined class="tags-icon" />
-                      <span class="tags-count">{{ item.tags.length }} тег(ов)</span>
+                      <a-tooltip
+                        placement="top"
+                        overlay-class-name="tags-tooltip"
+                      >
+                        <template #title>
+                          <div class="tags-tooltip-content">
+                            <div class="tooltip-header">
+                              Теги вопроса:
+                            </div>
+                            <div class="tags-tooltip-chips">
+                              <span
+                                v-for="(tag, tagIndex) in item.tags"
+                                :key="tagIndex"
+                                class="tag-tooltip-chip"
+                              >
+                                {{ tag }}
+                              </span>
+                            </div>
+                          </div>
+                        </template>
+                        <span class="tags-count">
+                          {{ item.tags.length }} {{ getTagsWord(item.tags.length) }}
+                        </span>
+                      </a-tooltip>
                     </div>
 
-                    <!-- Дата -->
                     <Tooltip v-if="item.createdAt" :title="`Добавлен: ${formatDate(item.createdAt)}`">
                       <div class="date-info">
                         <CalendarOutlined />
@@ -660,6 +693,7 @@ onMounted(() => {
   gap: 6px;
   font-size: 12px;
   color: #8c8c8c;
+  cursor: pointer;
 }
 
 .tags-icon {
@@ -669,6 +703,11 @@ onMounted(() => {
 
 .tags-count {
   font-size: 11px;
+  transition: color 0.2s ease;
+}
+
+.tags-count:hover {
+  color: #1890ff;
 }
 
 .date-info {
@@ -791,5 +830,38 @@ onMounted(() => {
 
 .inline-progress {
   margin-bottom: 16px;
+}
+</style>
+
+<style>
+.tags-tooltip .ant-tooltip-inner {
+  background: white;
+  color: #262626;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  padding: 12px;
+  max-width: 300px;
+}
+
+.tags-tooltip .ant-tooltip-arrow::before {
+  background: white;
+}
+
+.tags-tooltip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 250px;
+}
+
+.tag-tooltip-chip {
+  background: #f0f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  border: 1px solid #d6e4ff;
+  white-space: nowrap;
 }
 </style>

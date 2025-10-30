@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BulbOutlined, CheckOutlined, ExclamationOutlined, RedoOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, CheckOutlined, ExclamationOutlined, RedoOutlined, TagOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
@@ -16,6 +16,7 @@ const isLastQuestion = computed(() => interviewStore.isLastQuestion)
 
 const answerVisible = ref(false)
 const answerGenerating = ref(false)
+const showAllTags = ref(false)
 
 async function setQuestionStatus(status: 'known' | 'repeat' | 'hard') {
   if (!currentQuestion.value?.id) {
@@ -136,6 +137,39 @@ const filteredTags = computed(() => {
     && !(category === 'soft-skills' && tag === 'soft-skills'),
   )
 })
+
+// Ограничиваем количество отображаемых тегов
+const MAX_VISIBLE_TAGS = 3
+
+const visibleTags = computed(() => {
+  if (showAllTags.value) {
+    return filteredTags.value
+  }
+  return filteredTags.value.slice(0, MAX_VISIBLE_TAGS)
+})
+
+const hiddenTagsCount = computed(() => {
+  return Math.max(0, filteredTags.value.length - MAX_VISIBLE_TAGS)
+})
+
+const hasManyTags = computed(() => filteredTags.value.length > MAX_VISIBLE_TAGS)
+
+function toggleTagsVisibility() {
+  showAllTags.value = !showAllTags.value
+}
+
+// Функция для правильного склонения слова "тег"
+function getTagsWord(count: number): string {
+  if (count % 10 === 1 && count % 100 !== 11) {
+    return 'тег'
+  }
+  else if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) {
+    return 'тега'
+  }
+  else {
+    return 'тегов'
+  }
+}
 </script>
 
 <template>
@@ -181,16 +215,32 @@ const filteredTags = computed(() => {
               {{ currentQuestion?.text }}
             </p>
 
-            <div v-if="filteredTags.length" class="question-tags">
-              <a-tag
-                v-for="(tag, index) in filteredTags"
-                :key="index"
-                color="blue"
-                size="small"
-                class="tag-item"
-              >
-                {{ tag }}
-              </a-tag>
+            <div v-if="filteredTags.length" class="question-tags-container">
+              <div class="question-tags">
+                <a-tag
+                  v-for="(tag, index) in visibleTags"
+                  :key="index"
+                  color="blue"
+                  size="small"
+                  class="tag-item"
+                >
+                  {{ tag }}
+                </a-tag>
+
+                <!-- Кнопка для показа/скрытия дополнительных тегов -->
+                <a-button
+                  v-if="hasManyTags"
+                  type="link"
+                  size="small"
+                  class="tags-toggle-button"
+                  @click="toggleTagsVisibility"
+                >
+                  <template #icon>
+                    <TagOutlined />
+                  </template>
+                  {{ showAllTags ? 'Скрыть' : `+${hiddenTagsCount} ${getTagsWord(hiddenTagsCount)}` }}
+                </a-button>
+              </div>
             </div>
           </div>
         </a-card>
@@ -333,15 +383,62 @@ const filteredTags = computed(() => {
   color: #333;
 }
 
+.question-tags-container {
+  margin-top: 12px;
+}
+
 .question-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
+  align-items: center;
+  max-height: 80px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.question-tags::-webkit-scrollbar {
+  width: 4px;
+}
+
+.question-tags::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.question-tags::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.question-tags::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .tag-item {
   margin: 0;
+  flex-shrink: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tags-toggle-button {
+  color: #8c8c8c;
+  font-size: 12px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.tags-toggle-button:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+  background: #f0f8ff;
 }
 
 .status-actions {
@@ -363,7 +460,6 @@ const filteredTags = computed(() => {
   font-weight: 500;
 }
 
-/* Статус "Знаю" - зеленый */
 .status-known {
   border-color: #b7eb8f;
   color: #389e0d;
@@ -381,7 +477,6 @@ const filteredTags = computed(() => {
   color: #135200;
 }
 
-/* Статус "Повторить" - оранжевый */
 .status-repeat {
   border-color: #ffd591;
   color: #d46b08;
@@ -399,7 +494,6 @@ const filteredTags = computed(() => {
   color: #873800;
 }
 
-/* Статус "Сложно" - красный */
 .status-hard {
   border-color: #ffccc7;
   color: #cf1322;
@@ -422,14 +516,15 @@ const filteredTags = computed(() => {
   font-size: 14px;
 }
 
-.instruction-section {
-  margin-bottom: 24px;
-}
-
-.navigation-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
+.fixed-navigation-section {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  margin-top: auto;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .quick-navigation {
@@ -440,17 +535,6 @@ const filteredTags = computed(() => {
 .quick-navigation h4 {
   margin-bottom: 12px;
   color: #8c8c8c;
-}
-
-.fixed-navigation-section {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 16px 0;
-  border-top: 1px solid #f0f0f0;
-  margin-top: auto;
-  flex-shrink: 0;
-  z-index: 10;
 }
 
 /* Базовые стили для кнопок навигации по вопросам */
@@ -524,8 +608,19 @@ const filteredTags = computed(() => {
   }
 
   .tag-item {
-    max-width: 120px;
+    max-width: 100px;
     font-size: 11px;
+  }
+
+  .question-tags {
+    max-height: 60px;
+    gap: 4px;
+  }
+
+  .tags-toggle-button {
+    font-size: 11px;
+    height: 20px;
+    padding: 0 6px;
   }
 
   .status-actions {
@@ -545,7 +640,11 @@ const filteredTags = computed(() => {
   }
 
   .tag-item {
-    max-width: 100px;
+    max-width: 80px;
+  }
+
+  .question-tags {
+    max-height: 50px;
   }
 }
 
