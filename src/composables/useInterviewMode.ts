@@ -7,36 +7,29 @@ export type InterviewMode = 'manual' | 'ai'
  * Композабл для управления и сохранения выбора режима собеседования
  */
 export function useInterviewMode() {
-  const { value: mode, setValue: setMode } = useLocalStorage<InterviewMode>(
-    'interview-trainer-mode',
-    'manual',
-  )
-
-  const { value: aiSettings, setValue: setAISettings } = useLocalStorage('interview-trainer-ai-settings', {
-    field: 'frontend',
+  const mode = useLocalStorage<InterviewMode>('interview-trainer-mode', 'manual')
+  const aiSettings = useLocalStorage('interview-trainer-ai-settings', {
+    specialty: 'frontend',
     difficulty: 'middle',
     questionsCount: 5,
     technology: 'vue',
+    skill: 'hard',
   })
-
-  const { value: interviewSettings, setValue: setInterviewSettings } = useLocalStorage<InterviewSettings>('interview-trainer-settings', {
+  const interviewSettings = useLocalStorage<InterviewSettings>('interview-trainer-settings', {
     showProgress: true,
     enableAnswerInput: true,
   })
-
-  const { value: questionsListCollapsed, setValue: setQuestionsListCollapsed } = useLocalStorage(
-    'interview-trainer-questions-collapsed',
-    false,
-  )
+  const questionsListCollapsed = useLocalStorage('interview-trainer-questions-collapsed', false)
 
   return {
     mode,
-    setMode,
     aiSettings,
-    setAISettings,
     interviewSettings,
-    setInterviewSettings,
     questionsListCollapsed,
-    setQuestionsListCollapsed,
+
+    setMode: (value: InterviewMode) => { mode.value = value },
+    setAISettings: (value: any) => { aiSettings.value = value },
+    setInterviewSettings: (value: InterviewSettings) => { interviewSettings.value = value },
+    setQuestionsListCollapsed: (value: boolean) => { questionsListCollapsed.value = value },
   }
 }

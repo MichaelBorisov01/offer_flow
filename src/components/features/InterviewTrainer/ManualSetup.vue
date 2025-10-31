@@ -13,7 +13,7 @@ import {
 import { message, Tooltip } from 'ant-design-vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
-import { useInterviewStore } from '@/stores/interview'
+import { useInterviewStore } from '@/stores/interview/index'
 import AIAnswerCard from './AIAnswerCard.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 import QuestionFilters from './manual/QuestionFilters.vue'
