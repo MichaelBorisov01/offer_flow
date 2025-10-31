@@ -12,7 +12,7 @@ export function useInterview() {
     if (mode.value === 'manual') {
       return store.questions.length > 0
     }
-    return true // Для AI режима проверки не нужны
+    return true
   })
 
   return {
