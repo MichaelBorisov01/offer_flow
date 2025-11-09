@@ -6,8 +6,8 @@ import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIInterviewSession from './sessions/AIInterviewSession.vue'
+import ManualInterviewSession from './sessions/ManualInterviewSession.vue'
 import AISetup from './setup/AISetup.vue'
-import InterviewSession from './sessions/InterviewSession.vue'
 import ManualSetup from './setup/ManualSetup.vue'
 
 const interviewStore = useInterviewStore()
@@ -168,7 +168,7 @@ watch(mode, (newMode, oldMode) => {
       </div>
 
       <div v-else>
-        <InterviewSession v-if="mode === 'manual'" />
+        <ManualInterviewSession v-if="mode === 'manual'" />
         <AIInterviewSession v-else />
       </div>
     </a-card>

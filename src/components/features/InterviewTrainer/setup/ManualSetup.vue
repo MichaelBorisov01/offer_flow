@@ -7,10 +7,10 @@ import { useInterviewStore } from '@/stores/interview/index'
 import { EmptyStates } from '../components/EmptyStates'
 import { QuestionItem } from '../components/QuestionItem'
 import { QuestionListHeader } from '../components/QuestionListHeader'
-import EditQuestionForm from './EditQuestionForm.vue'
-import QuestionFilters from '../Manual/QuestionFilters.vue'
 import ConfirmClearAllModal from '../modal/ConfirmClearAllModal.vue'
+import QuestionFilters from '../shared/QuestionFilters.vue'
 import StatusProgressBar from '../shared/StatusProgressBar.vue'
+import EditQuestionForm from './EditQuestionForm.vue'
 
 const emit = defineEmits<{
   (e: 'questionsChanged'): void
