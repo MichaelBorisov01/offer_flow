@@ -2,6 +2,7 @@
 import type { UserAnswer } from '@/types/interview'
 import { BulbOutlined, CheckOutlined, EditOutlined } from '@ant-design/icons-vue'
 import { ref, watch } from 'vue'
+import { getScoreColor } from '@/utils/helpers/scoreHelpers'
 
 interface Props {
   questionId: string
@@ -32,16 +33,6 @@ watch(() => props.userAnswer, (newAnswer) => {
     localAnswer.value = newAnswer.userAnswer
   }
 }, { immediate: true })
-
-function getScoreColor(score: number): string {
-  if (score >= 9)
-    return 'green'
-  if (score >= 7)
-    return 'blue'
-  if (score >= 5)
-    return 'orange'
-  return 'red'
-}
 
 function submitAnswer() {
   if (!localAnswer.value.trim())

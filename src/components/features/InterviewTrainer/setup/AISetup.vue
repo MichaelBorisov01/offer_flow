@@ -5,6 +5,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { AIService } from '@/services/aiService'
 import { QuestionService } from '@/services/questionService'
 import { useInterviewStore } from '@/stores/interview'
+import { getDifficultyColor } from '@/utils/helpers/questionHelpers'
 
 interface Props {
   initialSettings?: AISettings
@@ -100,11 +101,6 @@ const showTechnologySelect = computed(() =>
 const showSpecialtyAndDifficulty = computed(() => aiSettings.skill === 'hard')
 
 const hasQuestions = computed(() => aiQuestions.value.length > 0)
-
-function getDifficultyColor(difficulty: string) {
-  const colors = { junior: 'green', middle: 'orange', senior: 'red' }
-  return colors[difficulty as keyof typeof colors] || 'blue'
-}
 
 function showMessage(type: 'success' | 'warning' | 'error' | 'info', content: string, duration?: number) {
   const now = Date.now()

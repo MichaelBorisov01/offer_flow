@@ -5,10 +5,10 @@ import { message } from 'ant-design-vue'
 import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
-import AIInterviewSession from './AIInterviewSession.vue'
-import AISetup from './AISetup.vue'
-import InterviewSession from './InterviewSession.vue'
-import ManualSetup from './ManualSetup.vue'
+import AIInterviewSession from './sessions/AIInterviewSession.vue'
+import AISetup from './setup/AISetup.vue'
+import InterviewSession from './sessions/InterviewSession.vue'
+import ManualSetup from './setup/ManualSetup.vue'
 
 const interviewStore = useInterviewStore()
 
