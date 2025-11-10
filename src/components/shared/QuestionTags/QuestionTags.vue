@@ -148,4 +148,3 @@ function toggleTagsVisibility() {
   }
 }
 </style>
-

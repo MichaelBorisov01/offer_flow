@@ -1,3 +1,4 @@
+import type { QuestionStatus } from '@/types/interview'
 import {
   CATEGORY_COLORS,
   CATEGORY_LABELS,
@@ -32,17 +33,17 @@ export function getCategoryLabelShort(category: string): string {
   return CATEGORY_LABELS_SHORT[category as keyof typeof CATEGORY_LABELS_SHORT] || category
 }
 
-export function getQuestionStatusColors(status: 'known' | 'repeat' | 'hard') {
+export function getQuestionStatusColors(status: QuestionStatus) {
   return QUESTION_STATUS_COLORS[status]
 }
 
-export function getCardBorderColor(status?: 'known' | 'repeat' | 'hard'): string {
+export function getCardBorderColor(status?: QuestionStatus): string {
   if (!status)
     return '#f0f0f0'
   return QUESTION_STATUS_COLORS[status].border
 }
 
-export function getCardBackgroundColor(status?: 'known' | 'repeat' | 'hard'): string {
+export function getCardBackgroundColor(status?: QuestionStatus): string {
   if (!status)
     return '#ffffff'
   return QUESTION_STATUS_COLORS[status].background

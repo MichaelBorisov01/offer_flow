@@ -12,7 +12,7 @@ export interface Question extends QuestionForm {
   updatedAt?: Date
   userId?: string
   aiAnswer?: AIAnswer
-  status?: 'known' | 'repeat' | 'hard'
+  status?: QuestionStatus
   tempId?: string
 }
 
@@ -45,6 +45,8 @@ export interface AIAnswer {
   type: 'serious' | 'joke'
 }
 
+export type QuestionStatus = 'known' | 'repeat' | 'hard'
+
 export interface UserAnswer {
   questionId: string
   questionText: string
@@ -63,11 +65,11 @@ export interface AnswerEvaluation {
 export interface InterviewSettings {
   showProgress: boolean
   enableAnswerInput?: boolean
-  filterByStatus?: 'known' | 'repeat' | 'hard' | ''
+  filterByStatus?: QuestionStatus | ''
 }
 
 export interface QuestionFilters {
-  statuses: string[]
+  statuses: QuestionStatus[]
   difficulties: string[]
   categories: string[]
   tags: string[]

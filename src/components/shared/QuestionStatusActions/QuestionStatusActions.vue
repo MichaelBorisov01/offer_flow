@@ -1,18 +1,19 @@
 <script setup lang="ts">
+import type { QuestionStatus } from '@/types/interview'
 import { CheckOutlined, ExclamationOutlined, RedoOutlined } from '@ant-design/icons-vue'
 
 interface Props {
-  currentStatus?: 'known' | 'repeat' | 'hard'
+  currentStatus?: QuestionStatus
 }
 
 interface Emits {
-  (e: 'statusChange', status: 'known' | 'repeat' | 'hard'): void
+  (e: 'statusChange', status: QuestionStatus): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-function handleStatusChange(status: 'known' | 'repeat' | 'hard') {
+function handleStatusChange(status: QuestionStatus) {
   emit('statusChange', status)
 }
 </script>

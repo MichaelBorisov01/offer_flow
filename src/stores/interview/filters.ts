@@ -1,4 +1,4 @@
-import type { Question, QuestionFilters } from '@/types/interview'
+import type { Question, QuestionFilters, QuestionStatus } from '@/types/interview'
 import { useStorage } from '@vueuse/core'
 import { message } from 'ant-design-vue'
 
@@ -40,7 +40,7 @@ export function useInterviewFilters(getQuestions: () => Question[]) {
     const difficulties = new Set<string>()
     const categories = new Set<string>()
     const tags = new Set<string>()
-    const statuses = new Set<string>()
+    const statuses = new Set<QuestionStatus>()
 
     questions.forEach((question) => {
       difficulties.add(question.difficulty)

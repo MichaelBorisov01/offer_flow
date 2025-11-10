@@ -7,4 +7,3 @@ export function getScoreColor(score: number): string {
     return 'orange'
   return 'red'
 }
-

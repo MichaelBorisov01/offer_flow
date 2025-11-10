@@ -71,4 +71,3 @@ withDefaults(defineProps<Props>(), {
   }
 }
 </style>
-

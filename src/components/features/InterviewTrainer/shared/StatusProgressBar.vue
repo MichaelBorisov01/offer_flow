@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import type { Question } from '@/types/interview'
+import type { Question, QuestionStatus } from '@/types/interview'
 import { computed } from 'vue'
 
 interface Props {
   questions: Question[]
 }
-
-type QuestionStatus = 'known' | 'repeat' | 'hard' | 'unknown'
 
 interface StatusStats {
   known: number
@@ -51,10 +49,12 @@ const statusStats = computed((): StatusStats => {
   }
 })
 
-const statusTypes: QuestionStatus[] = ['known', 'repeat', 'hard', 'unknown']
+type ExtendedQuestionStatus = QuestionStatus | 'unknown'
 
-function getStatusLabel(status: QuestionStatus): string {
-  const labels: Record<QuestionStatus, string> = {
+const statusTypes: ExtendedQuestionStatus[] = ['known', 'repeat', 'hard', 'unknown']
+
+function getStatusLabel(status: ExtendedQuestionStatus): string {
+  const labels: Record<ExtendedQuestionStatus, string> = {
     known: 'Знаю',
     repeat: 'Повторить',
     hard: 'Сложно',
@@ -63,8 +63,8 @@ function getStatusLabel(status: QuestionStatus): string {
   return labels[status]
 }
 
-function getStatusColor(status: QuestionStatus): string {
-  const colors: Record<QuestionStatus, string> = {
+function getStatusColor(status: ExtendedQuestionStatus): string {
+  const colors: Record<ExtendedQuestionStatus, string> = {
     known: '#52c41a',
     repeat: '#fa8c16',
     hard: '#ff4d4f',

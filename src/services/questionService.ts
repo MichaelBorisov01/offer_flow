@@ -1,3 +1,4 @@
+import type { QuestionStatus } from '@/types/interview'
 import {
   addDoc,
   collection,
@@ -20,7 +21,7 @@ export interface Question {
   category: string
   difficulty: string
   tags?: string[]
-  status?: 'known' | 'repeat' | 'hard'
+  status?: QuestionStatus
   createdAt?: Date
   updatedAt?: Date
   userId?: string

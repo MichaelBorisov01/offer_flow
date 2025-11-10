@@ -1,4 +1,4 @@
-import type { Question, QuestionForm } from '@/types/interview'
+import type { Question, QuestionForm, QuestionStatus } from '@/types/interview'
 import { computed, ref } from 'vue'
 import { QuestionService } from '@/services/questionService'
 
@@ -103,7 +103,7 @@ export function useInterviewQuestions() {
     }
   }
 
-  const updateQuestionStatus = async (questionId: string, status: 'known' | 'repeat' | 'hard') => {
+  const updateQuestionStatus = async (questionId: string, status: QuestionStatus) => {
     const question = questions.value.find(q => q.id === questionId)
     if (question) {
       try {

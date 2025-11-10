@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
 import { ProgressSection } from '@/components/shared/ProgressSection'
@@ -20,7 +21,7 @@ const interviewSettings = computed(() => interviewStore.interviewSettings)
 const answerVisible = ref(false)
 const answerGenerating = ref(false)
 
-async function setQuestionStatus(status: 'known' | 'repeat' | 'hard') {
+async function setQuestionStatus(status: QuestionStatus) {
   if (!currentQuestion.value?.id) {
     return
   }

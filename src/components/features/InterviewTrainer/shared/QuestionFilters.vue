@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Question } from '@/types/interview'
+import type { Question, QuestionFilters, QuestionStatus } from '@/types/interview'
 import { ClearOutlined, FilterOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { computed, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
@@ -9,14 +9,7 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'filterChange', filters: FilterState): void
-}
-
-interface FilterState {
-  difficulties: string[]
-  categories: string[]
-  tags: string[]
-  statuses: string[]
+  (e: 'filterChange', filters: QuestionFilters): void
 }
 
 const props = defineProps<Props>()
@@ -25,24 +18,30 @@ const emit = defineEmits<Emits>()
 const interviewStore = useInterviewStore()
 
 // Загружаем фильтры из store
-function loadFiltersFromStorage(): FilterState {
-  return interviewStore.getCurrentFilters()
+function loadFiltersFromStorage(): QuestionFilters {
+  const filters = interviewStore.getCurrentFilters()
+  return {
+    ...filters,
+    statuses: filters.statuses.filter((status): status is QuestionStatus =>
+      ['known', 'repeat', 'hard'].includes(status),
+    ),
+  }
 }
 
 // Сохраняем фильтры в store
-function saveFiltersToStorage(filters: FilterState) {
+function saveFiltersToStorage(filters: QuestionFilters) {
   interviewStore.setQuestionFilters(filters)
 }
 
-const filterState = ref<FilterState>(loadFiltersFromStorage())
-const activeCollapseKeys = ref<string[]>(['1']) // По умолчанию развернуто
+const filterState = ref<QuestionFilters>(loadFiltersFromStorage())
+const activeCollapseKeys = ref<string[]>(['1'])
 
 // Получаем все уникальные значения для фильтров
 const availableFilters = computed(() => {
   const difficulties = new Set<string>()
   const categories = new Set<string>()
   const tags = new Set<string>()
-  const statuses = new Set<string>()
+  const statuses = new Set<QuestionStatus>()
 
   props.questions.forEach((question) => {
     difficulties.add(question.difficulty)
@@ -55,7 +54,7 @@ const availableFilters = computed(() => {
 
   // Кастомная сортировка для определенного порядка
   const difficultyOrder = ['junior', 'middle', 'senior']
-  const statusOrder = ['known', 'repeat', 'hard']
+  const statusOrder: QuestionStatus[] = ['known', 'repeat', 'hard']
 
   const sortByOrder = (arr: string[], order: string[]) => {
     return arr.sort((a, b) => {
@@ -75,7 +74,11 @@ const availableFilters = computed(() => {
     difficulties: sortByOrder(Array.from(difficulties), difficultyOrder),
     categories: Array.from(categories).sort((a, b) => a.localeCompare(b)),
     tags: Array.from(tags).sort((a, b) => a.localeCompare(b)),
-    statuses: sortByOrder(Array.from(statuses), statusOrder),
+    statuses: Array.from(statuses).sort((a, b) => {
+      const indexA = statusOrder.indexOf(a)
+      const indexB = statusOrder.indexOf(b)
+      return indexA - indexB
+    }),
   }
 })
 
@@ -115,22 +118,22 @@ function getCategoryLabel(category: string) {
   return labels[category] || category
 }
 
-function getStatusLabel(status: string) {
-  const labels: Record<string, string> = {
+function getStatusLabel(status: QuestionStatus): string {
+  const labels: Record<QuestionStatus, string> = {
     known: 'Знаю',
     repeat: 'Повторить',
     hard: 'Сложно',
   }
-  return labels[status] || status
+  return labels[status]
 }
 
-function getStatusColor(status: string) {
-  const colors: Record<string, string> = {
+function getStatusColor(status: QuestionStatus): string {
+  const colors: Record<QuestionStatus, string> = {
     known: '#52c41a',
     repeat: '#fa8c16',
     hard: '#ff4d4f',
   }
-  return colors[status] || '#d9d9d9'
+  return colors[status]
 }
 
 // Обработчик изменения фильтров
@@ -142,20 +145,20 @@ function handleFilterChange() {
 // Очистка фильтров
 function clearFilters() {
   filterState.value = {
+    statuses: [],
     difficulties: [],
     categories: [],
     tags: [],
-    statuses: [],
   }
   interviewStore.resetQuestionFilters()
   emit('filterChange', { ...filterState.value })
 }
 
 function getActiveFiltersCount() {
-  return filterState.value.difficulties.length
+  return filterState.value.statuses.length
+    + filterState.value.difficulties.length
     + filterState.value.categories.length
     + filterState.value.tags.length
-    + filterState.value.statuses.length
 }
 
 const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
@@ -171,7 +174,12 @@ watch(
   () => interviewStore.getCurrentFilters(),
   (newFilters) => {
     // Синхронизируем локальное состояние с store
-    filterState.value = { ...newFilters }
+    filterState.value = {
+      ...newFilters,
+      statuses: newFilters.statuses.filter((status): status is QuestionStatus =>
+        ['known', 'repeat', 'hard'].includes(status),
+      ),
+    }
   },
   { deep: true },
 )
