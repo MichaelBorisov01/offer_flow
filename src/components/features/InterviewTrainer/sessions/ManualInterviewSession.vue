@@ -21,6 +21,10 @@ const interviewSettings = computed(() => interviewStore.interviewSettings)
 const answerVisible = ref(false)
 const answerGenerating = ref(false)
 
+function isQuestionAnswered(questionId: string): boolean {
+  return !!interviewStore.getUserAnswer(questionId)
+}
+
 async function setQuestionStatus(status: QuestionStatus) {
   if (!currentQuestion.value?.id) {
     return
@@ -28,7 +32,6 @@ async function setQuestionStatus(status: QuestionStatus) {
 
   try {
     await interviewStore.updateQuestionStatus(currentQuestion.value.id, status)
-    await interviewStore.loadUserQuestions()
   }
   catch (error) {
     console.error('Error updating status:', error)
@@ -130,6 +133,7 @@ function navigateToQuestion(index: number) {
         <QuestionNavigation
           :questions="questions"
           :current-index="currentQuestionIndex"
+          :is-question-answered="isQuestionAnswered"
           @previous="navigateToPreviousQuestion"
           @next="navigateToNextQuestion"
           @finish="completeInterview"
