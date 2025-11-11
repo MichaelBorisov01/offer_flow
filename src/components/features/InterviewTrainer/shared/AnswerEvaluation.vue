@@ -164,23 +164,6 @@ function showAIAnswer() {
         </div>
       </a-card>
     </div>
-
-    <!-- Индикатор оценки -->
-    <a-modal
-      v-model:open="showEvaluationModal"
-      title="Оценка ответа"
-      :footer="null"
-      :closable="false"
-      centered
-    >
-      <div class="evaluation-loading">
-        <a-spin size="large" />
-        <p>ИИ оценивает ваш ответ...</p>
-        <p class="loading-subtext">
-          Это может занять несколько секунд
-        </p>
-      </div>
-    </a-modal>
   </div>
 </template>
 
@@ -260,23 +243,6 @@ function showAIAnswer() {
   border-top: 1px solid #f0f0f0;
   padding-top: 16px;
   text-align: center;
-}
-
-.evaluation-loading {
-  text-align: center;
-  padding: 20px;
-}
-
-.evaluation-loading p {
-  margin-top: 12px;
-  font-size: 16px;
-  color: #1890ff;
-}
-
-.loading-subtext {
-  font-size: 14px !important;
-  color: #8c8c8c !important;
-  margin-top: 4px !important;
 }
 
 :deep(.ant-modal-body) {
