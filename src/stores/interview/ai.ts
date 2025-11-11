@@ -14,7 +14,7 @@ export function useInterviewAI(getQuestions: () => Question[]) {
     isGeneratingAnswer.value = true
 
     try {
-      const aiAnswer = await AIService.generateAnswer(question.text, userAnswer)
+      const aiAnswer = await AIService.generateAnswer(question.text, userAnswer, question.category)
       return aiAnswer
     }
     catch (error) {

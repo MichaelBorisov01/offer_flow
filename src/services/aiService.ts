@@ -194,10 +194,10 @@ export const AIService = {
   /**
    * Генерация ответа на вопрос
    */
-  async generateAnswer(question: string, userAnswer?: string): Promise<AIAnswer> {
+  async generateAnswer(question: string, userAnswer?: string, questionCategory?: string): Promise<AIAnswer> {
     if (isHuggingFaceConfigured) {
       try {
-        return await huggingFaceService.generateAnswer(question, userAnswer)
+        return await huggingFaceService.generateAnswer(question, userAnswer, questionCategory)
       }
       catch (error) {
         console.error('AI answer generation error:', error)
