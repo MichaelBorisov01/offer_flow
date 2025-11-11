@@ -1,11 +1,11 @@
-import type { Question } from '@/types/interview'
+import type { AIAnswer, Question } from '@/types/interview'
 import { ref } from 'vue'
 import { AIService } from '@/services/aiService'
 
 export function useInterviewAI(getQuestions: () => Question[]) {
   const isGeneratingAnswer = ref(false)
 
-  const generateAnswerForQuestion = async (questionId: string, userAnswer?: string) => {
+  const generateAnswerForQuestion = async (questionId: string, userAnswer?: string): Promise<AIAnswer | null> => {
     const question = getQuestions().find(q => q.id === questionId)
     if (!question) {
       throw new Error('Question not found')

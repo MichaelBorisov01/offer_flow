@@ -10,7 +10,7 @@ import AnswerEvaluation from '../shared/AnswerEvaluation.vue'
 
 const interviewStore = useInterviewStore()
 
-const questions = computed(() => interviewStore.questions)
+const questions = computed(() => interviewStore.sessionQuestionsList)
 const currentQuestion = computed(() => interviewStore.currentQuestion!)
 const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex)
 const progress = computed(() => interviewStore.progress)
@@ -43,10 +43,12 @@ function isQuestionAnswered(questionId: string): boolean {
 
 function nextQuestion() {
   interviewStore.nextQuestion()
+  showAIAnswer.value = false
 }
 
 function previousQuestion() {
   interviewStore.previousQuestion()
+  showAIAnswer.value = false
 }
 
 // Обработчики событий
@@ -65,6 +67,7 @@ async function handleAnswerSubmit(answer: string) {
 
 function handleSkipQuestion() {
   interviewStore.nextQuestion()
+  showAIAnswer.value = false
 }
 
 function handleNextQuestion() {
@@ -77,12 +80,18 @@ function handleEditAnswer() {
 }
 
 async function handleShowAIAnswer() {
+  if (!currentQuestion.value?.id)
+    return
+
+  showAIAnswer.value = true
+
   try {
     await interviewStore.generateAnswerForQuestion(currentQuestion.value.id!)
-    showAIAnswer.value = true
+    message.success('Ответ ИИ сгенерирован!')
   }
   catch {
     message.error('Не удалось сгенерировать ответ ИИ')
+    showAIAnswer.value = false
   }
 }
 
@@ -172,6 +181,7 @@ onMounted(() => {
         v-if="showAIAnswer && currentQuestion.aiAnswer"
         :answer="currentQuestion.aiAnswer"
         style="margin-top: 16px;"
+        @regenerate="handleShowAIAnswer"
         @close="showAIAnswer = false"
       />
     </a-card>

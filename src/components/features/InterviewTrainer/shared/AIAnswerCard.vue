@@ -5,7 +5,6 @@ import { computed } from 'vue'
 
 interface Props {
   answer: AIAnswer
-  loading?: boolean
   questionText?: string
 }
 
@@ -56,14 +55,8 @@ function regenerateAnswer() {
         </a-space>
       </template>
 
-      <!-- Индикатор загрузки -->
-      <div v-if="loading" class="loading-section">
-        <a-spin size="large" />
-        <p>ИИ генерирует ответ...</p>
-      </div>
-
       <!-- Контент ответа -->
-      <div v-else class="answer-content">
+      <div class="answer-content">
         <div class="answer-header">
           <a-tag :color="typeColor" class="type-tag">
             <SmileOutlined v-if="answer.type === 'joke'" />
@@ -86,7 +79,6 @@ function regenerateAnswer() {
           <a-button
             type="link"
             size="small"
-            :loading="loading"
             @click="regenerateAnswer"
           >
             <ReloadOutlined />
@@ -111,16 +103,6 @@ function regenerateAnswer() {
 .answer-card.joke {
   border-color: #fff2e8;
   background: #fffcf5;
-}
-
-.loading-section {
-  text-align: center;
-  padding: 20px;
-}
-
-.loading-section p {
-  margin-top: 8px;
-  color: #8c8c8c;
 }
 
 .answer-header {

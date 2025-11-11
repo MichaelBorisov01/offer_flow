@@ -1,4 +1,4 @@
-import type { InterviewSettings, Question } from '@/types/interview'
+import type { AIAnswer, InterviewSettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { defineStore } from 'pinia'
 import { computed, onUnmounted, ref } from 'vue'
@@ -34,6 +34,39 @@ export const useInterviewStore = defineStore('interview', () => {
       ? sessionModule.sessionQuestions.value
       : filteredQuestions.value
   })
+
+  // Метод для генерации ответа ИИ с сохранением в вопрос
+  const generateAnswerForQuestion = async (questionId: string, userAnswer?: string): Promise<AIAnswer | null> => {
+    try {
+      const aiAnswer = await aiModule.generateAnswerForQuestion(questionId, userAnswer)
+
+      if (aiAnswer) {
+      // Обновляем вопрос с AI ответом в основном списке
+        await questionsModule.updateQuestion(questionId, { aiAnswer })
+
+        // Если сессия активна, обновляем также в sessionQuestions
+        if (sessionModule.isSessionActive.value) {
+          const sessionQuestionIndex = sessionModule.sessionQuestions.value.findIndex(q => q.id === questionId)
+          if (sessionQuestionIndex !== -1) {
+            const updatedSessionQuestions = [...sessionModule.sessionQuestions.value]
+            updatedSessionQuestions[sessionQuestionIndex] = {
+              ...updatedSessionQuestions[sessionQuestionIndex],
+              aiAnswer,
+            } as Question
+            sessionModule.sessionQuestions.value = updatedSessionQuestions
+          }
+        }
+
+        return aiAnswer
+      }
+
+      return null
+    }
+    catch (error) {
+      console.error('Error in generateAnswerForQuestion:', error)
+      throw error
+    }
+  }
 
   // Метод для начала интервью
   const startInterview = async (settings?: InterviewSettings) => {
@@ -125,5 +158,6 @@ export const useInterviewStore = defineStore('interview', () => {
 
     // Actions
     startInterview,
+    generateAnswerForQuestion,
   }
 })

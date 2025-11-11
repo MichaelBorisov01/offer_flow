@@ -18,8 +18,7 @@ const currentQuestionIndex = computed(() => interviewStore.currentQuestionIndex)
 const progress = computed(() => interviewStore.progress)
 const interviewSettings = computed(() => interviewStore.interviewSettings)
 
-const answerVisible = ref(false)
-const answerGenerating = ref(false)
+const showAIAnswer = ref(false)
 
 function isQuestionAnswered(questionId: string): boolean {
   return !!interviewStore.getUserAnswer(questionId)
@@ -40,7 +39,7 @@ async function setQuestionStatus(status: QuestionStatus) {
 }
 
 async function toggleAnswerVisibility() {
-  if (answerVisible.value) {
+  if (showAIAnswer.value) {
     hideAnswer()
   }
   else {
@@ -49,35 +48,32 @@ async function toggleAnswerVisibility() {
 }
 
 function hideAnswer() {
-  answerVisible.value = false
+  showAIAnswer.value = false
 }
 
 async function generateAIAnswer() {
   if (!currentQuestion.value?.id)
     return
 
-  answerGenerating.value = true
-  answerVisible.value = true
-
   try {
     await interviewStore.generateAnswerForQuestion(currentQuestion.value.id)
     message.success('Ответ сгенерирован!')
+    showAIAnswer.value = true
   }
   catch (error) {
     console.error('Error generating answer:', error)
     message.error('Не удалось сгенерировать ответ')
   }
-  finally {
-    answerGenerating.value = false
-  }
 }
 
 function navigateToNextQuestion() {
   interviewStore.nextQuestion()
+  hideAnswer()
 }
 
 function navigateToPreviousQuestion() {
   interviewStore.previousQuestion()
+  hideAnswer()
 }
 
 function completeInterview() {
@@ -87,6 +83,7 @@ function completeInterview() {
 function navigateToQuestion(index: number) {
   if (index >= 0 && index < questions.value.length) {
     interviewStore.currentQuestionIndex = index
+    hideAnswer()
   }
 }
 </script>
@@ -106,8 +103,8 @@ function navigateToQuestion(index: number) {
           :question="currentQuestion!"
           :question-number="currentQuestionIndex + 1"
           :show-answer-toggle="true"
-          :answer-visible="answerVisible"
-          :answer-generating="answerGenerating"
+          :answer-visible="showAIAnswer"
+          :answer-generating="interviewStore.isGeneratingAnswer"
           @toggle-answer="toggleAnswerVisibility"
         >
           <template #tags="{ tags }">
@@ -121,9 +118,8 @@ function navigateToQuestion(index: number) {
         />
 
         <AIAnswerCard
-          v-if="answerVisible && currentQuestion.aiAnswer"
+          v-if="showAIAnswer && currentQuestion.aiAnswer"
           :answer="currentQuestion.aiAnswer"
-          :loading="answerGenerating"
           @regenerate="generateAIAnswer"
           @close="hideAnswer"
         />
