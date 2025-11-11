@@ -111,9 +111,7 @@ watch(mode, (newMode, oldMode) => {
         <a-divider />
 
         <!-- Контент в зависимости от режима -->
-        <ManualSetup
-          v-if="mode === 'manual'"
-        />
+        <ManualSetup v-if="mode === 'manual'" />
 
         <AISetup
           v-else

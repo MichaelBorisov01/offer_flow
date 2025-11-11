@@ -9,6 +9,7 @@ interface Props {
   questionText: string
   evaluating?: boolean
   userAnswer?: UserAnswer
+  aiAnswerLoading?: boolean
 }
 
 interface Emits {
@@ -152,10 +153,12 @@ function showAIAnswer() {
             <a-button
               type="link"
               size="large"
+              :loading="aiAnswerLoading"
+              :disabled="aiAnswerLoading"
               @click="showAIAnswer"
             >
               <BulbOutlined />
-              Посмотреть ответ ИИ
+              {{ aiAnswerLoading ? 'Генерация ответа...' : 'Посмотреть ответ ИИ' }}
             </a-button>
           </a-space>
         </div>

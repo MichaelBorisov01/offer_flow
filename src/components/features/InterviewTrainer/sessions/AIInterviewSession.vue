@@ -155,6 +155,7 @@ onMounted(() => {
         :question-text="currentQuestion.text"
         :evaluating="isEvaluating"
         :user-answer="currentUserAnswer"
+        :ai-answer-loading="interviewStore.isGeneratingAnswer"
         @submit="handleAnswerSubmit"
         @skip="handleSkipQuestion"
         @next="handleNextQuestion"

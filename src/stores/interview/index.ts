@@ -35,26 +35,26 @@ export const useInterviewStore = defineStore('interview', () => {
       : filteredQuestions.value
   })
 
-  // Метод для генерации ответа ИИ с сохранением в вопрос
+  // Метод для генерации ответа ИИ с сохранением только в локальное состояние
   const generateAnswerForQuestion = async (questionId: string, userAnswer?: string): Promise<AIAnswer | null> => {
     try {
       const aiAnswer = await aiModule.generateAnswerForQuestion(questionId, userAnswer)
 
       if (aiAnswer) {
-      // Обновляем вопрос с AI ответом в основном списке
-        await questionsModule.updateQuestion(questionId, { aiAnswer })
+      // Обновляем в основном списке вопросов (локально)
+        questionsModule.questions.value = questionsModule.questions.value.map(question =>
+          question.id === questionId
+            ? { ...question, aiAnswer }
+            : question,
+        )
 
         // Если сессия активна, обновляем также в sessionQuestions
         if (sessionModule.isSessionActive.value) {
-          const sessionQuestionIndex = sessionModule.sessionQuestions.value.findIndex(q => q.id === questionId)
-          if (sessionQuestionIndex !== -1) {
-            const updatedSessionQuestions = [...sessionModule.sessionQuestions.value]
-            updatedSessionQuestions[sessionQuestionIndex] = {
-              ...updatedSessionQuestions[sessionQuestionIndex],
-              aiAnswer,
-            } as Question
-            sessionModule.sessionQuestions.value = updatedSessionQuestions
-          }
+          sessionModule.sessionQuestions.value = sessionModule.sessionQuestions.value.map(question =>
+            question.id === questionId
+              ? { ...question, aiAnswer } as Question
+              : question,
+          )
         }
 
         return aiAnswer
@@ -63,7 +63,7 @@ export const useInterviewStore = defineStore('interview', () => {
       return null
     }
     catch (error) {
-      console.error('Error in generateAnswerForQuestion:', error)
+      console.error('❌ [InterviewStore] Error in generateAnswerForQuestion:', error)
       throw error
     }
   }
