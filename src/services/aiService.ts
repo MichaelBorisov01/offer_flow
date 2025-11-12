@@ -1,5 +1,6 @@
 import type { AIAnswer, AISettings, Question } from '@/types/interview'
-import { huggingFaceService, RECOMMENDED_MODELS } from './huggingFaceService'
+import { RECOMMENDED_MODELS } from '@/utils/constants/huggingFace'
+import { huggingFaceService } from './huggingFaceService'
 
 const isHuggingFaceConfigured = !!import.meta.env.VITE_HUGGING_FACE_API_KEY
 
