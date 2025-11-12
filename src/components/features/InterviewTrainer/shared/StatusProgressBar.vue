@@ -6,6 +6,13 @@ interface Props {
   questions: Question[]
 }
 
+interface Emits {
+  (e: 'statusClick', status: QuestionStatus): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+
 interface StatusStats {
   known: number
   repeat: number
@@ -18,8 +25,6 @@ interface StatusStats {
     unknown: number
   }
 }
-
-const props = defineProps<Props>()
 
 const statusStats = computed((): StatusStats => {
   const total = props.questions.length
@@ -72,6 +77,20 @@ function getStatusColor(status: ExtendedQuestionStatus): string {
   }
   return colors[status]
 }
+
+function handleStatusClick(status: ExtendedQuestionStatus) {
+  if (status === 'unknown')
+    return
+
+  emit('statusClick', status as QuestionStatus)
+}
+
+function handleSegmentClick(status: ExtendedQuestionStatus) {
+  if (status === 'unknown')
+    return
+
+  emit('statusClick', status as QuestionStatus)
+}
 </script>
 
 <template>
@@ -92,6 +111,7 @@ function getStatusColor(status: ExtendedQuestionStatus): string {
             backgroundColor: getStatusColor(status),
           }"
           :title="`${getStatusLabel(status)}: ${statusStats.counts[status]} (${Math.round(statusStats[status])}%)`"
+          @click="handleSegmentClick(status)"
         />
       </div>
     </div>
@@ -102,6 +122,8 @@ function getStatusColor(status: ExtendedQuestionStatus): string {
         :key="status"
         :color="getStatusColor(status)"
         class="legend-tag"
+        :class="{ clickable: status !== 'unknown' }"
+        @click="handleStatusClick(status)"
       >
         {{ getStatusLabel(status) }} ({{ statusStats.counts[status] }})
       </a-tag>
@@ -151,9 +173,9 @@ function getStatusColor(status: ExtendedQuestionStatus): string {
 
 .progress-segment {
   height: 100%;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
-  min-width: 2px; /* Чтобы очень маленькие сегменты были видны */
+  min-width: 2px;
 }
 
 .progress-segment:hover {
@@ -170,11 +192,17 @@ function getStatusColor(status: ExtendedQuestionStatus): string {
 .legend-tag {
   margin: 0;
   font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.legend-tag.clickable {
   cursor: pointer;
 }
 
-.legend-tag:hover {
+.legend-tag.clickable:hover {
   opacity: 0.8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 768px) {

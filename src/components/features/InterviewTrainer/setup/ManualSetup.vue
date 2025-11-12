@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Question, QuestionForm } from '@/types/interview'
+import type { Question, QuestionForm, QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
@@ -210,6 +210,28 @@ function clearAllFilters() {
   handleFilterChange(currentFilters.value)
 }
 
+function handleStatusClick(status: QuestionStatus) {
+  const currentFilters = interviewStore.getCurrentFilters()
+
+  const isStatusSelected = currentFilters.statuses.includes(status)
+
+  if (isStatusSelected) {
+    const newStatuses = currentFilters.statuses.filter(s => s !== status)
+    const newFilters = {
+      ...currentFilters,
+      statuses: newStatuses,
+    }
+    handleFilterChange(newFilters)
+  }
+  else {
+    const newFilters = {
+      ...currentFilters,
+      statuses: [status],
+    }
+    handleFilterChange(newFilters)
+  }
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -241,6 +263,7 @@ onMounted(() => {
         v-if="allQuestions.length > 0"
         :questions="filteredQuestions"
         class="inline-progress"
+        @status-click="handleStatusClick"
       />
 
       <QuestionListHeader
