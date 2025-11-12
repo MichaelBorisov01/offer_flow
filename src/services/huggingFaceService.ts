@@ -11,7 +11,7 @@ import {
 } from '@/utils/constants/huggingFace'
 
 import { PROMPTS } from '@/utils/constants/prompts'
-import { isGibberish } from '@/utils/helpers/AITextHelpers'
+import { isGibberish, isLikelyNormalQuestion } from '@/utils/helpers/AITextHelpers'
 
 export interface HuggingFaceConfig {
   apiKey: string
@@ -250,7 +250,7 @@ ${technology ? `Основная технология: ${technology}` : ''}
 
   async generateAnswer(question: string, userAnswer?: string, questionCategory?: string): Promise<AIAnswer> {
     try {
-      // Для софт-вопросов всегда генерируем серьезный ответ
+    // Для софт-вопросов всегда генерируем серьезный ответ
       const isSoftQuestion = questionCategory === 'soft-skills'
       if (isSoftQuestion) {
         const messages = this.buildSoftSkillsAnswerMessages(question)
@@ -262,11 +262,13 @@ ${technology ? `Основная технология: ${technology}` : ''}
         }
       }
 
-      // Для технических вопросов сохраняем текущую логику с проверкой на "ерунду"
+      // Для технических вопросов используем улучшенную логику с проверкой на "ерунду" и нормальные вопросы
       const isQuestionGibberish = isGibberish(question)
       const isAnswerGibberish = userAnswer ? isGibberish(userAnswer) : false
+      const isLikelyNormal = isLikelyNormalQuestion(question)
 
-      const shouldGenerateJoke = isQuestionGibberish || isAnswerGibberish
+      // Генерируем шутку только если вопрос или ответ - ерунда И это не похоже на нормальный вопрос
+      const shouldGenerateJoke = (isQuestionGibberish || isAnswerGibberish) && !isLikelyNormal
 
       const messages: ChatCompletionInputMessage[] = shouldGenerateJoke
         ? this.buildJokeMessages(question, userAnswer, isQuestionGibberish)
