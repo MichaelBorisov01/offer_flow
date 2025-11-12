@@ -34,7 +34,7 @@ function saveFiltersToStorage(filters: QuestionFilters) {
 }
 
 const filterState = ref<QuestionFilters>(loadFiltersFromStorage())
-const activeCollapseKeys = ref<string[]>(['1'])
+const activeCollapseKeys = ref<string[]>([])
 
 // Получаем все уникальные значения для фильтров
 const availableFilters = computed(() => {
