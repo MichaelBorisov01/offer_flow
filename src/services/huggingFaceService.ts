@@ -735,6 +735,6 @@ export const RECOMMENDED_MODELS = {
 export const huggingFaceService = new HuggingFaceService({
   apiKey: import.meta.env.VITE_HUGGING_FACE_API_KEY || '',
   model: RECOMMENDED_MODELS.GENERAL,
-  maxTokens: 800,
+  maxTokens: 1000,
   temperature: 0.7,
 })
