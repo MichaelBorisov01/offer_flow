@@ -2018,6 +2018,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/trusted-types@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
+  languageName: node
+  linkType: hard
+
 "@types/unist@npm:*, @types/unist@npm:^3.0.0":
   version: 3.0.3
   resolution: "@types/unist@npm:3.0.3"
@@ -3216,9 +3223,11 @@ __metadata:
     ant-design-vue: "npm:^4.2.6"
     antfu: "npm:^0.0.0"
     axios: "npm:^1.12.0"
+    dompurify: "npm:^3.3.0"
     eslint: "npm:^9.31.0"
     firebase: "npm:^12.2.1"
     jiti: "npm:^2.4.2"
+    marked: "npm:^17.0.0"
     pinia: "npm:^3.0.3"
     sass-embedded: "npm:^1.93.2"
     typescript: "npm:~5.9.2"
@@ -3240,6 +3249,18 @@ __metadata:
   version: 2.0.1
   resolution: "dom-scroll-into-view@npm:2.0.1"
   checksum: 10c0/d2ee7032e3f352f23b1ae870f151c8f7d57b8e67b9ba526f9a15bb810799903bce44a0245c0e63d344bb1fb442ba4337f5c0f2b83684c9a37be0b2d064ea9d23
+  languageName: node
+  linkType: hard
+
+"dompurify@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "dompurify@npm:3.3.0"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.7"
+  dependenciesMeta:
+    "@types/trusted-types":
+      optional: true
+  checksum: 10c0/66b1787b0bc8250d8f58e13284cf7f5f6bb400a0a55515e7a2a030316a4bb0d8306fdb669c17ed86ed58ff7e53c62b5da4488c2f261d11c58870fe01b8fcc486
   languageName: node
   linkType: hard
 
@@ -4845,6 +4866,15 @@ __metadata:
   version: 3.0.4
   resolution: "markdown-table@npm:3.0.4"
   checksum: 10c0/1257b31827629a54c24a5030a3dac952256c559174c95ce3ef89bebd6bff0cb1444b1fd667b1a1bb53307f83278111505b3e26f0c4e7b731e0060d435d2d930b
+  languageName: node
+  linkType: hard
+
+"marked@npm:^17.0.0":
+  version: 17.0.0
+  resolution: "marked@npm:17.0.0"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/e7f02b59356e50d751f57e9715ca29c5da580459450ae2ba2e0cfb286dd972d57fdb7ad9945c742ceb91a0bf65d2ff9e2f2fdc4094ae2a8621173c9e4a00b4f8
   languageName: node
   linkType: hard
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { AIAnswer } from '@/types/interview'
 import { BulbOutlined, CloseOutlined, InfoCircleOutlined, ReloadOutlined, SmileOutlined } from '@ant-design/icons-vue'
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 import { computed } from 'vue'
 
 interface Props {
@@ -26,6 +28,53 @@ const typeLabel = computed(() => {
 
 const typeColor = computed(() => {
   return props.answer.type === 'joke' ? 'orange' : 'green'
+})
+
+// Конвертируем Markdown в HTML
+const sanitizedContent = computed(() => {
+  if (!props.answer.content)
+    return ''
+
+  try {
+    const html = marked.parse(props.answer.content, {
+      breaks: true,
+      gfm: true,
+    })
+
+    return DOMPurify.sanitize(html.toString(), {
+      ALLOWED_TAGS: [
+        'strong',
+        'em',
+        'code',
+        'pre',
+        'p',
+        'ul',
+        'ol',
+        'li',
+        'br',
+        'span',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'blockquote',
+        'hr',
+      ],
+      ALLOWED_ATTR: ['class', 'style'],
+    })
+  }
+  catch (error) {
+    console.error('Ошибка при обработке Markdown:', error)
+    return DOMPurify.sanitize(
+      props.answer.content
+        .replace(/\*\*/g, '')
+        .replace(/`/g, '')
+        .replace(/\n/g, '<br/>'),
+      { ALLOWED_TAGS: ['br'] },
+    )
+  }
 })
 
 function regenerateAnswer() {
@@ -71,9 +120,12 @@ function regenerateAnswer() {
           </div>
         </div>
 
-        <div class="answer-text" :class="{ 'joke-text': answer.type === 'joke' }">
-          {{ answer.content }}
-        </div>
+        <!-- Рендеринг отформатированного контента -->
+        <div
+          class="answer-text"
+          :class="{ 'joke-text': answer.type === 'joke' }"
+          v-html="sanitizedContent"
+        />
 
         <div v-if="answer.type === 'serious'" class="answer-actions">
           <a-button
@@ -116,10 +168,50 @@ function regenerateAnswer() {
   font-weight: 500;
 }
 
+/* Стили для Markdown-контента */
 .answer-text {
   line-height: 1.6;
   color: #262626;
-  white-space: pre-line;
+}
+
+.answer-text :deep(strong) {
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.answer-text :deep(ul),
+.answer-text :deep(ol) {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.answer-text :deep(li) {
+  margin-bottom: 4px;
+}
+
+/* Стили для кода */
+.answer-text :deep(code) {
+  font-family: 'Consolas', monospace;
+  background-color: #f0f5ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+
+.answer-text :deep(pre) {
+  background-color: #f9fbfd;
+  border: 1px solid #e8f4ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow-x: auto;
+  font-size: 0.95em;
+}
+
+.answer-text :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  display: block;
 }
 
 .answer-text.joke-text {
