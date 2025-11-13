@@ -12,6 +12,7 @@ export interface Question extends QuestionForm {
   updatedAt?: Date
   userId?: string
   aiAnswer?: AIAnswer
+  userAnswer?: string
   status?: QuestionStatus
   tempId?: string
 }

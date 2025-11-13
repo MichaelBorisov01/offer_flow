@@ -1,4 +1,4 @@
-import type { QuestionStatus } from '@/types/interview'
+import type { Question } from '@/types/interview'
 import {
   addDoc,
   collection,
@@ -13,19 +13,6 @@ import {
 } from 'firebase/firestore'
 import { useAuthStore } from '@/stores/auth'
 import { db } from './firebase'
-
-export interface Question {
-  id?: string
-  text: string
-  type: 'text' | 'code' | 'ai'
-  category: string
-  difficulty: string
-  tags?: string[]
-  status?: QuestionStatus
-  createdAt?: Date
-  updatedAt?: Date
-  userId?: string
-}
 
 export const QuestionService = {
   async getQuestions(category?: string, difficulty?: string): Promise<Question[]> {
@@ -62,6 +49,7 @@ export const QuestionService = {
           difficulty: data.difficulty || 'middle',
           tags: data.tags || [],
           status: data.status || '',
+          userAnswer: data.userAnswer || '',
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
           userId: data.userId,
@@ -91,6 +79,8 @@ export const QuestionService = {
         difficulty: question.difficulty,
         tags: question.tags || [],
         status: question.status || '',
+        userAnswer: question.userAnswer || '',
+        aiAnswer: question.aiAnswer || null,
         userId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),

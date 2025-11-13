@@ -3,11 +3,15 @@ import type { Question } from '@/types/interview'
 import {
   BulbOutlined,
   CalendarOutlined,
+  CloseOutlined,
   DeleteOutlined,
+  EditFilled,
   EditOutlined,
+  SaveOutlined,
   TagOutlined,
 } from '@ant-design/icons-vue'
 import { Tooltip } from 'ant-design-vue'
+import { computed, ref } from 'vue'
 import {
   getCardBackgroundColor,
   getCardBorderColor,
@@ -29,10 +33,66 @@ interface Emits {
   (e: 'remove', index: number): void
   (e: 'generateAnswer', question: Question): void
   (e: 'clearAnswer', question: Question): void
+  (e: 'updateUserAnswer', question: Question, userAnswer: string): void
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+// Локальное состояние для редактирования пользовательского ответа
+const isEditingUserAnswer = ref(false)
+const userAnswerText = ref('')
+const isLoadingUserAnswer = ref(false)
+
+// Начинаем редактирование пользовательского ответа
+function startEditingUserAnswer() {
+  userAnswerText.value = props.question.userAnswer || ''
+  isEditingUserAnswer.value = true
+}
+
+// Отменяем редактирование
+function cancelEditingUserAnswer() {
+  isEditingUserAnswer.value = false
+  userAnswerText.value = ''
+}
+
+// Сохраняем пользовательский ответ
+async function saveUserAnswer() {
+  if (!userAnswerText.value.trim())
+    return
+
+  isLoadingUserAnswer.value = true
+  try {
+    await emit('updateUserAnswer', props.question, userAnswerText.value.trim())
+    isEditingUserAnswer.value = false
+  }
+  catch (error) {
+    console.error('Error saving user answer:', error)
+  }
+  finally {
+    isLoadingUserAnswer.value = false
+  }
+}
+
+// Удаляем пользовательский ответ
+async function clearUserAnswer() {
+  isLoadingUserAnswer.value = true
+  try {
+    await emit('updateUserAnswer', props.question, '')
+    isEditingUserAnswer.value = false
+  }
+  catch (error) {
+    console.error('Error clearing user answer:', error)
+  }
+  finally {
+    isLoadingUserAnswer.value = false
+  }
+}
+
+// Проверяем, есть ли пользовательский ответ
+const hasUserAnswer = computed(() => {
+  return props.question.userAnswer && props.question.userAnswer.trim().length > 0
+})
 </script>
 
 <template>
@@ -137,6 +197,86 @@ const emit = defineEmits<Emits>()
         </div>
       </template>
     </a-list-item-meta>
+
+    <!-- Блок пользовательского ответа -->
+    <div class="user-answer-section">
+      <div class="user-answer-header">
+        <h4 class="user-answer-title">
+          <EditFilled />
+          Ваш ответ
+        </h4>
+        <div class="user-answer-actions">
+          <a-button
+            v-if="!isEditingUserAnswer && !hasUserAnswer"
+            type="dashed"
+            size="small"
+            @click="startEditingUserAnswer"
+          >
+            Добавить ответ
+          </a-button>
+          <a-button
+            v-else-if="!isEditingUserAnswer && hasUserAnswer"
+            type="text"
+            size="small"
+            @click="startEditingUserAnswer"
+          >
+            Редактировать
+          </a-button>
+        </div>
+      </div>
+
+      <!-- Режим редактирования -->
+      <div v-if="isEditingUserAnswer" class="user-answer-edit">
+        <a-textarea
+          v-model:value="userAnswerText"
+          placeholder="Введите ваш ответ на этот вопрос..."
+          :rows="4"
+          :maxlength="2000"
+          show-count
+          class="user-answer-textarea"
+        />
+        <div class="user-answer-edit-actions">
+          <a-button
+            type="primary"
+            size="small"
+            :loading="isLoadingUserAnswer"
+            @click="saveUserAnswer"
+          >
+            <SaveOutlined />
+            Сохранить
+          </a-button>
+          <a-button
+            v-if="hasUserAnswer"
+            type="text"
+            danger
+            size="small"
+            :loading="isLoadingUserAnswer"
+            @click="clearUserAnswer"
+          >
+            Удалить
+          </a-button>
+          <a-button
+            size="small"
+            @click="cancelEditingUserAnswer"
+          >
+            <CloseOutlined />
+            Отмена
+          </a-button>
+        </div>
+      </div>
+
+      <!-- Режим просмотра -->
+      <div v-else-if="hasUserAnswer" class="user-answer-display">
+        <div class="user-answer-content">
+          {{ question.userAnswer }}
+        </div>
+      </div>
+
+      <!-- Сообщение когда ответа нет -->
+      <div v-else class="user-answer-empty">
+        <span class="empty-text">Вы еще не добавили ответ на этот вопрос</span>
+      </div>
+    </div>
 
     <AIAnswerCard
       v-if="question.aiAnswer"
@@ -274,6 +414,74 @@ const emit = defineEmits<Emits>()
   margin-top: 12px;
 }
 
+/* Стили для блока пользовательского ответа */
+.user-answer-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.user-answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.user-answer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.user-answer-edit {
+  margin-top: 8px;
+}
+
+.user-answer-textarea {
+  margin-bottom: 12px;
+}
+
+.user-answer-edit-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.user-answer-display {
+  margin-top: 8px;
+}
+
+.user-answer-content {
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: #262626;
+}
+
+.user-answer-empty {
+  padding: 12px;
+  text-align: center;
+  color: #8c8c8c;
+  font-style: italic;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px dashed #d9d9d9;
+}
+
+.empty-text {
+  font-size: 14px;
+}
+
 @media (max-width: 768px) {
   .question-header {
     flex-direction: column;
@@ -295,6 +503,14 @@ const emit = defineEmits<Emits>()
     align-items: flex-start;
     gap: 8px;
   }
+
+  .user-answer-edit-actions {
+    flex-direction: column;
+  }
+
+  .user-answer-edit-actions .ant-btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -313,6 +529,10 @@ const emit = defineEmits<Emits>()
   .difficulty-badge {
     font-size: 10px;
     padding: 1px 4px;
+  }
+
+  .user-answer-section {
+    padding: 12px;
   }
 }
 </style>

@@ -17,6 +17,8 @@ export function useInterviewQuestions() {
       const transformedQuestions = userQuestions.map(question => ({
         ...question,
         tags: question.tags || [],
+        userAnswer: question.userAnswer || '',
+        aiAnswer: question.aiAnswer || undefined,
       })) as Question[]
 
       questions.value = transformedQuestions
@@ -37,6 +39,7 @@ export function useInterviewQuestions() {
         category: questionData.category,
         difficulty: questionData.difficulty,
         tags: questionData.tags,
+        userAnswer: '',
         createdAt: new Date(),
       }
 
@@ -118,6 +121,22 @@ export function useInterviewQuestions() {
     }
   }
 
+  // Метод для обновления пользовательского ответа
+  const updateUserAnswer = async (questionId: string, userAnswer: string) => {
+    const question = questions.value.find(q => q.id === questionId)
+    if (question) {
+      try {
+        await QuestionService.updateQuestion(questionId, { userAnswer })
+        question.userAnswer = userAnswer
+        question.updatedAt = new Date()
+      }
+      catch (error) {
+        console.error('Error saving user answer:', error)
+        throw error
+      }
+    }
+  }
+
   const shuffleQuestions = () => {
     const shuffled: Question[] = [...questions.value]
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -146,6 +165,7 @@ export function useInterviewQuestions() {
     cancelEditing,
     updateQuestion,
     updateQuestionStatus,
+    updateUserAnswer,
     shuffleQuestions,
   }
 }

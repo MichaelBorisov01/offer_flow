@@ -232,6 +232,21 @@ function handleStatusClick(status: QuestionStatus) {
   }
 }
 
+// Обработчик обновления пользовательского ответа
+async function updateUserAnswer(question: Question, userAnswer: string) {
+  if (!question.id)
+    return
+
+  try {
+    await interviewStore.updateUserAnswer(question.id, userAnswer)
+    message.success(userAnswer ? 'Ответ сохранен' : 'Ответ удален')
+  }
+  catch (error) {
+    console.error('Error updating user answer:', error)
+    message.error('Ошибка при сохранении ответа')
+  }
+}
+
 onMounted(() => {
   interviewStore.loadUserQuestions()
 })
@@ -305,6 +320,7 @@ onMounted(() => {
               @remove="removeQuestion"
               @generate-answer="generateAnswerForQuestion"
               @clear-answer="clearAnswer"
+              @update-user-answer="updateUserAnswer"
             />
           </template>
         </a-list>
