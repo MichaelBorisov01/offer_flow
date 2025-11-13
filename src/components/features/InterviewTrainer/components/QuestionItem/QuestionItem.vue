@@ -34,6 +34,7 @@ interface Emits {
   (e: 'generateAnswer', question: Question): void
   (e: 'clearAnswer', question: Question): void
   (e: 'updateUserAnswer', question: Question, userAnswer: string): void
+  (e: 'saveAiToUserAnswer', question: Question, aiAnswer: string): void
 }
 
 const props = defineProps<Props>()
@@ -63,7 +64,7 @@ async function saveUserAnswer() {
 
   isLoadingUserAnswer.value = true
   try {
-    await emit('updateUserAnswer', props.question, userAnswerText.value.trim())
+    emit('updateUserAnswer', props.question, userAnswerText.value.trim())
     isEditingUserAnswer.value = false
   }
   catch (error) {
@@ -78,7 +79,7 @@ async function saveUserAnswer() {
 async function clearUserAnswer() {
   isLoadingUserAnswer.value = true
   try {
-    await emit('updateUserAnswer', props.question, '')
+    emit('updateUserAnswer', props.question, '')
     isEditingUserAnswer.value = false
   }
   catch (error) {
@@ -87,6 +88,11 @@ async function clearUserAnswer() {
   finally {
     isLoadingUserAnswer.value = false
   }
+}
+
+// Обработчик сохранения ответа ИИ как пользовательского ответа
+function handleSaveAiToUserAnswer(aiAnswer: string) {
+  emit('saveAiToUserAnswer', props.question, aiAnswer)
 }
 
 // Проверяем, есть ли пользовательский ответ
@@ -281,10 +287,11 @@ const hasUserAnswer = computed(() => {
     <AIAnswerCard
       v-if="question.aiAnswer"
       :answer="question.aiAnswer"
-      :loading="question.id === generatingAnswerId"
+      :question-text="question.text"
       class="ai-answer-card"
       @regenerate="() => emit('generateAnswer', question)"
       @close="emit('clearAnswer', question)"
+      @save-to-user-answer="handleSaveAiToUserAnswer"
     />
   </a-list-item>
 </template>
