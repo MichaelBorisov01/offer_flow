@@ -18,6 +18,9 @@ const isEvaluating = computed(() => interviewStore.isEvaluating)
 const showAIAnswer = ref(false)
 const interviewSettings = computed(() => interviewStore.interviewSettings)
 
+// Добавляем ключ для принудительного пересоздания AnswerEvaluation
+const answerEvaluationKey = ref(0)
+
 // Вычисляем текущий ответ пользователя
 const currentUserAnswer = computed(() => {
   return interviewStore.getUserAnswer(currentQuestion.value.id!)
@@ -44,11 +47,15 @@ function isQuestionAnswered(questionId: string): boolean {
 function nextQuestion() {
   interviewStore.nextQuestion()
   showAIAnswer.value = false
+  // Сбрасываем ключ для пересоздания AnswerEvaluation
+  answerEvaluationKey.value++
 }
 
 function previousQuestion() {
   interviewStore.previousQuestion()
   showAIAnswer.value = false
+  // Сбрасываем ключ для пересоздания AnswerEvaluation
+  answerEvaluationKey.value++
 }
 
 // Обработчики событий
@@ -68,11 +75,15 @@ async function handleAnswerSubmit(answer: string) {
 function handleSkipQuestion() {
   interviewStore.nextQuestion()
   showAIAnswer.value = false
+  // Сбрасываем ключ для пересоздания AnswerEvaluation
+  answerEvaluationKey.value++
 }
 
 function handleNextQuestion() {
   interviewStore.nextQuestion()
   showAIAnswer.value = false
+  // Сбрасываем ключ для пересоздания AnswerEvaluation
+  answerEvaluationKey.value++
 }
 
 function handleEditAnswer() {
@@ -99,6 +110,8 @@ function goToQuestion(index: number) {
   if (index >= 0 && index < questions.value.length) {
     interviewStore.currentQuestionIndex = index
     showAIAnswer.value = false
+    // Сбрасываем ключ для пересоздания AnswerEvaluation
+    answerEvaluationKey.value++
   }
 }
 
@@ -119,6 +132,12 @@ watch(() => interviewStore.userAnswers.length, (newCount) => {
   if (newCount === questions.value.length && !interviewStore.isLastQuestion) {
     finishInterview()
   }
+})
+
+// Следим за изменением текущего вопроса и сбрасываем состояние
+watch(currentQuestionIndex, () => {
+  showAIAnswer.value = false
+  answerEvaluationKey.value++
 })
 
 onMounted(() => {
@@ -151,6 +170,7 @@ onMounted(() => {
       <!-- Компонент оценки ответа -->
       <AnswerEvaluation
         v-if="interviewSettings.enableAnswerInput"
+        :key="answerEvaluationKey"
         :question-id="currentQuestion.id!"
         :question-text="currentQuestion.text"
         :evaluating="isEvaluating"
