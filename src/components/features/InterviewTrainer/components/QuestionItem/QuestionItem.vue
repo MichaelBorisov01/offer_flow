@@ -5,13 +5,15 @@ import {
   CalendarOutlined,
   CloseOutlined,
   DeleteOutlined,
+  DownOutlined,
   EditFilled,
   EditOutlined,
   SaveOutlined,
   TagOutlined,
+  UpOutlined,
 } from '@ant-design/icons-vue'
 import { Tooltip } from 'ant-design-vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import {
   getCardBackgroundColor,
   getCardBorderColor,
@@ -44,6 +46,20 @@ const emit = defineEmits<Emits>()
 const isEditingUserAnswer = ref(false)
 const userAnswerText = ref('')
 const isLoadingUserAnswer = ref(false)
+
+// Состояние для сворачивания/разворачивания ответа
+const isAnswerExpanded = ref(false)
+const userAnswerContent = ref<HTMLElement>()
+const isOverflowing = ref(false)
+
+// Проверяем, превышает ли контент ответа максимальную высоту
+async function checkContentOverflow() {
+  await nextTick()
+  if (userAnswerContent.value) {
+    const content = userAnswerContent.value
+    isOverflowing.value = content.scrollHeight > content.clientHeight
+  }
+}
 
 // Начинаем редактирование пользовательского ответа
 function startEditingUserAnswer() {
@@ -98,6 +114,18 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 // Проверяем, есть ли пользовательский ответ
 const hasUserAnswer = computed(() => {
   return props.question.userAnswer && props.question.userAnswer.trim().length > 0
+})
+
+// Переключаем состояние развертывания/свертывания
+function toggleAnswerExpansion() {
+  isAnswerExpanded.value = !isAnswerExpanded.value
+}
+
+// При монтировании проверяем переполнение
+onMounted(() => {
+  if (hasUserAnswer.value) {
+    checkContentOverflow()
+  }
 })
 </script>
 
@@ -273,8 +301,26 @@ const hasUserAnswer = computed(() => {
 
       <!-- Режим просмотра -->
       <div v-else-if="hasUserAnswer" class="user-answer-display">
-        <div class="user-answer-content">
+        <div
+          ref="userAnswerContent"
+          class="user-answer-content"
+          :class="{ expanded: isAnswerExpanded }"
+        >
           {{ question.userAnswer }}
+        </div>
+        <div v-if="isOverflowing || isAnswerExpanded" class="user-answer-expand">
+          <a-button
+            type="link"
+            size="small"
+            class="expand-button"
+            @click="toggleAnswerExpansion"
+          >
+            <template #icon>
+              <DownOutlined v-if="!isAnswerExpanded" />
+              <UpOutlined v-else />
+            </template>
+            {{ isAnswerExpanded ? 'Свернуть' : 'Развернуть' }}
+          </a-button>
         </div>
       </div>
 
@@ -473,6 +519,45 @@ const hasUserAnswer = computed(() => {
   line-height: 1.6;
   white-space: pre-line;
   color: #262626;
+  max-height: 150px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  position: relative;
+}
+
+.user-answer-content.expanded {
+  max-height: none;
+  overflow: visible;
+}
+
+.user-answer-content:not(.expanded)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(transparent, white);
+  pointer-events: none;
+}
+
+.user-answer-expand {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.expand-button {
+  color: #1890ff;
+  font-size: 12px;
+  padding: 0;
+  height: auto;
+}
+
+.expand-button:hover {
+  color: #40a9ff;
 }
 
 .user-answer-empty {
@@ -518,6 +603,10 @@ const hasUserAnswer = computed(() => {
   .user-answer-edit-actions .ant-btn {
     width: 100%;
   }
+
+  .user-answer-content {
+    max-height: 120px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -540,6 +629,10 @@ const hasUserAnswer = computed(() => {
 
   .user-answer-section {
     padding: 12px;
+  }
+
+  .user-answer-content {
+    max-height: 100px;
   }
 }
 </style>
