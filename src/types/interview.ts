@@ -17,6 +17,17 @@ export interface Question extends QuestionForm {
   tempId?: string
 }
 
+export interface Category {
+  id: string
+  name: string
+  icon?: string
+  color?: string
+  isCustom: boolean
+  userId?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface InterviewSession {
   id?: string
   userId?: string

@@ -4,6 +4,7 @@ import { defineStore } from 'pinia'
 import { computed, onUnmounted, ref } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewAI } from './ai'
+import { useInterviewCategories } from './categories' // Добавляем импорт
 import { useInterviewFilters } from './filters'
 import { useInterviewQuestions } from './questions'
 import { useInterviewSession } from './session'
@@ -16,6 +17,7 @@ export const useInterviewStore = defineStore('interview', () => {
   const sessionModule = useInterviewSession()
   const filtersModule = useInterviewFilters(() => questionsModule.questions.value)
   const aiModule = useInterviewAI(() => questionsModule.questions.value)
+  const categoriesModule = useInterviewCategories()
 
   // Настройки интервью
   const interviewSettings = ref<InterviewSettings>({
@@ -35,13 +37,22 @@ export const useInterviewStore = defineStore('interview', () => {
       : filteredQuestions.value
   })
 
+  // Метод для получения названия категории
+  const getCategoryName = (categoryId: string): string => {
+    return categoriesModule.getCategoryName(categoryId)
+  }
+
+  const refreshCategories = async () => {
+    await categoriesModule.loadCategories()
+  }
+
   // Метод для генерации ответа ИИ с сохранением только в локальное состояние
   const generateAnswerForQuestion = async (questionId: string, userAnswer?: string): Promise<AIAnswer | null> => {
     try {
       const aiAnswer = await aiModule.generateAnswerForQuestion(questionId, userAnswer)
 
       if (aiAnswer) {
-      // Обновляем в основном списке вопросов (локально)
+        // Обновляем в основном списке вопросов (локально)
         questionsModule.questions.value = questionsModule.questions.value.map(question =>
           question.id === questionId
             ? { ...question, aiAnswer }
@@ -139,8 +150,9 @@ export const useInterviewStore = defineStore('interview', () => {
     }
   })
 
-  // Загружаем вопросы при инициализации
+  // Загружаем вопросы и категории при инициализации
   questionsModule.loadUserQuestions()
+  categoriesModule.loadCategories() // Добавляем загрузку категорий
 
   return {
     // State из модулей
@@ -148,6 +160,7 @@ export const useInterviewStore = defineStore('interview', () => {
     ...sessionModule,
     ...filtersModule,
     ...aiModule,
+    ...categoriesModule, // Добавляем категории
 
     // Локальный state
     interviewSettings,
@@ -159,5 +172,7 @@ export const useInterviewStore = defineStore('interview', () => {
     // Actions
     startInterview,
     generateAnswerForQuestion,
+    getCategoryName,
+    refreshCategories,
   }
 })

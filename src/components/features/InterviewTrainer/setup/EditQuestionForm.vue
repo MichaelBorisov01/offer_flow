@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { QuestionForm } from '@/types/interview'
-import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import type { Category, QuestionForm } from '@/types/interview'
+import { CheckOutlined, CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{
@@ -17,14 +18,21 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const tagsInput = ref('')
 const isLoading = ref(false)
-const activeKey = ref<string[]>([]) // По умолчанию свернута
+const activeKey = ref<string[]>([])
+const showAddCategoryModal = ref(false)
+const newCategoryName = ref('')
+const isCreatingCategory = ref(false)
+
+// Загружаем категории
+const categories = ref<Category[]>([])
+const loadingCategories = ref(false)
 
 const isEditing = computed(() => !!props.questionToEdit?.id)
 
 const formState = ref<QuestionForm>({
   text: '',
   type: 'text',
-  category: 'javascript',
+  category: '',
   difficulty: 'middle',
   tags: [],
 })
@@ -33,6 +41,82 @@ const formState = ref<QuestionForm>({
 const panelTitle = computed(() => {
   return isEditing.value ? '✏️ Редактирование вопроса' : '➕ Добавление вопроса'
 })
+
+// Опции для селекта категорий
+const categoryOptions = computed(() => {
+  return categories.value.map(cat => ({
+    value: cat.id,
+    label: `${cat.icon || '📁'} ${cat.name}`,
+    isCustom: cat.isCustom,
+  }))
+})
+
+// Загрузка категорий
+async function loadCategories() {
+  loadingCategories.value = true
+  try {
+    const data = await CategoryService.getCategories()
+    categories.value = data
+
+    // Устанавливаем первую категорию по умолчанию, если не выбрана
+    if (!formState.value.category && data.length > 0) {
+      const firstCategory = data[0]
+      if (firstCategory && firstCategory.id) {
+        formState.value.category = firstCategory.id
+      }
+    }
+  }
+  catch (error) {
+    console.error('Error loading categories:', error)
+    message.error('Не удалось загрузить категории')
+  }
+  finally {
+    loadingCategories.value = false
+  }
+}
+
+// Создание новой категории
+async function handleCreateCategory() {
+  if (!newCategoryName.value.trim()) {
+    message.error('Введите название категории')
+    return
+  }
+
+  // Проверяем, нет ли уже категории с таким названием
+  const existingCategory = categories.value.find(
+    cat => cat.name.toLowerCase() === newCategoryName.value.trim().toLowerCase(),
+  )
+
+  if (existingCategory) {
+    message.error('Категория с таким названием уже существует')
+    return
+  }
+
+  isCreatingCategory.value = true
+  try {
+    const newCategoryId = await CategoryService.createCategory({
+      name: newCategoryName.value.trim(),
+    })
+
+    // Перезагружаем категории, чтобы получить новую
+    await loadCategories()
+
+    // Устанавливаем новую категорию как выбранную
+    formState.value.category = newCategoryId
+
+    showAddCategoryModal.value = false
+    newCategoryName.value = ''
+
+    message.success('Категория создана!')
+  }
+  catch (error) {
+    console.error('Error creating category:', error)
+    message.error('Не удалось создать категорию')
+  }
+  finally {
+    isCreatingCategory.value = false
+  }
+}
 
 // При начале редактирования автоматически разворачиваем форму
 watch(() => props.questionToEdit, (newQuestion) => {
@@ -51,6 +135,11 @@ watch(() => props.questionToEdit, (newQuestion) => {
     }
   }
 }, { immediate: true })
+
+// Загружаем категории при монтировании
+onMounted(() => {
+  loadCategories()
+})
 
 function handleTagsBlur() {
   if (tagsInput.value.trim()) {
@@ -74,7 +163,7 @@ function resetForm() {
   formState.value = {
     text: '',
     type: 'text',
-    category: 'javascript',
+    category: categories.value[0]?.id || '',
     difficulty: 'middle',
     tags: [],
   }
@@ -83,7 +172,7 @@ function resetForm() {
 
 function handleCancel() {
   resetForm()
-  activeKey.value = [] // Сворачиваем форму при отмене
+  activeKey.value = []
   emit('cancel')
 }
 
@@ -95,6 +184,11 @@ async function handleSubmit() {
 
   if (!formState.value.text.trim()) {
     message.error('Введите текст вопроса')
+    return
+  }
+
+  if (!formState.value.category) {
+    message.error('Выберите категорию')
     return
   }
 
@@ -133,6 +227,12 @@ function expandForm() {
 // Программное сворачивание формы
 function collapseForm() {
   activeKey.value = []
+}
+
+// Открытие модалки создания категории
+function openAddCategoryModal() {
+  newCategoryName.value = ''
+  showAddCategoryModal.value = true
 }
 
 // Экспортируем методы для родительского компонента
@@ -184,43 +284,34 @@ defineExpose({
           </a-col>
           <a-col :xs="24" :sm="12" :md="8">
             <a-form-item label="Категория" required>
-              <a-select
-                v-model:value="formState.category"
-                size="large"
-                show-search
-                option-filter-prop="label"
-              >
-                <a-select-option value="javascript" label="JavaScript">
-                  🔵 JavaScript
-                </a-select-option>
-                <a-select-option value="vue" label="Vue.js">
-                  🟢 Vue.js
-                </a-select-option>
-                <a-select-option value="react" label="React">
-                  ⚛️ React
-                </a-select-option>
-                <a-select-option value="html-css" label="HTML/CSS">
-                  🎨 HTML/CSS
-                </a-select-option>
-                <a-select-option value="algorithms" label="Алгоритмы">
-                  🧠 Алгоритмы
-                </a-select-option>
-                <a-select-option value="database" label="Базы данных">
-                  💾 Базы данных
-                </a-select-option>
-                <a-select-option value="system-design" label="System Design">
-                  🏗️ System Design
-                </a-select-option>
-                <a-select-option value="soft-skills" label="Soft Skills">
-                  🤝 Soft Skills
-                </a-select-option>
-                <a-select-option value="typescript" label="TypeScript">
-                  🔷 TypeScript
-                </a-select-option>
-                <a-select-option value="nodejs" label="Node.js">
-                  📦 Node.js
-                </a-select-option>
-              </a-select>
+              <div class="category-select-wrapper">
+                <a-select
+                  v-model:value="formState.category"
+                  :loading="loadingCategories"
+                  size="large"
+                  show-search
+                  option-filter-prop="label"
+                  placeholder="Выберите категорию"
+                >
+                  <a-select-option
+                    v-for="option in categoryOptions"
+                    :key="option.value"
+                    :value="option.value"
+                    :label="option.label"
+                  >
+                    {{ option.label }}
+                    <span v-if="option.isCustom" class="custom-badge">пользовательская</span>
+                  </a-select-option>
+                </a-select>
+                <a-button
+                  type="dashed"
+                  size="large"
+                  class="add-category-btn"
+                  @click="openAddCategoryModal"
+                >
+                  <PlusOutlined />
+                </a-button>
+              </div>
             </a-form-item>
           </a-col>
         </a-row>
@@ -289,11 +380,51 @@ defineExpose({
       </a-form>
     </a-collapse-panel>
   </a-collapse>
+
+  <!-- Модальное окно для создания категории -->
+  <a-modal
+    v-model:open="showAddCategoryModal"
+    title="Создание новой категории"
+    ok-text="Создать"
+    cancel-text="Отмена"
+    :confirm-loading="isCreatingCategory"
+    @ok="handleCreateCategory"
+  >
+    <a-form layout="vertical">
+      <a-form-item label="Название категории" required>
+        <a-input
+          v-model:value="newCategoryName"
+          placeholder="Введите название категории"
+          @press-enter="handleCreateCategory"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 
 <style scoped>
 .question-form-collapse {
   margin-bottom: 24px;
+}
+
+.category-select-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.add-category-btn {
+  flex-shrink: 0;
+  height: 40px;
+}
+
+.custom-badge {
+  font-size: 10px;
+  color: #8c8c8c;
+  margin-left: 8px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .tags-preview {
@@ -399,6 +530,14 @@ defineExpose({
 @media (max-width: 768px) {
   .question-form-panel :deep(.ant-collapse-content-box) {
     padding: 16px;
+  }
+
+  .category-select-wrapper {
+    flex-direction: column;
+  }
+
+  .add-category-btn {
+    width: 100%;
   }
 
   .form-actions {

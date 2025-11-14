@@ -14,14 +14,15 @@ import {
 } from '@ant-design/icons-vue'
 import { Tooltip } from 'ant-design-vue'
 import { computed, nextTick, onMounted, ref } from 'vue'
+import { useInterviewStore } from '@/stores/interview'
 import {
   getCardBackgroundColor,
   getCardBorderColor,
-  getCategoryLabelShort,
   getDifficultyColor,
   getDifficultyLabel,
 } from '@/utils/helpers/questionHelpers'
 import { formatDate, getTagsWord } from '@/utils/helpers/textHelpers'
+
 import AIAnswerCard from '../../shared/AIAnswerCard.vue'
 
 interface Props {
@@ -42,6 +43,8 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const interviewStore = useInterviewStore()
+
 // Локальное состояние для редактирования пользовательского ответа
 const isEditingUserAnswer = ref(false)
 const userAnswerText = ref('')
@@ -51,6 +54,10 @@ const isLoadingUserAnswer = ref(false)
 const isAnswerExpanded = ref(false)
 const userAnswerContent = ref<HTMLElement>()
 const isOverflowing = ref(false)
+
+const categoryName = computed(() => {
+  return interviewStore.getCategoryName(props.question.category)
+})
 
 // Проверяем, превышает ли контент ответа максимальную высоту
 async function checkContentOverflow() {
@@ -186,7 +193,7 @@ onMounted(() => {
               {{ getDifficultyLabel(question.difficulty) }}
             </span>
             <span class="category-badge">
-              {{ getCategoryLabelShort(question.category) }}
+              {{ categoryName }}
             </span>
           </div>
         </div>

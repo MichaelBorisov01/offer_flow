@@ -130,6 +130,11 @@ async function addQuestion(questionData: QuestionForm) {
       await interviewStore.addQuestion(questionData)
       message.success('Вопрос добавлен!')
     }
+
+    // Принудительно обновляем список вопросов и категорий
+    await interviewStore.loadUserQuestions()
+    await interviewStore.refreshCategories()
+
     editingQuestion.value = undefined
     emit('questionsChanged')
   }
