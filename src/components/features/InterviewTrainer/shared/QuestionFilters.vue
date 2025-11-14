@@ -3,6 +3,7 @@ import type { Question, QuestionFilters, QuestionStatus } from '@/types/intervie
 import { ClearOutlined, FilterOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { computed, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
+import { getDifficultyLabel } from '@/utils/helpers/questionHelpers'
 
 interface Props {
   questions: Question[]
@@ -92,31 +93,6 @@ const hasAnyFilters = computed(() => {
 
 // Проверяем, есть ли вопросы для фильтрации
 const hasQuestions = computed(() => props.questions.length > 0)
-
-function getDifficultyLabel(difficulty: string) {
-  const labels: Record<string, string> = {
-    junior: 'Junior',
-    middle: 'Middle',
-    senior: 'Senior',
-  }
-  return labels[difficulty] || difficulty
-}
-
-function getCategoryLabel(category: string) {
-  const labels: Record<string, string> = {
-    'javascript': 'JavaScript',
-    'vue': 'Vue.js',
-    'react': 'React',
-    'typescript': 'TypeScript',
-    'html-css': 'HTML/CSS',
-    'algorithms': 'Алгоритмы',
-    'database': 'Базы данных',
-    'system-design': 'System Design',
-    'soft-skills': 'Soft Skills',
-    'nodejs': 'Node.js',
-  }
-  return labels[category] || category
-}
 
 function getStatusLabel(status: QuestionStatus): string {
   const labels: Record<QuestionStatus, string> = {
@@ -308,7 +284,7 @@ watch(
                 :value="category"
                 class="filter-option"
               >
-                {{ getCategoryLabel(category) }}
+                {{ interviewStore.getCategoryName(category) }}
               </a-checkbox>
             </a-checkbox-group>
           </div>
@@ -381,7 +357,7 @@ watch(
           class="active-filter-item category"
         >
           <span class="filter-label">Категория</span>
-          <span class="filter-value">{{ getCategoryLabel(category) }}</span>
+          <span class="filter-value">{{ interviewStore.getCategoryName(category) }}</span>
           <ClearOutlined class="filter-remove" @click="filterState.categories = filterState.categories.filter(c => c !== category); handleFilterChange()" />
         </div>
 
