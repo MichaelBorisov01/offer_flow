@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Category, QuestionForm } from '@/types/interview'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
+import { message, Tooltip } from 'ant-design-vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
@@ -303,14 +303,17 @@ defineExpose({
                     <span v-if="option.isCustom" class="custom-badge">пользовательская</span>
                   </a-select-option>
                 </a-select>
-                <a-button
-                  type="dashed"
-                  size="large"
-                  class="add-category-btn"
-                  @click="openAddCategoryModal"
-                >
-                  <PlusOutlined />
-                </a-button>
+
+                <Tooltip title="Создать новую категорию" placement="top">
+                  <a-button
+                    type="dashed"
+                    size="large"
+                    class="add-category-btn"
+                    @click="openAddCategoryModal"
+                  >
+                    <PlusOutlined />
+                  </a-button>
+                </Tooltip>
               </div>
             </a-form-item>
           </a-col>
