@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { Category, QuestionForm } from '@/types/interview'
-import { CheckOutlined, CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
-import { message, Tooltip } from 'ant-design-vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import { CheckOutlined, CloseOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { message, Modal, Tooltip } from 'ant-design-vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
+import { useInterviewStore } from '@/stores/interview' // Добавляем импорт store вопросов
 
 const props = defineProps<{
   questionToEdit?: QuestionForm & { id?: string }
@@ -16,12 +17,14 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const interviewStore = useInterviewStore() // Используем store вопросов
 const tagsInput = ref('')
 const isLoading = ref(false)
 const activeKey = ref<string[]>([])
 const showAddCategoryModal = ref(false)
 const newCategoryName = ref('')
 const isCreatingCategory = ref(false)
+const isDeletingCategory = ref(false)
 
 // Загружаем категории
 const categories = ref<Category[]>([])
@@ -50,6 +53,16 @@ const categoryOptions = computed(() => {
     isCustom: cat.isCustom,
   }))
 })
+
+// Проверяем, используется ли категория в вопросах
+function isCategoryUsed(categoryId: string): boolean {
+  return interviewStore.questions.some(question => question.category === categoryId)
+}
+
+// Получаем количество вопросов в категории
+function getQuestionsCountInCategory(categoryId: string): number {
+  return interviewStore.questions.filter(question => question.category === categoryId).length
+}
 
 // Загрузка категорий
 async function loadCategories() {
@@ -116,6 +129,56 @@ async function handleCreateCategory() {
   finally {
     isCreatingCategory.value = false
   }
+}
+
+// Удаление категории
+async function handleDeleteCategory(categoryId: string, categoryName: string) {
+  // Находим категорию для проверки, можно ли ее удалить
+  const categoryToDelete = categories.value.find(cat => cat.id === categoryId)
+
+  if (!categoryToDelete) {
+    message.error('Категория не найдена')
+    return
+  }
+
+  // Проверяем, используется ли категория в вопросах
+  if (isCategoryUsed(categoryId)) {
+    const questionsCount = getQuestionsCountInCategory(categoryId)
+    message.error(`Нельзя удалить категорию "${categoryName}", так как она используется в ${questionsCount} вопросе(ах)`)
+    return
+  }
+
+  Modal.confirm({
+    title: 'Удаление категории',
+    icon: h(ExclamationCircleOutlined),
+    content: `Вы уверены, что хотите удалить категорию "${categoryName}"?`,
+    okText: 'Удалить',
+    cancelText: 'Отмена',
+    okType: 'danger',
+    async onOk() {
+      isDeletingCategory.value = true
+      try {
+        await CategoryService.deleteCategory(categoryId)
+
+        // Если удаляемая категория была выбрана, сбрасываем выбор
+        if (formState.value.category === categoryId) {
+          formState.value.category = categories.value[0]?.id || ''
+        }
+
+        // Перезагружаем категории
+        await loadCategories()
+
+        message.success('Категория удалена')
+      }
+      catch (error) {
+        console.error('Error deleting category:', error)
+        message.error('Не удалось удалить категорию')
+      }
+      finally {
+        isDeletingCategory.value = false
+      }
+    },
+  })
 }
 
 // При начале редактирования автоматически разворачиваем форму
@@ -299,8 +362,28 @@ defineExpose({
                     :value="option.value"
                     :label="option.label"
                   >
-                    {{ option.label }}
-                    <span v-if="option.isCustom" class="custom-badge">пользовательская</span>
+                    <div class="category-option">
+                      <span class="category-label">{{ option.label }}</span>
+                      <div class="category-actions">
+                        <Tooltip
+                          v-if="option.isCustom"
+                          :title="isCategoryUsed(option.value) ? `Категория используется в ${getQuestionsCountInCategory(option.value)} вопросе(ах)` : 'Удалить категорию'"
+                          placement="top"
+                        >
+                          <a-button
+                            type="text"
+                            size="small"
+                            class="delete-category-btn"
+                            :class="{ 'disabled-category': isCategoryUsed(option.value) }"
+                            :loading="isDeletingCategory"
+                            :disabled="isCategoryUsed(option.value)"
+                            @click.stop="handleDeleteCategory(option.value, option.label)"
+                          >
+                            <DeleteOutlined />
+                          </a-button>
+                        </Tooltip>
+                      </div>
+                    </div>
                   </a-select-option>
                 </a-select>
 
@@ -421,13 +504,69 @@ defineExpose({
   height: 40px;
 }
 
-.custom-badge {
-  font-size: 10px;
-  color: #8c8c8c;
-  margin-left: 8px;
-  background: #f0f0f0;
-  padding: 2px 6px;
-  border-radius: 4px;
+.category-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 24px;
+}
+
+.category-label {
+  flex: 1;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  min-width: 0;
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.delete-category-btn {
+  color: #ff4d4f;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.delete-category-btn:hover:not(.disabled-category) {
+  background: #fff2f0;
+  color: #ff7875;
+}
+
+.disabled-category {
+  color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* Стили для предотвращения закрытия селекта при клике на кнопку удаления */
+:deep(.ant-select-item-option) {
+  padding: 8px 12px;
+}
+
+:deep(.ant-select-item-option-content) {
+  width: 100%;
+}
+
+/* Улучшаем отображение длинных названий в выпадающем списке */
+:deep(.ant-select-dropdown) {
+  max-width: 400px;
+}
+
+:deep(.ant-select-item-option) {
+  max-width: 100%;
 }
 
 .tags-preview {
@@ -543,6 +682,20 @@ defineExpose({
     width: 100%;
   }
 
+  .category-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .category-label {
+    max-width: 100%;
+  }
+
+  .category-actions {
+    align-self: flex-end;
+  }
+
   .form-actions {
     flex-direction: column;
     align-items: stretch;
@@ -574,6 +727,15 @@ defineExpose({
   .question-form-panel :deep(.ant-collapse-header) {
     padding: 12px 16px !important;
     font-size: 14px;
+  }
+
+  .category-label {
+    max-width: 180px;
+  }
+
+  .category-actions {
+    flex-direction: column;
+    gap: 4px;
   }
 
   .tag-item {
