@@ -7,17 +7,12 @@ export function useInterviewCategories() {
   const categories = ref<Category[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const isLoaded = ref(false)
 
   const loadCategories = async () => {
-    if (isLoaded.value)
-      return // Не загружать повторно
-
     isLoading.value = true
     error.value = null
     try {
       categories.value = await CategoryService.getCategories()
-      isLoaded.value = true
     }
     catch (err) {
       error.value = 'Не удалось загрузить категории'
@@ -75,7 +70,6 @@ export function useInterviewCategories() {
     categories,
     isLoading,
     error,
-    isLoaded,
 
     // Actions
     loadCategories,

@@ -55,10 +55,6 @@ const isAnswerExpanded = ref(false)
 const userAnswerContent = ref<HTMLElement>()
 const isOverflowing = ref(false)
 
-const categoryName = computed(() => {
-  return interviewStore.getCategoryName(props.question.category)
-})
-
 // Проверяем, превышает ли контент ответа максимальную высоту
 async function checkContentOverflow() {
   await nextTick()
@@ -193,7 +189,7 @@ onMounted(() => {
               {{ getDifficultyLabel(question.difficulty) }}
             </span>
             <span class="category-badge">
-              {{ categoryName }}
+              {{ interviewStore.getCategoryName(question.category) }}
             </span>
           </div>
         </div>
