@@ -3,7 +3,7 @@ import type { Question, QuestionFilters, QuestionStatus } from '@/types/intervie
 import { ClearOutlined, FilterOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
 import { computed, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
-import { getDifficultyLabel } from '@/utils/helpers/questionHelpers'
+import { getDifficultyLabel, getStatusColor, getStatusLabel } from '@/utils/helpers/questionHelpers'
 
 interface Props {
   questions: Question[]
@@ -93,24 +93,6 @@ const hasAnyFilters = computed(() => {
 
 // Проверяем, есть ли вопросы для фильтрации
 const hasQuestions = computed(() => props.questions.length > 0)
-
-function getStatusLabel(status: QuestionStatus): string {
-  const labels: Record<QuestionStatus, string> = {
-    known: 'Знаю',
-    repeat: 'Повторить',
-    hard: 'Сложно',
-  }
-  return labels[status]
-}
-
-function getStatusColor(status: QuestionStatus): string {
-  const colors: Record<QuestionStatus, string> = {
-    known: '#52c41a',
-    repeat: '#fa8c16',
-    hard: '#ff4d4f',
-  }
-  return colors[status]
-}
 
 // Обработчик изменения фильтров
 function handleFilterChange() {

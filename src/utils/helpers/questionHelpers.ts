@@ -1,3 +1,4 @@
+import type { AllQuestionStatus } from '../constants/questionConstants'
 import type { QuestionStatus } from '@/types/interview'
 import {
   CATEGORY_COLORS,
@@ -7,6 +8,8 @@ import {
   DIFFICULTY_COLORS_HEX,
   DIFFICULTY_LABELS,
   QUESTION_STATUS_COLORS,
+  STATUS_COLORS,
+  STATUS_LABELS,
 } from '../constants/questionConstants'
 
 export function getDifficultyColor(difficulty: string): string {
@@ -47,4 +50,12 @@ export function getCardBackgroundColor(status?: QuestionStatus): string {
   if (!status)
     return '#ffffff'
   return QUESTION_STATUS_COLORS[status].background
+}
+
+export function getStatusLabel(status: AllQuestionStatus): string {
+  return STATUS_LABELS[status]
+}
+
+export function getStatusColor(status: AllQuestionStatus): string {
+  return STATUS_COLORS[status]
 }

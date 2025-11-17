@@ -72,3 +72,21 @@ export const QUESTION_STATUS_COLORS = {
     text: '#ff4d4f',
   },
 } as const
+
+export const ALL_STATUS_TYPES = ['known', 'repeat', 'hard', 'unknown'] as const
+
+export type AllQuestionStatus = typeof ALL_STATUS_TYPES[number]
+
+export const STATUS_LABELS: Record<AllQuestionStatus, string> = {
+  known: 'Знаю',
+  repeat: 'Повторить',
+  hard: 'Сложно',
+  unknown: 'Без статуса',
+}
+
+export const STATUS_COLORS: Record<AllQuestionStatus, string> = {
+  known: '#52c41a',
+  repeat: '#fa8c16',
+  hard: '#ff4d4f',
+  unknown: '#d9d9d9',
+}

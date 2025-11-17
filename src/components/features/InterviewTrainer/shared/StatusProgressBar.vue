@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Question, QuestionStatus } from '@/types/interview'
+import type { AllQuestionStatus } from '@/utils/constants/questionConstants'
 import { computed } from 'vue'
+import { ALL_STATUS_TYPES } from '@/utils/constants/questionConstants'
+import { getStatusColor, getStatusLabel } from '@/utils/helpers/questionHelpers'
 
 interface Props {
   questions: Question[]
@@ -54,38 +57,16 @@ const statusStats = computed((): StatusStats => {
   }
 })
 
-type ExtendedQuestionStatus = QuestionStatus | 'unknown'
+const statusTypes = ALL_STATUS_TYPES
 
-const statusTypes: ExtendedQuestionStatus[] = ['known', 'repeat', 'hard', 'unknown']
-
-function getStatusLabel(status: ExtendedQuestionStatus): string {
-  const labels: Record<ExtendedQuestionStatus, string> = {
-    known: 'Знаю',
-    repeat: 'Повторить',
-    hard: 'Сложно',
-    unknown: 'Без статуса',
-  }
-  return labels[status]
-}
-
-function getStatusColor(status: ExtendedQuestionStatus): string {
-  const colors: Record<ExtendedQuestionStatus, string> = {
-    known: '#52c41a',
-    repeat: '#fa8c16',
-    hard: '#ff4d4f',
-    unknown: '#d9d9d9',
-  }
-  return colors[status]
-}
-
-function handleStatusClick(status: ExtendedQuestionStatus) {
+function handleStatusClick(status: AllQuestionStatus) {
   if (status === 'unknown')
     return
 
   emit('statusClick', status as QuestionStatus)
 }
 
-function handleSegmentClick(status: ExtendedQuestionStatus) {
+function handleSegmentClick(status: AllQuestionStatus) {
   if (status === 'unknown')
     return
 
