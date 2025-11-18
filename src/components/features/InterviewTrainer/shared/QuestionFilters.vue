@@ -266,7 +266,7 @@ watch(
                   :value="category"
                   class="filter-option category-option"
                 >
-                  <span class="category-text" :title="interviewStore.getCategoryName(category)">
+                  <span class="category-text">
                     {{ interviewStore.getCategoryName(category) }}
                   </span>
                 </a-checkbox>
@@ -297,7 +297,7 @@ watch(
                 :key="tag"
                 :value="tag"
               >
-                <span class="tag-option-text" :title="tag">
+                <span class="tag-option-text">
                   {{ tag }}
                 </span>
               </a-select-option>
@@ -322,7 +322,7 @@ watch(
           :style="{ borderLeftColor: getStatusColor(status) }"
         >
           <span class="filter-label">Статус</span>
-          <span class="filter-value" :title="getStatusLabel(status)">
+          <span class="filter-value">
             {{ getStatusLabel(status) }}
           </span>
           <ClearOutlined class="filter-remove" @click="filterState.statuses = filterState.statuses.filter(s => s !== status); handleFilterChange()" />
@@ -336,7 +336,7 @@ watch(
           :class="`difficulty-${difficulty}`"
         >
           <span class="filter-label">Сложность</span>
-          <span class="filter-value" :title="getDifficultyLabel(difficulty)">
+          <span class="filter-value">
             {{ getDifficultyLabel(difficulty) }}
           </span>
           <ClearOutlined class="filter-remove" @click="filterState.difficulties = filterState.difficulties.filter(d => d !== difficulty); handleFilterChange()" />
@@ -349,7 +349,7 @@ watch(
           class="active-filter-item category"
         >
           <span class="filter-label">Категория</span>
-          <span class="filter-value" :title="interviewStore.getCategoryName(category)">
+          <span class="filter-value">
             {{ interviewStore.getCategoryName(category) }}
           </span>
           <ClearOutlined class="filter-remove" @click="filterState.categories = filterState.categories.filter(c => c !== category); handleFilterChange()" />
@@ -362,7 +362,7 @@ watch(
           class="active-filter-item tag"
         >
           <span class="filter-label">Тег</span>
-          <span class="filter-value" :title="tag">
+          <span class="filter-value">
             {{ tag }}
           </span>
           <ClearOutlined class="filter-remove" @click="filterState.tags = filterState.tags.filter(t => t !== tag); handleFilterChange()" />
@@ -667,7 +667,7 @@ watch(
 
 /* Стили для выбранных тегов в select */
 :deep(.ant-select-selection-item) {
-  max-width: 150px;
+  max-width: 150px !important;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
