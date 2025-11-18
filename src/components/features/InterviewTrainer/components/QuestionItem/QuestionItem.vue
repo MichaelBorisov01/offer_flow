@@ -213,12 +213,14 @@ onMounted(() => {
                       v-for="(tag, tagIndex) in question.tags"
                       :key="tagIndex"
                       class="tag-tooltip-chip"
+                      :title="tag.length > 15 ? tag : undefined"
                     >
-                      {{ tag }}
+                      {{ tag.length > 15 ? `${tag.substring(0, 15)}...` : tag }}
                     </span>
                   </div>
                 </div>
               </template>
+
               <span class="tags-count">
                 {{ question.tags.length }} {{ getTagsWord(question.tags.length) }}
               </span>
@@ -668,18 +670,34 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 1px solid #f0f0f0;
   padding: 12px;
-  max-width: 300px;
+  max-width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .tags-tooltip .ant-tooltip-arrow::before {
   background: white;
 }
 
+.tags-tooltip-content {
+  max-width: 250px;
+}
+
+.tooltip-header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #262626;
+  font-size: 13px;
+}
+
 .tags-tooltip-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-width: 250px;
+  max-width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .tag-tooltip-chip {
@@ -690,5 +708,33 @@ onMounted(() => {
   font-size: 11px;
   border: 1px solid #d6e4ff;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+/* Для очень длинных тегов добавляем подсказку при наведении */
+.tag-tooltip-chip[title] {
+  cursor: help;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 480px) {
+  .tags-tooltip .ant-tooltip-inner {
+    max-width: 240px;
+    max-height: 250px;
+  }
+
+  .tags-tooltip-chips {
+    max-height: 180px;
+  }
+
+  .tag-tooltip-chip {
+    max-width: 100px;
+    font-size: 10px;
+  }
 }
 </style>
