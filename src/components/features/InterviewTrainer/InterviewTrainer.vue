@@ -128,7 +128,7 @@ watch(mode, (newMode, oldMode) => {
                 v-model:checked="interviewSettings.showProgress"
                 @change="handleSettingsChange"
               >
-                Показывать прогресс
+                Показывать быструю навигацию
               </a-checkbox>
             </a-form-item>
 

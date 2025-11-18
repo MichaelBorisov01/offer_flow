@@ -440,7 +440,9 @@ defineExpose({
 
 <style scoped>
 .question-form-collapse {
-  margin-bottom: 24px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .category-select-wrapper {
