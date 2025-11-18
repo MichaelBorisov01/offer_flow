@@ -20,8 +20,36 @@ interface AuthState {
   user: User | null
   userProfile: UserProfile | null
   isLoading: boolean
-  isInitialized: boolean // Добавляем флаг инициализации
+  isInitialized: boolean
   error: string | null
+}
+
+function getFirebaseErrorMessage(errorCode: string): string {
+  const errorMessages: { [key: string]: string } = {
+    // Ошибки аутентификации
+    'auth/invalid-credential': 'Неверный email или пароль',
+    'auth/user-not-found': 'Пользователь с таким email не найден',
+    'auth/wrong-password': 'Неверный пароль',
+    'auth/invalid-email': 'Неверный формат email',
+    'auth/email-already-in-use': 'Пользователь с таким email уже существует',
+    'auth/weak-password': 'Пароль слишком слабый. Минимум 6 символов',
+    'auth/network-request-failed': 'Ошибка сети. Проверьте подключение к интернету',
+    'auth/too-many-requests': 'Слишком много попыток входа. Попробуйте позже',
+    'auth/user-disabled': 'Аккаунт заблокирован',
+    'auth/operation-not-allowed': 'Операция не разрешена',
+    'auth/requires-recent-login': 'Требуется повторный вход',
+
+    // Общие ошибки
+    'auth/unauthorized-domain': 'Неавторизованный домен',
+    'auth/app-not-authorized': 'Приложение не авторизовано',
+    'auth/argument-error': 'Ошибка аргументов',
+    'auth/invalid-api-key': 'Неверный API ключ',
+    'auth/invalid-user-token': 'Неверный токен пользователя',
+    'auth/invalid-tenant-id': 'Неверный ID tenant',
+    'auth/tenant-id-mismatch': 'Несоответствие ID tenant',
+  }
+
+  return errorMessages[errorCode] || 'Произошла неизвестная ошибка. Попробуйте еще раз.'
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -29,13 +57,12 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     userProfile: null,
     isLoading: false,
-    isInitialized: false, // Инициализация не завершена
+    isInitialized: false,
     error: null,
   }),
 
   actions: {
     async init() {
-      // Если уже инициализирован, выходим
       if (this.isInitialized)
         return
 
@@ -53,7 +80,7 @@ export const useAuthStore = defineStore('auth', {
           }
 
           this.isLoading = false
-          this.isInitialized = true // Отмечаем что инициализация завершена
+          this.isInitialized = true
           resolve()
         })
       })
@@ -90,8 +117,10 @@ export const useAuthStore = defineStore('auth', {
         return true
       }
       catch (error: any) {
-        this.error = error.message
-        throw error
+        const errorMessage = getFirebaseErrorMessage(error.code)
+        this.error = errorMessage
+        console.error('Sign up error:', error)
+        throw new Error(errorMessage)
       }
       finally {
         this.isLoading = false
@@ -107,8 +136,10 @@ export const useAuthStore = defineStore('auth', {
         return true
       }
       catch (error: any) {
-        this.error = error.message
-        throw error
+        const errorMessage = getFirebaseErrorMessage(error.code)
+        this.error = errorMessage
+        console.error('Sign in error:', error)
+        throw new Error(errorMessage)
       }
       finally {
         this.isLoading = false
@@ -117,6 +148,7 @@ export const useAuthStore = defineStore('auth', {
 
     async signOut(): Promise<boolean> {
       this.isLoading = true
+      this.error = null
 
       try {
         await signOut(auth)
@@ -125,12 +157,18 @@ export const useAuthStore = defineStore('auth', {
         return true
       }
       catch (error: any) {
-        this.error = error.message
-        throw error
+        const errorMessage = getFirebaseErrorMessage(error.code)
+        this.error = errorMessage
+        console.error('Sign out error:', error)
+        throw new Error(errorMessage)
       }
       finally {
         this.isLoading = false
       }
+    },
+
+    clearError() {
+      this.error = null
     },
   },
 
