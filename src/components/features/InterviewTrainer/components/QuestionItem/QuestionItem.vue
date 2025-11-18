@@ -395,6 +395,8 @@ onMounted(() => {
   border-radius: 4px;
   background: #f5f5f5;
   border: 1px solid #e8e8e8;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .category-badge {
@@ -404,6 +406,12 @@ onMounted(() => {
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid #e8e8e8;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .question-footer {
@@ -586,6 +594,12 @@ onMounted(() => {
 
   .question-meta-icons {
     align-self: flex-start;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .category-badge {
+    max-width: 100px;
   }
 
   .question-text {
@@ -623,11 +637,17 @@ onMounted(() => {
 
   .question-meta-icons {
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   .difficulty-badge {
     font-size: 10px;
     padding: 1px 4px;
+  }
+
+  .category-badge {
+    max-width: 80px;
+    font-size: 10px;
   }
 
   .user-answer-section {
