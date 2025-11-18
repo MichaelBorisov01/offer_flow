@@ -254,21 +254,24 @@ watch(
             <div v-if="availableFilters.categories.length === 0" class="filter-empty">
               <span class="empty-text">Нет вопросов с категориями</span>
             </div>
-            <a-checkbox-group
-              v-else
-              v-model:value="filterState.categories"
-              class="filter-options"
-              @change="handleFilterChange"
-            >
-              <a-checkbox
-                v-for="category in availableFilters.categories"
-                :key="category"
-                :value="category"
-                class="filter-option"
+            <div v-else class="categories-container">
+              <a-checkbox-group
+                v-model:value="filterState.categories"
+                class="filter-options"
+                @change="handleFilterChange"
               >
-                {{ interviewStore.getCategoryName(category) }}
-              </a-checkbox>
-            </a-checkbox-group>
+                <a-checkbox
+                  v-for="category in availableFilters.categories"
+                  :key="category"
+                  :value="category"
+                  class="filter-option category-option"
+                >
+                  <span class="category-text" :title="interviewStore.getCategoryName(category)">
+                    {{ interviewStore.getCategoryName(category) }}
+                  </span>
+                </a-checkbox>
+              </a-checkbox-group>
+            </div>
           </div>
 
           <!-- Фильтр по тегам -->
@@ -285,6 +288,7 @@ watch(
               size="small"
               class="tags-select"
               :max-tag-count="2"
+              :max-tag-text-length="20"
               style="width: 100%"
               @change="handleFilterChange"
             >
@@ -293,7 +297,9 @@ watch(
                 :key="tag"
                 :value="tag"
               >
-                {{ tag }}
+                <span class="tag-option-text" :title="tag">
+                  {{ tag }}
+                </span>
               </a-select-option>
             </a-select>
           </div>
@@ -316,7 +322,9 @@ watch(
           :style="{ borderLeftColor: getStatusColor(status) }"
         >
           <span class="filter-label">Статус</span>
-          <span class="filter-value">{{ getStatusLabel(status) }}</span>
+          <span class="filter-value" :title="getStatusLabel(status)">
+            {{ getStatusLabel(status) }}
+          </span>
           <ClearOutlined class="filter-remove" @click="filterState.statuses = filterState.statuses.filter(s => s !== status); handleFilterChange()" />
         </div>
 
@@ -328,7 +336,9 @@ watch(
           :class="`difficulty-${difficulty}`"
         >
           <span class="filter-label">Сложность</span>
-          <span class="filter-value">{{ getDifficultyLabel(difficulty) }}</span>
+          <span class="filter-value" :title="getDifficultyLabel(difficulty)">
+            {{ getDifficultyLabel(difficulty) }}
+          </span>
           <ClearOutlined class="filter-remove" @click="filterState.difficulties = filterState.difficulties.filter(d => d !== difficulty); handleFilterChange()" />
         </div>
 
@@ -339,7 +349,9 @@ watch(
           class="active-filter-item category"
         >
           <span class="filter-label">Категория</span>
-          <span class="filter-value">{{ interviewStore.getCategoryName(category) }}</span>
+          <span class="filter-value" :title="interviewStore.getCategoryName(category)">
+            {{ interviewStore.getCategoryName(category) }}
+          </span>
           <ClearOutlined class="filter-remove" @click="filterState.categories = filterState.categories.filter(c => c !== category); handleFilterChange()" />
         </div>
 
@@ -350,7 +362,9 @@ watch(
           class="active-filter-item tag"
         >
           <span class="filter-label">Тег</span>
-          <span class="filter-value">{{ tag }}</span>
+          <span class="filter-value" :title="tag">
+            {{ tag }}
+          </span>
           <ClearOutlined class="filter-remove" @click="filterState.tags = filterState.tags.filter(t => t !== tag); handleFilterChange()" />
         </div>
       </div>
@@ -470,6 +484,10 @@ watch(
 
 .filter-option {
   margin: 0;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filter-option :deep(.ant-checkbox-wrapper) {
@@ -486,6 +504,34 @@ watch(
 
 .tags-select {
   width: 100%;
+}
+
+/* Контейнер для категорий с прокруткой */
+.categories-container {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.category-option {
+  width: 100%;
+}
+
+.category-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.tag-option-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 /* Цвета сложности - используем :deep для доступа к содержимому */
@@ -537,6 +583,7 @@ watch(
   border: 1px solid #e8e8e8;
   font-size: 12px;
   transition: all 0.2s ease;
+  max-width: 300px;
 }
 
 .active-filter-item:hover {
@@ -546,11 +593,17 @@ watch(
 .filter-label {
   color: #8c8c8c;
   font-weight: 400;
+  flex-shrink: 0;
 }
 
 .filter-value {
   color: #262626;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .filter-remove {
@@ -558,6 +611,7 @@ watch(
   cursor: pointer;
   font-size: 10px;
   margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .filter-remove:hover {
@@ -611,6 +665,20 @@ watch(
   font-size: 12px !important;
 }
 
+/* Стили для выбранных тегов в select */
+:deep(.ant-select-selection-item) {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:deep(.ant-select-selection-item-content) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .filters-grid {
     grid-template-columns: 1fr;
@@ -623,12 +691,32 @@ watch(
 
   .active-filter-item {
     justify-content: space-between;
+    max-width: 100%;
   }
 
   .empty-state {
     flex-direction: column;
     text-align: center;
     gap: 8px;
+  }
+
+  .categories-container {
+    max-height: 150px;
+  }
+
+  .active-filter-item {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .active-filter-item {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .filter-value {
+    max-width: 120px;
   }
 }
 </style>
