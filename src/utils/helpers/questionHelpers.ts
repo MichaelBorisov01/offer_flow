@@ -5,7 +5,6 @@ import {
   CATEGORY_LABELS,
   CATEGORY_LABELS_SHORT,
   DIFFICULTY_COLORS,
-  DIFFICULTY_COLORS_HEX,
   DIFFICULTY_LABELS,
   QUESTION_STATUS_COLORS,
   STATUS_COLORS,
@@ -14,10 +13,6 @@ import {
 
 export function getDifficultyColor(difficulty: string): string {
   return DIFFICULTY_COLORS[difficulty as keyof typeof DIFFICULTY_COLORS] || 'blue'
-}
-
-export function getDifficultyColorHex(difficulty: string): string {
-  return DIFFICULTY_COLORS_HEX[difficulty as keyof typeof DIFFICULTY_COLORS_HEX] || '#d9d9d9'
 }
 
 export function getDifficultyLabel(difficulty: string): string {
@@ -34,10 +29,6 @@ export function getCategoryLabel(category: string): string {
 
 export function getCategoryLabelShort(category: string): string {
   return CATEGORY_LABELS_SHORT[category as keyof typeof CATEGORY_LABELS_SHORT] || category
-}
-
-export function getQuestionStatusColors(status: QuestionStatus) {
-  return QUESTION_STATUS_COLORS[status]
 }
 
 export function getCardBorderColor(status?: QuestionStatus): string {

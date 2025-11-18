@@ -10,12 +10,6 @@ export const DIFFICULTY_LABELS = {
   senior: 'Senior',
 } as const
 
-export const DIFFICULTY_COLORS_HEX = {
-  junior: '#52c41a',
-  middle: '#fa8c16',
-  senior: '#ff4d4f',
-} as const
-
 export const CATEGORY_COLORS = {
   'javascript': 'gold',
   'vue': 'green',
