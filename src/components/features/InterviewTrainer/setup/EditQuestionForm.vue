@@ -3,9 +3,10 @@ import type { Category, QuestionForm } from '@/types/interview'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { message, Modal, Tooltip } from 'ant-design-vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
+import CreateCategoryModal from '@/components/features/InterviewTrainer/modal/CreateCategoryModal.vue'
 import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
-import { useInterviewStore } from '@/stores/interview' // Добавляем импорт store вопросов
+import { useInterviewStore } from '@/stores/interview'
 
 const props = defineProps<{
   questionToEdit?: QuestionForm & { id?: string }
@@ -17,13 +18,11 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
-const interviewStore = useInterviewStore() // Используем store вопросов
+const interviewStore = useInterviewStore()
 const tagsInput = ref('')
 const isLoading = ref(false)
 const activeKey = ref<string[]>([])
 const showAddCategoryModal = ref(false)
-const newCategoryName = ref('')
-const isCreatingCategory = ref(false)
 const isDeletingCategory = ref(false)
 
 // Загружаем категории
@@ -88,47 +87,11 @@ async function loadCategories() {
   }
 }
 
-// Создание новой категории
-async function handleCreateCategory() {
-  if (!newCategoryName.value.trim()) {
-    message.error('Введите название категории')
-    return
-  }
-
-  // Проверяем, нет ли уже категории с таким названием
-  const existingCategory = categories.value.find(
-    cat => cat.name.toLowerCase() === newCategoryName.value.trim().toLowerCase(),
-  )
-
-  if (existingCategory) {
-    message.error('Категория с таким названием уже существует')
-    return
-  }
-
-  isCreatingCategory.value = true
-  try {
-    const newCategoryId = await CategoryService.createCategory({
-      name: newCategoryName.value.trim(),
-    })
-
-    // Перезагружаем категории, чтобы получить новую
-    await loadCategories()
-
-    // Устанавливаем новую категорию как выбранную
-    formState.value.category = newCategoryId
-
-    showAddCategoryModal.value = false
-    newCategoryName.value = ''
-
-    message.success('Категория создана!')
-  }
-  catch (error) {
-    console.error('Error creating category:', error)
-    message.error('Не удалось создать категорию')
-  }
-  finally {
-    isCreatingCategory.value = false
-  }
+// Обработчик успешного создания категории
+function handleCategoryCreated(categoryId: string) {
+  loadCategories()
+  // Устанавливаем новую категорию как выбранную
+  formState.value.category = categoryId
 }
 
 // Удаление категории
@@ -294,7 +257,6 @@ function collapseForm() {
 
 // Открытие модалки создания категории
 function openAddCategoryModal() {
-  newCategoryName.value = ''
   showAddCategoryModal.value = true
 }
 
@@ -468,24 +430,12 @@ defineExpose({
   </a-collapse>
 
   <!-- Модальное окно для создания категории -->
-  <a-modal
-    v-model:open="showAddCategoryModal"
-    title="Создание новой категории"
-    ok-text="Создать"
-    cancel-text="Отмена"
-    :confirm-loading="isCreatingCategory"
-    @ok="handleCreateCategory"
-  >
-    <a-form layout="vertical">
-      <a-form-item label="Название категории" required>
-        <a-input
-          v-model:value="newCategoryName"
-          placeholder="Введите название категории"
-          @press-enter="handleCreateCategory"
-        />
-      </a-form-item>
-    </a-form>
-  </a-modal>
+  <CreateCategoryModal
+    :open="showAddCategoryModal"
+    :existing-categories="categories"
+    @update:open="(value) => showAddCategoryModal = value"
+    @created="handleCategoryCreated"
+  />
 </template>
 
 <style scoped>
