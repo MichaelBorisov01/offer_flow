@@ -120,6 +120,7 @@ function navigateToQuestion(index: number) {
         <AIAnswerCard
           v-if="showAIAnswer && currentQuestion.aiAnswer"
           :answer="currentQuestion.aiAnswer"
+          mode="manual"
           @regenerate="generateAIAnswer"
           @close="hideAnswer"
         />

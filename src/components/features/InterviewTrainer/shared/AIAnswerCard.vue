@@ -16,6 +16,7 @@ import { computed, ref } from 'vue'
 interface Props {
   answer: AIAnswer
   questionText?: string
+  mode: 'manual' | 'ai'
 }
 
 interface Emits {
@@ -175,6 +176,7 @@ function regenerateAnswer() {
           </a-button>
 
           <a-button
+            v-if="mode === 'manual'"
             type="primary"
             size="small"
             :loading="isSaving"

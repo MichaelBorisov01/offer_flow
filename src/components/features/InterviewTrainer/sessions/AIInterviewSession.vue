@@ -201,6 +201,7 @@ onMounted(() => {
       <AIAnswerCard
         v-if="showAIAnswer && currentQuestion.aiAnswer"
         :answer="currentQuestion.aiAnswer"
+        mode="ai"
         style="margin-top: 16px;"
         @regenerate="handleShowAIAnswer"
         @close="showAIAnswer = false"
