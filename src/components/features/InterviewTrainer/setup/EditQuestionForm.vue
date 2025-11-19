@@ -88,9 +88,8 @@ async function loadCategories() {
 }
 
 // Обработчик успешного создания категории
-function handleCategoryCreated(categoryId: string) {
-  loadCategories()
-  // Устанавливаем новую категорию как выбранную
+async function handleCategoryCreated(categoryId: string) {
+  await loadCategories()
   formState.value.category = categoryId
 }
 
