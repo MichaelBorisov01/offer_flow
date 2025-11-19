@@ -13,7 +13,7 @@ import {
   UpOutlined,
 } from '@ant-design/icons-vue'
 import { Tooltip } from 'ant-design-vue'
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 import {
   getCardBackgroundColor,
@@ -64,6 +64,15 @@ async function checkContentOverflow() {
   }
 }
 
+// Сбрасываем состояние расширения при изменении ответа
+function resetExpansionState() {
+  isAnswerExpanded.value = false
+  // Перепроверяем переполнение после изменения контента
+  nextTick(() => {
+    checkContentOverflow()
+  })
+}
+
 // Начинаем редактирование пользовательского ответа
 function startEditingUserAnswer() {
   userAnswerText.value = props.question.userAnswer || ''
@@ -85,6 +94,8 @@ async function saveUserAnswer() {
   try {
     emit('updateUserAnswer', props.question, userAnswerText.value.trim())
     isEditingUserAnswer.value = false
+    // Сбрасываем состояние расширения после сохранения
+    resetExpansionState()
   }
   catch (error) {
     console.error('Error saving user answer:', error)
@@ -100,6 +111,8 @@ async function clearUserAnswer() {
   try {
     emit('updateUserAnswer', props.question, '')
     isEditingUserAnswer.value = false
+    // Сбрасываем состояние расширения после очистки
+    resetExpansionState()
   }
   catch (error) {
     console.error('Error clearing user answer:', error)
@@ -112,6 +125,8 @@ async function clearUserAnswer() {
 // Обработчик сохранения ответа ИИ как пользовательского ответа
 function handleSaveAiToUserAnswer(aiAnswer: string) {
   emit('saveAiToUserAnswer', props.question, aiAnswer)
+  // Сбрасываем состояние расширения после сохранения ИИ ответа
+  resetExpansionState()
 }
 
 // Проверяем, есть ли пользовательский ответ
@@ -130,6 +145,24 @@ onMounted(() => {
     checkContentOverflow()
   }
 })
+
+// Следим за изменениями пользовательского ответа
+watch(() => props.question.userAnswer, (newAnswer, oldAnswer) => {
+  // Если ответ изменился (не только при первой загрузке)
+  if (newAnswer !== oldAnswer) {
+    resetExpansionState()
+  }
+})
+
+// Также следим за изменениями самого вопроса (на случай перерисовки)
+watch(() => props.question, () => {
+  if (hasUserAnswer.value) {
+    // Даем время на обновление DOM перед проверкой
+    nextTick(() => {
+      checkContentOverflow()
+    })
+  }
+}, { deep: true })
 </script>
 
 <template>
