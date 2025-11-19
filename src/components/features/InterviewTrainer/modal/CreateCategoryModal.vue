@@ -92,6 +92,8 @@ function handleInputKeypress(event: KeyboardEvent) {
         <a-input
           v-model:value="newCategoryName"
           placeholder="Введите название категории"
+          show-count
+          :maxlength="25"
           @press-enter="handleInputKeypress"
         />
       </a-form-item>

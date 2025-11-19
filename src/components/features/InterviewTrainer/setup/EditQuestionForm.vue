@@ -25,7 +25,6 @@ const activeKey = ref<string[]>([])
 const showAddCategoryModal = ref(false)
 const isDeletingCategory = ref(false)
 
-// Загружаем категории
 const categories = ref<Category[]>([])
 const loadingCategories = ref(false)
 
@@ -39,7 +38,6 @@ const formState = ref<QuestionForm>({
   tags: [],
 })
 
-// Заголовок для collapse панели
 const panelTitle = computed(() => {
   return isEditing.value ? '✏️ Редактирование вопроса' : '➕ Добавление вопроса'
 })
@@ -161,19 +159,39 @@ watch(() => props.questionToEdit, (newQuestion) => {
   }
 }, { immediate: true })
 
-// Загружаем категории при монтировании
 onMounted(() => {
   loadCategories()
 })
 
 function handleTagsBlur() {
-  if (tagsInput.value.trim()) {
-    const newTags = tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0 && !formState.value.tags.includes(tag))
+  addTag()
+}
 
-    formState.value.tags = [...formState.value.tags, ...newTags]
+function handleTagInput() {
+  // Автоматически добавляем тег при вводе запятой или пробела
+  if (tagsInput.value.includes(',') || tagsInput.value.endsWith(' ')) {
+    addTag()
+  }
+}
+
+function addTag() {
+  const tagText = tagsInput.value.trim()
+
+  if (tagText) {
+    // Проверяем, не достигли ли мы лимита в 10 тегов
+    if (formState.value.tags.length >= 10) {
+      tagsInput.value = ''
+      return
+    }
+
+    // Проверяем, нет ли уже такого тега
+    if (!formState.value.tags.includes(tagText)) {
+      formState.value.tags = [...formState.value.tags, tagText]
+    }
+    else {
+      message.warning('Такой тег уже добавлен')
+    }
+
     tagsInput.value = ''
   }
 }
@@ -214,6 +232,12 @@ async function handleSubmit() {
 
   if (!formState.value.category) {
     message.error('Выберите категорию')
+    return
+  }
+
+  // Проверка на максимальное количество тегов при сохранении
+  if (formState.value.tags.length > 10) {
+    message.error('Максимальное количество тегов - 10')
     return
   }
 
@@ -363,16 +387,25 @@ defineExpose({
           </a-col>
         </a-row>
 
-        <a-form-item label="Теги (через запятую)">
+        <a-form-item :label="`Теги ${formState.tags.length}/10`">
           <a-input
             v-model:value="tagsInput"
-            placeholder="vue3, composition-api, reactivity..."
+            placeholder="Введите тег и нажмите Enter"
             size="large"
+            show-count
+            :maxlength="10"
+            :disabled="formState.tags.length >= 10"
             @blur="handleTagsBlur"
-            @keypress.enter="handleTagsBlur"
+            @keypress.enter="addTag"
+            @input="handleTagInput"
           />
           <div class="tags-hint">
-            Нажмите Enter или Tab для добавления тега
+            <span v-if="formState.tags.length < 10">
+              Нажмите Enter, Tab или пробел для добавления тега
+            </span>
+            <span v-else class="tags-limit-reached">
+              Достигнуто максимальное количество тегов (10)
+            </span>
           </div>
           <div v-if="formState.tags.length > 0" class="tags-preview">
             <a-tag
@@ -502,7 +535,6 @@ defineExpose({
   cursor: not-allowed;
 }
 
-/* Стили для предотвращения закрытия селекта при клике на кнопку удаления */
 :deep(.ant-select-item-option) {
   padding: 8px 12px;
 }
@@ -511,7 +543,6 @@ defineExpose({
   width: 100%;
 }
 
-/* Улучшаем отображение длинных названий в выпадающем списке */
 :deep(.ant-select-dropdown) {
   max-width: 400px;
 }
@@ -525,6 +556,11 @@ defineExpose({
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
+}
+
+.tags-limit-reached {
+  color: #ff4d4f;
+  font-weight: 500;
 }
 
 .tag-item {
