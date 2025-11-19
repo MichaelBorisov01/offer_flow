@@ -338,7 +338,6 @@ onMounted(() => {
     <AIAnswerCard
       v-if="question.aiAnswer"
       :answer="question.aiAnswer"
-      :question-text="question.text"
       mode="manual"
       class="ai-answer-card"
       @regenerate="() => emit('generateAnswer', question)"

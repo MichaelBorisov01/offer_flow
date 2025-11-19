@@ -15,7 +15,6 @@ import { computed, ref } from 'vue'
 
 interface Props {
   answer: AIAnswer
-  questionText?: string
   mode: 'manual' | 'ai'
 }
 

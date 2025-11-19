@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QuestionStatus } from '@/types/interview'
+import type { Question, QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
 import { ProgressSection } from '@/components/shared/ProgressSection'
@@ -9,6 +9,12 @@ import { QuestionStatusActions } from '@/components/shared/QuestionStatusActions
 import { QuestionTags } from '@/components/shared/QuestionTags'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from '../shared/AIAnswerCard.vue'
+
+interface Emits {
+  (e: 'saveAiToUserAnswer', question: Question, aiAnswer: string): void
+}
+
+const emit = defineEmits<Emits>()
 
 const interviewStore = useInterviewStore()
 
@@ -86,6 +92,10 @@ function navigateToQuestion(index: number) {
     hideAnswer()
   }
 }
+
+function handleSaveAiToUserAnswer(aiAnswer: string) {
+  emit('saveAiToUserAnswer', currentQuestion.value, aiAnswer)
+}
 </script>
 
 <template>
@@ -123,6 +133,7 @@ function navigateToQuestion(index: number) {
           mode="manual"
           @regenerate="generateAIAnswer"
           @close="hideAnswer"
+          @save-to-user-answer="handleSaveAiToUserAnswer"
         />
       </div>
 

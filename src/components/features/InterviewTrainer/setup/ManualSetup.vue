@@ -14,6 +14,7 @@ import EditQuestionForm from './EditQuestionForm.vue'
 
 const emit = defineEmits<{
   (e: 'questionsChanged'): void
+  (e: 'saveAiToUserAnswer', question: Question, aiAnswer: string): void
 }>()
 
 const interviewStore = useInterviewStore()
@@ -250,18 +251,8 @@ async function updateUserAnswer(question: Question, userAnswer: string) {
 }
 
 // Обработчик сохранения ответа ИИ как пользовательского ответа
-async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
-  if (!question.id)
-    return
-
-  try {
-    await interviewStore.updateUserAnswer(question.id, aiAnswer)
-    message.success('Ответ ИИ сохранен как ваш ответ!')
-  }
-  catch (error) {
-    console.error('Error saving AI answer to user answer:', error)
-    message.error('Ошибка при сохранении ответа ИИ')
-  }
+function saveAiToUserAnswer(question: Question, aiAnswer: string) {
+  emit('saveAiToUserAnswer', question, aiAnswer)
 }
 
 onMounted(() => {

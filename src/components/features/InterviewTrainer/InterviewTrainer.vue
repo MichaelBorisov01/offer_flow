@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { InterviewMode } from '@/composables/useInterviewMode'
-import type { AISettings } from '@/types/interview'
+import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, watch } from 'vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
@@ -68,6 +68,21 @@ function exitInterview() {
   message.info('Собеседование прервано')
 }
 
+// Обработчик сохранения ответа ИИ как пользовательского ответа
+async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
+  if (!question.id)
+    return
+
+  try {
+    await interviewStore.updateUserAnswer(question.id, aiAnswer)
+    message.success('Ответ ИИ сохранен как ваш ответ!')
+  }
+  catch (error) {
+    console.error('Error saving AI answer to user answer:', error)
+    message.error('Ошибка при сохранении ответа ИИ')
+  }
+}
+
 // Следим за изменением режима и очищаем вопросы
 watch(mode, (newMode, oldMode) => {
   if (newMode !== oldMode) {
@@ -111,7 +126,10 @@ watch(mode, (newMode, oldMode) => {
         <a-divider />
 
         <!-- Контент в зависимости от режима -->
-        <ManualSetup v-if="mode === 'manual'" />
+        <ManualSetup
+          v-if="mode === 'manual'"
+          @save-ai-to-user-answer="saveAiToUserAnswer"
+        />
 
         <AISetup
           v-else
@@ -166,7 +184,10 @@ watch(mode, (newMode, oldMode) => {
       </div>
 
       <div v-else>
-        <ManualInterviewSession v-if="mode === 'manual'" />
+        <ManualInterviewSession
+          v-if="mode === 'manual'"
+          @save-ai-to-user-answer="saveAiToUserAnswer"
+        />
         <AIInterviewSession v-else />
       </div>
     </a-card>
