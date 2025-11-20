@@ -3,6 +3,7 @@ import type { InterviewMode } from '@/composables/useInterviewMode'
 import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, watch } from 'vue'
+import AppFooter from '@/components/AppFooter.vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
 import AIInterviewSession from './sessions/AIInterviewSession.vue'
@@ -191,17 +192,22 @@ watch(mode, (newMode, oldMode) => {
         <AIInterviewSession v-else />
       </div>
     </a-card>
+
+    <AppFooter />
   </div>
 </template>
 
 <style scoped>
 .interview-trainer {
-  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .trainer-card {
   max-width: 800px;
   margin: 0 auto;
+  flex: 1;
 }
 
 .mode-selector {

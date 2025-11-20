@@ -130,7 +130,6 @@ async function handleLogout() {
 }
 
 .content {
-  padding: 24px;
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
 }
