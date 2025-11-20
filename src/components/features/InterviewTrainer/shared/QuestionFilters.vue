@@ -397,8 +397,6 @@ watch(
 
 .filters-title {
   font-weight: 500;
-  color: #262626;
-  font-size: 14px;
 }
 
 .filters-badge :deep(.ant-badge-count) {

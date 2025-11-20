@@ -262,10 +262,6 @@ onMounted(() => {
 
 <template>
   <div class="manual-setup">
-    <div class="section-header">
-      <h3>📝 Редактор вопросов</h3>
-    </div>
-
     <div ref="editFormRef">
       <EditQuestionForm
         :question-to-edit="editingQuestion"
@@ -358,10 +354,6 @@ onMounted(() => {
 .manual-setup {
   max-width: 900px;
   margin: 0 auto;
-}
-
-.section-header {
-  margin-bottom: 24px;
 }
 
 .questions-list-section {

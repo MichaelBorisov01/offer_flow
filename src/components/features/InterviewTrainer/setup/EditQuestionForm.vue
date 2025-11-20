@@ -24,6 +24,7 @@ const isLoading = ref(false)
 const activeKey = ref<string[]>([])
 const showAddCategoryModal = ref(false)
 const isDeletingCategory = ref(false)
+const isDeletingAllCategories = ref(false)
 
 const categories = ref<Category[]>([])
 const loadingCategories = ref(false)
@@ -49,6 +50,18 @@ const categoryOptions = computed(() => {
     label: `${cat.icon || '📁'} ${cat.name}`,
     isCustom: cat.isCustom,
   }))
+})
+
+// Получаем категории, доступные для удаления
+const deletableCategories = computed(() => {
+  return categories.value.filter(cat =>
+    cat.isCustom && !isCategoryUsed(cat.id),
+  )
+})
+
+// Проверяем, есть ли категории для удаления
+const hasDeletableCategories = computed(() => {
+  return deletableCategories.value.length > 0
 })
 
 // Проверяем, используется ли категория в вопросах
@@ -136,6 +149,58 @@ async function handleDeleteCategory(categoryId: string, categoryName: string) {
       }
       finally {
         isDeletingCategory.value = false
+      }
+    },
+  })
+}
+
+// Удаление всех пользовательских категорий, доступных для удаления
+async function handleDeleteAllCustomCategories() {
+  if (!hasDeletableCategories.value) {
+    message.warning('Нет категорий для удаления')
+    return
+  }
+
+  const categoriesToDelete = deletableCategories.value
+  const categoriesNames = categoriesToDelete.map(cat => cat.name).join(', ')
+
+  Modal.confirm({
+    title: 'Удаление всех пользовательских категорий',
+    icon: h(ExclamationCircleOutlined),
+    content: `Вы уверены, что хотите удалить все пользовательские категории (${categoriesToDelete.length} шт.)? 
+              \nУдаляемые категории: ${categoriesNames}`,
+    okText: 'Удалить все',
+    cancelText: 'Отмена',
+    okType: 'danger',
+    width: 500,
+    async onOk() {
+      isDeletingAllCategories.value = true
+      try {
+        const deletePromises = categoriesToDelete.map(category =>
+          CategoryService.deleteCategory(category.id),
+        )
+
+        await Promise.all(deletePromises)
+
+        // Проверяем, была ли выбрана одна из удаленных категорий
+        const deletedCategoryIds = categoriesToDelete.map(cat => cat.id)
+        if (deletedCategoryIds.includes(formState.value.category)) {
+          formState.value.category = categories.value
+            .filter(cat => !deletedCategoryIds.includes(cat.id))[0]
+            ?.id || ''
+        }
+
+        // Перезагружаем категории
+        await loadCategories()
+
+        message.success(`Успешно удалено ${categoriesToDelete.length} категорий`)
+      }
+      catch (error) {
+        console.error('Error deleting categories:', error)
+        message.error('Не удалось удалить некоторые категории')
+      }
+      finally {
+        isDeletingAllCategories.value = false
       }
     },
   })
@@ -372,16 +437,35 @@ defineExpose({
                   </a-select-option>
                 </a-select>
 
-                <Tooltip title="Создать новую категорию" placement="top">
-                  <a-button
-                    type="dashed"
-                    size="large"
-                    class="add-category-btn"
-                    @click="openAddCategoryModal"
+                <div class="category-buttons-group">
+                  <Tooltip title="Создать новую категорию" placement="top">
+                    <a-button
+                      type="dashed"
+                      size="large"
+                      class="add-category-btn"
+                      @click="openAddCategoryModal"
+                    >
+                      <PlusOutlined />
+                    </a-button>
+                  </Tooltip>
+
+                  <Tooltip
+                    v-if="hasDeletableCategories"
+                    :title="`Удалить все пользовательские категории (${deletableCategories.length})`"
+                    placement="top"
                   >
-                    <PlusOutlined />
-                  </a-button>
-                </Tooltip>
+                    <a-button
+                      type="dashed"
+                      size="large"
+                      danger
+                      class="delete-all-categories-btn"
+                      :loading="isDeletingAllCategories"
+                      @click="handleDeleteAllCustomCategories"
+                    >
+                      <DeleteOutlined />
+                    </a-button>
+                  </Tooltip>
+                </div>
               </div>
             </a-form-item>
           </a-col>
@@ -483,7 +567,14 @@ defineExpose({
   align-items: flex-start;
 }
 
-.add-category-btn {
+.category-buttons-group {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.add-category-btn,
+.delete-all-categories-btn {
   flex-shrink: 0;
   height: 40px;
 }
@@ -549,6 +640,10 @@ defineExpose({
 
 :deep(.ant-select-item-option) {
   max-width: 100%;
+}
+
+:deep(.ant-collapse-header-text) {
+  font-weight: 500;
 }
 
 .tags-preview {
@@ -665,7 +760,12 @@ defineExpose({
     flex-direction: column;
   }
 
-  .add-category-btn {
+  .category-buttons-group {
+    width: 100%;
+  }
+
+  .add-category-btn,
+  .delete-all-categories-btn {
     width: 100%;
   }
 
