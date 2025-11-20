@@ -23,19 +23,6 @@ export const CATEGORY_COLORS = {
   'nodejs': 'green',
 } as const
 
-export const CATEGORY_LABELS = {
-  'javascript': 'JavaScript',
-  'vue': 'Vue.js',
-  'react': 'React',
-  'typescript': 'TypeScript',
-  'html-css': 'HTML/CSS',
-  'algorithms': 'Алгоритмы',
-  'database': 'Базы данных',
-  'system-design': 'System Design',
-  'soft-skills': 'Soft Skills',
-  'nodejs': 'Node.js',
-} as const
-
 export const CATEGORY_LABELS_SHORT = {
   'javascript': 'JS',
   'vue': 'Vue',

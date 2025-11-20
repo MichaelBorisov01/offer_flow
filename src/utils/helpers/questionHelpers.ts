@@ -2,7 +2,6 @@ import type { AllQuestionStatus } from '../constants/questionConstants'
 import type { QuestionStatus } from '@/types/interview'
 import {
   CATEGORY_COLORS,
-  CATEGORY_LABELS,
   CATEGORY_LABELS_SHORT,
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
@@ -21,10 +20,6 @@ export function getDifficultyLabel(difficulty: string): string {
 
 export function getCategoryColor(category: string): string {
   return CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] || 'default'
-}
-
-export function getCategoryLabel(category: string): string {
-  return CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || category
 }
 
 export function getCategoryLabelShort(category: string): string {

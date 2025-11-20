@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
 import { BulbOutlined, EditOutlined } from '@ant-design/icons-vue'
-
 import { computed } from 'vue'
+import { useInterviewStore } from '@/stores/interview'
 import {
   getCardBackgroundColor,
   getCardBorderColor,
   getCategoryColor,
-  getCategoryLabel,
   getDifficultyColor,
   getDifficultyLabel,
 } from '@/utils/helpers/questionHelpers'
@@ -39,6 +38,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+const interviewStore = useInterviewStore()
+
 const filteredTags = computed(() => {
   if (!props.question.tags)
     return []
@@ -66,7 +67,7 @@ const filteredTags = computed(() => {
           {{ getDifficultyLabel(question.difficulty) }}
         </a-tag>
         <a-tag :color="getCategoryColor(question.category)">
-          {{ getCategoryLabel(question.category) }}
+          {{ interviewStore.getCategoryName(question.category) }}
         </a-tag>
         <a-button
           v-if="showUserAnswerToggle"
