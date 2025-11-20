@@ -49,7 +49,7 @@ export interface AISettings {
 
 export interface AIQuestion extends Question {
   generatedBy: 'ai'
-  context?: string // дополнительный контекст для вопроса
+  context?: string
 }
 
 export interface AIAnswer {

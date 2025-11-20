@@ -25,10 +25,15 @@ const progress = computed(() => interviewStore.progress)
 const interviewSettings = computed(() => interviewStore.interviewSettings)
 
 const showAIAnswer = ref(false)
+const showUserAnswer = ref(false)
 
 function isQuestionAnswered(questionId: string): boolean {
   return !!interviewStore.getUserAnswer(questionId)
 }
+
+const hasUserAnswer = computed(() => {
+  return !!(currentQuestion.value?.userAnswer && currentQuestion.value.userAnswer.trim().length > 0)
+})
 
 async function setQuestionStatus(status: QuestionStatus) {
   if (!currentQuestion.value?.id) {
@@ -53,8 +58,17 @@ async function toggleAnswerVisibility() {
   }
 }
 
+function toggleUserAnswerVisibility() {
+  showUserAnswer.value = !showUserAnswer.value
+  // Скрываем AI ответ при показе пользовательского
+  if (showUserAnswer.value) {
+    showAIAnswer.value = false
+  }
+}
+
 function hideAnswer() {
   showAIAnswer.value = false
+  showUserAnswer.value = false
 }
 
 async function generateAIAnswer() {
@@ -65,6 +79,7 @@ async function generateAIAnswer() {
     await interviewStore.generateAnswerForQuestion(currentQuestion.value.id)
     message.success('Ответ сгенерирован!')
     showAIAnswer.value = true
+    showUserAnswer.value = false
   }
   catch (error) {
     console.error('Error generating answer:', error)
@@ -113,14 +128,40 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
           :question="currentQuestion!"
           :question-number="currentQuestionIndex + 1"
           :show-answer-toggle="true"
+          :show-user-answer-toggle="hasUserAnswer"
           :answer-visible="showAIAnswer"
+          :user-answer-visible="showUserAnswer"
           :answer-generating="interviewStore.isGeneratingAnswer"
           @toggle-answer="toggleAnswerVisibility"
+          @toggle-user-answer="toggleUserAnswerVisibility"
         >
           <template #tags="{ tags }">
             <QuestionTags :tags="tags" />
           </template>
         </QuestionCard>
+
+        <!-- Блок пользовательского ответа -->
+        <a-card
+          v-if="showUserAnswer && hasUserAnswer"
+          class="user-answer-card"
+          :class="{ expanded: showUserAnswer }"
+        >
+          <template #title>
+            <div class="user-answer-header">
+              <span class="user-answer-title">📝 Ваш ответ</span>
+              <a-button
+                type="text"
+                size="small"
+                @click="toggleUserAnswerVisibility"
+              >
+                Скрыть
+              </a-button>
+            </div>
+          </template>
+          <div class="user-answer-content">
+            {{ currentQuestion.userAnswer }}
+          </div>
+        </a-card>
 
         <QuestionStatusActions
           :current-status="currentQuestion?.status"
@@ -171,6 +212,38 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
   min-height: 0;
 }
 
+.user-answer-card {
+  border: 1px solid #e6f7ff;
+  background: #f6ffed;
+  transition: all 0.3s ease;
+}
+
+.user-answer-card.expanded {
+  border-color: #b7eb8f;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.1);
+}
+
+.user-answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-answer-title {
+  font-weight: 600;
+  color: #52c41a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-answer-content {
+  padding: 8px 0;
+  line-height: 1.6;
+  color: #262626;
+  white-space: pre-line;
+}
+
 .fixed-navigation-section {
   position: sticky;
   bottom: 0;
@@ -198,6 +271,16 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 
   .fixed-navigation-section :deep(.ant-btn) {
     flex: 1;
+  }
+
+  .user-answer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .user-answer-header :deep(.ant-btn) {
+    align-self: flex-end;
   }
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
-import { BulbOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, EditOutlined } from '@ant-design/icons-vue'
 
 import { computed } from 'vue'
 import {
@@ -17,18 +17,23 @@ interface Props {
   questionNumber?: number
   showTags?: boolean
   showAnswerToggle?: boolean
+  showUserAnswerToggle?: boolean
   answerVisible?: boolean
+  userAnswerVisible?: boolean
   answerGenerating?: boolean
 }
 
 interface Emits {
   (e: 'toggleAnswer'): void
+  (e: 'toggleUserAnswer'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showTags: true,
   showAnswerToggle: false,
+  showUserAnswerToggle: false,
   answerVisible: false,
+  userAnswerVisible: false,
   answerGenerating: false,
 })
 
@@ -64,14 +69,25 @@ const filteredTags = computed(() => {
           {{ getCategoryLabel(question.category) }}
         </a-tag>
         <a-button
+          v-if="showUserAnswerToggle"
+          type="link"
+          size="small"
+          :class="{ 'active-toggle': userAnswerVisible }"
+          @click="emit('toggleUserAnswer')"
+        >
+          <EditOutlined />
+          {{ userAnswerVisible ? 'Скрыть мой ответ' : 'Показать мой ответ' }}
+        </a-button>
+        <a-button
           v-if="showAnswerToggle"
           type="link"
           :loading="answerGenerating"
           size="small"
+          :class="{ 'active-toggle': answerVisible }"
           @click="emit('toggleAnswer')"
         >
           <BulbOutlined />
-          {{ answerVisible ? 'Скрыть ответ' : 'Развернуть ответ' }}
+          {{ answerVisible ? 'Скрыть ответ ИИ' : 'Ответ ИИ' }}
         </a-button>
       </a-space>
     </template>
@@ -137,5 +153,11 @@ const filteredTags = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.active-toggle {
+  color: #1890ff;
+  background: #e6f7ff;
+  border-color: #91d5ff;
 }
 </style>
