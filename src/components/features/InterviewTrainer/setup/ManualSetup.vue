@@ -27,6 +27,7 @@ const editingQuestion = ref<Question>()
 const generatingAnswerId = ref<string | null>(null)
 const editFormRef = ref<HTMLElement>()
 
+const isSectionLoading = ref(true)
 const isQuestionsListCollapsed = computed(() => questionsListCollapsed.value)
 
 const allQuestions = computed(() => interviewStore.questions)
@@ -48,6 +49,16 @@ watch(allQuestions, (newQuestions) => {
     handleFilterChange(currentFilters.value)
   }
 }, { immediate: true, deep: true })
+
+// Следим за состоянием загрузки и скрываем спиннер когда данные готовы
+watch([isLoading, allQuestions], ([loading, questions]) => {
+  if (!loading && questions.length >= 0) {
+    // Небольшая задержка для плавного перехода
+    setTimeout(() => {
+      isSectionLoading.value = false
+    }, 300)
+  }
+}, { immediate: true })
 
 // Обработчик изменения фильтров
 function handleFilterChange(filters: any) {
@@ -273,72 +284,83 @@ onMounted(() => {
     <a-divider />
 
     <div class="questions-list-section">
-      <QuestionFilters
-        :questions="allQuestions"
-        @filter-change="handleFilterChange"
-      />
-
-      <StatusProgressBar
-        v-if="allQuestions.length > 0"
-        :questions="filteredQuestions"
-        class="inline-progress"
-        @status-click="handleStatusClick"
-      />
-
-      <QuestionListHeader
-        :total-count="allQuestions.length"
-        :filtered-count="filteredQuestions.length"
-        :is-collapsed="isQuestionsListCollapsed"
-        @toggle-collapse="toggleQuestionsList"
-        @shuffle="shuffleQuestions"
-        @clear-all="showClearConfirmation"
-      />
-
-      <a-alert
-        v-if="isQuestionsListCollapsed && filteredQuestions.length > 0"
-        :message="`Список свернут. Доступно вопросов: ${filteredQuestions.length}`"
-        type="info"
-        show-icon
-        class="collapsed-alert"
+      <a-spin
+        v-if="isSectionLoading"
+        size="large"
+        class="section-spinner"
+        tip="Загрузка вопросов..."
       >
-        <template #action>
-          <a-button size="small" type="link" @click="expandQuestionsList">
-            Показать вопросы
-          </a-button>
-        </template>
-      </a-alert>
+        <div class="spinner-content" />
+      </a-spin>
 
-      <div v-if="!isQuestionsListCollapsed">
-        <a-list
-          :data-source="filteredQuestions"
-          item-layout="vertical"
-          :loading="isLoading"
-          class="questions-list"
-        >
-          <template #renderItem="{ item, index }">
-            <QuestionItem
-              :question="item"
-              :index="index"
-              :generating-answer-id="generatingAnswerId"
-              @edit="startEditing"
-              @remove="removeQuestion"
-              @generate-answer="generateAnswerForQuestion"
-              @clear-answer="clearAnswer"
-              @update-user-answer="updateUserAnswer"
-              @save-ai-to-user-answer="saveAiToUserAnswer"
-            />
-          </template>
-        </a-list>
-
-        <!-- Сообщения когда нет вопросов -->
-        <EmptyStates
-          v-if="filteredQuestions.length === 0 && !isLoading"
-          :has-questions="allQuestions.length > 0"
-          :has-active-filters="hasActiveFilters"
-          @add-question="scrollToEditForm"
-          @clear-filters="clearAllFilters"
+      <template v-else>
+        <QuestionFilters
+          :questions="allQuestions"
+          @filter-change="handleFilterChange"
         />
-      </div>
+
+        <StatusProgressBar
+          v-if="allQuestions.length > 0"
+          :questions="filteredQuestions"
+          class="inline-progress"
+          @status-click="handleStatusClick"
+        />
+
+        <QuestionListHeader
+          :total-count="allQuestions.length"
+          :filtered-count="filteredQuestions.length"
+          :is-collapsed="isQuestionsListCollapsed"
+          @toggle-collapse="toggleQuestionsList"
+          @shuffle="shuffleQuestions"
+          @clear-all="showClearConfirmation"
+        />
+
+        <a-alert
+          v-if="isQuestionsListCollapsed && filteredQuestions.length > 0"
+          :message="`Список свернут. Доступно вопросов: ${filteredQuestions.length}`"
+          type="info"
+          show-icon
+          class="collapsed-alert"
+        >
+          <template #action>
+            <a-button size="small" type="link" @click="expandQuestionsList">
+              Показать вопросы
+            </a-button>
+          </template>
+        </a-alert>
+
+        <div v-if="!isQuestionsListCollapsed">
+          <a-list
+            :data-source="filteredQuestions"
+            item-layout="vertical"
+            :loading="isLoading"
+            class="questions-list"
+          >
+            <template #renderItem="{ item, index }">
+              <QuestionItem
+                :question="item"
+                :index="index"
+                :generating-answer-id="generatingAnswerId"
+                @edit="startEditing"
+                @remove="removeQuestion"
+                @generate-answer="generateAnswerForQuestion"
+                @clear-answer="clearAnswer"
+                @update-user-answer="updateUserAnswer"
+                @save-ai-to-user-answer="saveAiToUserAnswer"
+              />
+            </template>
+          </a-list>
+
+          <!-- Сообщения когда нет вопросов -->
+          <EmptyStates
+            v-if="filteredQuestions.length === 0 && !isLoading"
+            :has-questions="allQuestions.length > 0"
+            :has-active-filters="hasActiveFilters"
+            @add-question="scrollToEditForm"
+            @clear-filters="clearAllFilters"
+          />
+        </div>
+      </template>
     </div>
   </div>
 
@@ -358,6 +380,20 @@ onMounted(() => {
 
 .questions-list-section {
   margin-top: 24px;
+  position: relative;
+  min-height: 200px;
+}
+
+.section-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+  width: 100%;
+}
+
+.spinner-content {
+  min-height: 120px;
 }
 
 .collapsed-alert {
@@ -385,9 +421,29 @@ onMounted(() => {
   .manual-setup {
     padding: 0 8px;
   }
+
+  .section-spinner {
+    padding: 40px 0;
+  }
 }
 
 .inline-progress {
   margin-bottom: 16px;
+}
+
+/* Анимация появления контента */
+.questions-list-section :deep(.ant-spin-container) {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
