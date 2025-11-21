@@ -487,6 +487,7 @@ watch(() => props.question, () => {
   gap: 4px;
   font-size: 11px;
   color: #8c8c8c;
+  cursor: pointer;
 }
 
 :deep(.ant-list-item-action) {

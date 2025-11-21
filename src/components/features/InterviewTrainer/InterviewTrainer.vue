@@ -193,13 +193,13 @@ watch(mode, (newMode, oldMode) => {
       </div>
     </a-card>
 
-    <AppFooter />
+    <AppFooter v-if="!isInterviewStarted" />
   </div>
 </template>
 
 <style scoped>
 .trainer-card {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
