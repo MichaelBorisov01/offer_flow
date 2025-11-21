@@ -132,5 +132,6 @@ async function handleLogout() {
 .content {
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
+  padding-top: 24px;
 }
 </style>

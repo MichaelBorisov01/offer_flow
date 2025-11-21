@@ -16,6 +16,7 @@ import { computed, ref } from 'vue'
 interface Props {
   answer: AIAnswer
   mode: 'manual' | 'ai'
+  answerGenerating?: boolean
 }
 
 interface Emits {
@@ -168,10 +169,14 @@ function regenerateAnswer() {
             type="link"
             size="small"
             class="action-btn"
+            :loading="answerGenerating"
+            :disabled="answerGenerating"
             @click="regenerateAnswer"
           >
-            <ReloadOutlined />
-            Перегенерировать ответ
+            <template #icon>
+              <ReloadOutlined />
+            </template>
+            {{ answerGenerating ? 'Генерация...' : 'Перегенерировать ответ' }}
           </a-button>
 
           <a-button
@@ -179,7 +184,7 @@ function regenerateAnswer() {
             type="primary"
             size="small"
             :loading="isSaving"
-            :disabled="isSaved"
+            :disabled="isSaved || answerGenerating"
             class="save-btn"
             :class="{ saved: isSaved }"
             @click="saveToUserAnswer"

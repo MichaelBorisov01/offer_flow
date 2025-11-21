@@ -171,6 +171,7 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
         <AIAnswerCard
           v-if="showAIAnswer && currentQuestion.aiAnswer"
           :answer="currentQuestion.aiAnswer"
+          :answer-generating="interviewStore.isGeneratingAnswer"
           mode="manual"
           @regenerate="generateAIAnswer"
           @close="hideAnswer"

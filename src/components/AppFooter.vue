@@ -8,11 +8,13 @@ const currentYear = new Date().getFullYear()
   <footer class="app-footer">
     <div class="footer-content">
       <div class="footer-section">
-        <h4>Тренажер собеседований</h4>
-        <p>Платформа для подготовки к техническим собеседованиям</p>
+        <h4>OfferFlow</h4>
+        <p>Платформа для подготовки к собеседованиям</p>
         <div class="tech-stack">
           <span class="tech-badge">Vue 3</span>
           <span class="tech-badge">TypeScript</span>
+          <span class="tech-badge">Vite</span>
+          <span class="tech-badge">Ant Design</span>
           <span class="tech-badge">Firebase</span>
         </div>
       </div>
@@ -60,7 +62,7 @@ const currentYear = new Date().getFullYear()
 .app-footer {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-top: 1px solid #e8e8e8;
-  margin-top: 60px;
+  margin-top: 24px;
   padding: 40px 20px 20px;
 }
 

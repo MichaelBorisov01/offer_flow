@@ -93,7 +93,7 @@ watch(mode, (newMode, oldMode) => {
 </script>
 
 <template>
-  <div class="interview-trainer">
+  <div>
     <a-card title="Тренажер собеседований" class="trainer-card">
       <template #extra>
         <a-button
@@ -198,16 +198,9 @@ watch(mode, (newMode, oldMode) => {
 </template>
 
 <style scoped>
-.interview-trainer {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .trainer-card {
   max-width: 800px;
   margin: 0 auto;
-  flex: 1;
 }
 
 .mode-selector {
