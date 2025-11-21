@@ -9,6 +9,7 @@ import { QuestionItem } from '../components/QuestionItem'
 import { QuestionListHeader } from '../components/QuestionListHeader'
 import ConfirmClearAllModal from '../modal/ConfirmClearAllModal.vue'
 import QuestionFilters from '../shared/QuestionFilters.vue'
+import SearchInput from '../shared/SearchInput.vue'
 import StatusProgressBar from '../shared/StatusProgressBar.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 
@@ -35,41 +36,70 @@ const isLoading = computed(() => interviewStore.isLoading)
 
 const clearConfirmationVisible = ref(false)
 
-const filteredQuestions = ref<Question[]>([])
+const displayedQuestions = ref<Question[]>([])
 const currentFilters = ref<any>(null)
+const isSearchActive = ref(false)
+const searchResults = ref<Question[]>([])
 
 onMounted(() => {
-  filteredQuestions.value = [...allQuestions.value]
+  displayedQuestions.value = [...allQuestions.value]
 })
 
-watch(allQuestions, (newQuestions) => {
-  filteredQuestions.value = [...newQuestions]
-
-  if (currentFilters.value) {
-    handleFilterChange(currentFilters.value)
-  }
+// Обновление отображаемых вопросов при изменении данных
+watch(allQuestions, () => {
+  updateDisplayedQuestions()
 }, { immediate: true, deep: true })
 
-// Следим за состоянием загрузки и скрываем спиннер когда данные готовы
+function handleSearchChange(results: Question[]) {
+  isSearchActive.value = true
+  searchResults.value = results
+  updateDisplayedQuestions()
+}
+
+function handleSearchClear() {
+  isSearchActive.value = false
+  searchResults.value = []
+  updateDisplayedQuestions()
+}
+
+// Обновление отображаемых вопросов с учетом поиска и фильтров
+function updateDisplayedQuestions() {
+  let questionsToDisplay = isSearchActive.value ? searchResults.value : allQuestions.value
+
+  // Применяем фильтры store, если нет активной сессии
+  if (!interviewStore.isSessionActive && currentFilters.value) {
+    interviewStore.setQuestionFilters(currentFilters.value)
+    questionsToDisplay = interviewStore.filteredQuestions
+
+    // Если есть активный поиск, применяем фильтры к результатам поиска
+    if (isSearchActive.value) {
+      const filteredSearchResults = interviewStore.filteredQuestions.filter(question =>
+        searchResults.value.some(searchQuestion => searchQuestion.id === question.id),
+      )
+      questionsToDisplay = filteredSearchResults
+    }
+  }
+
+  displayedQuestions.value = questionsToDisplay
+}
+
+// Обработчик изменения фильтров
+function handleFilterChange(filters: any) {
+  currentFilters.value = filters
+  interviewStore.setQuestionFilters(filters)
+
+  if (!interviewStore.isSessionActive) {
+    updateDisplayedQuestions()
+  }
+}
+
 watch([isLoading, allQuestions], ([loading, questions]) => {
   if (!loading && questions.length >= 0) {
-    // Небольшая задержка для плавного перехода
     setTimeout(() => {
       isSectionLoading.value = false
     }, 300)
   }
 }, { immediate: true })
-
-// Обработчик изменения фильтров
-function handleFilterChange(filters: any) {
-  // Сохраняем фильтры в store
-  interviewStore.setQuestionFilters(filters)
-
-  // Применяем фильтрацию через store, но только если нет активной сессии
-  if (!interviewStore.isSessionActive) {
-    filteredQuestions.value = interviewStore.filteredQuestions
-  }
-}
 
 function showClearConfirmation() {
   if (allQuestions.value.length === 0) {
@@ -82,8 +112,6 @@ function showClearConfirmation() {
 async function clearAllQuestions() {
   try {
     clearConfirmationVisible.value = false
-
-    // Собираем ID всех вопросов до начала удаления
     const questionIds = allQuestions.value.map(q => q.id).filter(Boolean) as string[]
 
     if (questionIds.length === 0) {
@@ -91,12 +119,10 @@ async function clearAllQuestions() {
       return
     }
 
-    // Создаем промисы для удаления по ID
     const deletePromises = questionIds.map(id =>
       interviewStore.removeQuestionById(id),
     )
 
-    // Ждем завершения всех операций удаления
     await Promise.all(deletePromises)
 
     message.success('Все вопросы удалены')
@@ -213,6 +239,10 @@ const hasActiveFilters = computed(() => {
     || filters.tags.length > 0
 })
 
+const hasActiveSearchOrFilters = computed(() => {
+  return hasActiveFilters.value || isSearchActive.value
+})
+
 function clearAllFilters() {
   currentFilters.value = {
     statuses: [],
@@ -222,24 +252,25 @@ function clearAllFilters() {
   }
   interviewStore.resetQuestionFilters()
   handleFilterChange(currentFilters.value)
+  handleSearchClear()
 }
 
 function handleStatusClick(status: QuestionStatus) {
-  const currentFilters = interviewStore.getCurrentFilters()
+  const currentStoreFilters = interviewStore.getCurrentFilters()
 
-  const isStatusSelected = currentFilters.statuses.includes(status)
+  const isStatusSelected = currentStoreFilters.statuses.includes(status)
 
   if (isStatusSelected) {
-    const newStatuses = currentFilters.statuses.filter(s => s !== status)
+    const newStatuses = currentStoreFilters.statuses.filter(s => s !== status)
     const newFilters = {
-      ...currentFilters,
+      ...currentStoreFilters,
       statuses: newStatuses,
     }
     handleFilterChange(newFilters)
   }
   else {
     const newFilters = {
-      ...currentFilters,
+      ...currentStoreFilters,
       statuses: [status],
     }
     handleFilterChange(newFilters)
@@ -301,14 +332,20 @@ onMounted(() => {
 
         <StatusProgressBar
           v-if="allQuestions.length > 0"
-          :questions="filteredQuestions"
+          :questions="displayedQuestions"
           class="inline-progress"
           @status-click="handleStatusClick"
         />
 
+        <SearchInput
+          :questions="allQuestions"
+          @search-change="handleSearchChange"
+          @search-clear="handleSearchClear"
+        />
+
         <QuestionListHeader
           :total-count="allQuestions.length"
-          :filtered-count="filteredQuestions.length"
+          :filtered-count="displayedQuestions.length"
           :is-collapsed="isQuestionsListCollapsed"
           @toggle-collapse="toggleQuestionsList"
           @shuffle="shuffleQuestions"
@@ -316,8 +353,8 @@ onMounted(() => {
         />
 
         <a-alert
-          v-if="isQuestionsListCollapsed && filteredQuestions.length > 0"
-          :message="`Список свернут. Доступно вопросов: ${filteredQuestions.length}`"
+          v-if="isQuestionsListCollapsed && displayedQuestions.length > 0"
+          :message="`Список свернут. Доступно вопросов: ${displayedQuestions.length}`"
           type="info"
           show-icon
           class="collapsed-alert"
@@ -331,7 +368,7 @@ onMounted(() => {
 
         <div v-if="!isQuestionsListCollapsed">
           <a-list
-            :data-source="filteredQuestions"
+            :data-source="displayedQuestions"
             item-layout="vertical"
             :loading="isLoading"
             class="questions-list"
@@ -351,11 +388,10 @@ onMounted(() => {
             </template>
           </a-list>
 
-          <!-- Сообщения когда нет вопросов -->
           <EmptyStates
-            v-if="filteredQuestions.length === 0 && !isLoading"
+            v-if="displayedQuestions.length === 0 && !isLoading"
             :has-questions="allQuestions.length > 0"
-            :has-active-filters="hasActiveFilters"
+            :has-active-filters="hasActiveSearchOrFilters"
             @add-question="scrollToEditForm"
             @clear-filters="clearAllFilters"
           />
