@@ -602,7 +602,7 @@ watch(() => props.question, () => {
 }
 
 .user-answer-empty {
-  padding: 12px;
+  padding: 8px;
   text-align: center;
   color: #8c8c8c;
   font-style: italic;
@@ -681,7 +681,7 @@ watch(() => props.question, () => {
   }
 
   .user-answer-section {
-    padding: 12px;
+    padding: 6px;
   }
 
   .user-answer-content {
