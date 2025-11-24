@@ -13,6 +13,8 @@ import {
   UpOutlined,
 } from '@ant-design/icons-vue'
 import { Tooltip } from 'ant-design-vue'
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 import {
@@ -54,6 +56,54 @@ const isLoadingUserAnswer = ref(false)
 const isAnswerExpanded = ref(false)
 const userAnswerContent = ref<HTMLElement>()
 const isOverflowing = ref(false)
+
+// TODO вынести метод выше (используются ещё и в AIAnswerCard)
+// Конвертируем Markdown в HTML
+const sanitizedContent = computed(() => {
+  if (!props.question.userAnswer)
+    return ''
+
+  try {
+    const html = marked.parse(props.question.userAnswer, {
+      breaks: true,
+      gfm: true,
+    })
+
+    return DOMPurify.sanitize(html.toString(), {
+      ALLOWED_TAGS: [
+        'strong',
+        'em',
+        'code',
+        'pre',
+        'p',
+        'ul',
+        'ol',
+        'li',
+        'br',
+        'span',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'blockquote',
+        'hr',
+      ],
+      ALLOWED_ATTR: ['class', 'style'],
+    })
+  }
+  catch (error) {
+    console.error('Ошибка при обработке Markdown:', error)
+    return DOMPurify.sanitize(
+      props.question.userAnswer
+        .replace(/\*\*/g, '')
+        .replace(/`/g, '')
+        .replace(/\n/g, '<br/>'),
+      { ALLOWED_TAGS: ['br'] },
+    )
+  }
+})
 
 // Проверяем, превышает ли контент ответа максимальную высоту
 async function checkContentOverflow() {
@@ -341,11 +391,10 @@ watch(() => props.question, () => {
       <div v-else-if="hasUserAnswer" class="user-answer-display">
         <div
           ref="userAnswerContent"
-          class="user-answer-content"
+          class="user-answer-content answer-text"
           :class="{ expanded: isAnswerExpanded }"
-        >
-          {{ question.userAnswer }}
-        </div>
+          v-html="sanitizedContent"
+        />
         <div v-if="isOverflowing || isAnswerExpanded" class="user-answer-expand">
           <a-button
             type="link"
@@ -518,7 +567,6 @@ watch(() => props.question, () => {
 .user-answer-section {
   margin-top: 16px;
   padding: 16px;
-  background: #fafafa;
   border-radius: 8px;
   border: 1px solid #f0f0f0;
 }
@@ -560,12 +608,6 @@ watch(() => props.question, () => {
 
 .user-answer-content {
   padding: 12px;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e8e8e8;
-  line-height: 1.6;
-  white-space: pre-line;
-  color: #262626;
   max-height: 150px;
   overflow: hidden;
   transition: max-height 0.3s ease;
@@ -693,6 +735,62 @@ watch(() => props.question, () => {
   .user-answer-content {
     max-height: 100px;
   }
+}
+
+/* TODO вынести эти стили (используются ещё и в AIAnswerCard) */
+/* Стили для Markdown-контента */
+.answer-text {
+  line-height: 1.6;
+  color: #262626;
+}
+
+.answer-text :deep(strong) {
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.answer-text :deep(ul),
+.answer-text :deep(ol) {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.answer-text :deep(li) {
+  margin-bottom: 4px;
+}
+
+/* Стили для кода */
+.answer-text :deep(code) {
+  font-family: 'Consolas', monospace;
+  background-color: #f0f5ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+
+.answer-text :deep(pre) {
+  background-color: #f9fbfd;
+  border: 1px solid #e8f4ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  overflow-x: auto;
+  font-size: 0.95em;
+}
+
+.answer-text :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  display: block;
+}
+
+.answer-text.joke-text {
+  font-style: italic;
+  color: #d46b08;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+  padding: 8px;
 }
 </style>
 
