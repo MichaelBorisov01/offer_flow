@@ -18,7 +18,6 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
           <ul>
             <li>Адрес электронной почты (email)</li>
             <li>Имя (отображаемое имя)</li>
-            <li>Уровень опыта (junior, middle, senior)</li>
             <li>Результаты тренировок и ответы на вопросы</li>
             <li>История использования Сервиса</li>
             <li>Технические данные (IP-адрес, данные cookies)</li>
@@ -61,7 +60,6 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
             <li>На исправление неточных персональных данных</li>
             <li>На удаление персональных данных</li>
             <li>На отзыв согласия на обработку персональных данных</li>
-            <li>На получение информации о ходе обработки персональных данных</li>
           </ul>
         </section>
 
@@ -72,7 +70,7 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
 
         <section class="document-section">
           <h2>8. Контактная информация</h2>
-          <p>8.1. По всем вопросам, связанным с обработкой персональных данных, Пользователь может обратиться по электронной почте: privacy@interview-trainer.ru</p>
+          <p>8.1. По всем вопросам, связанным с обработкой персональных данных, Пользователь может обратиться по электронной почте: bori.mix@gmail.com</p>
         </section>
 
         <div class="document-footer">
