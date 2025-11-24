@@ -40,7 +40,7 @@ const formState = ref<QuestionForm>({
 })
 
 const panelTitle = computed(() => {
-  return isEditing.value ? '✏️ Редактирование вопроса' : '➕ Добавление вопроса'
+  return isEditing.value ? 'Редактирование вопроса' : 'Добавление вопроса'
 })
 
 // Опции для селекта категорий
@@ -333,26 +333,10 @@ function handleCollapseChange(keys: string[]) {
   activeKey.value = keys
 }
 
-// Программное разворачивание формы (можно вызывать из родителя)
-function expandForm() {
-  activeKey.value = ['form']
-}
-
-// Программное сворачивание формы
-function collapseForm() {
-  activeKey.value = []
-}
-
 // Открытие модалки создания категории
 function openAddCategoryModal() {
   showAddCategoryModal.value = true
 }
-
-// Экспортируем методы для родительского компонента
-defineExpose({
-  expandForm,
-  collapseForm,
-})
 </script>
 
 <template>
@@ -474,7 +458,7 @@ defineExpose({
         <a-form-item :label="`Теги ${formState.tags.length}/10`">
           <a-input
             v-model:value="tagsInput"
-            placeholder="Введите тег и нажмите Enter"
+            placeholder="Введите тег и нажмите пробел"
             size="large"
             show-count
             :maxlength="10"
@@ -485,7 +469,7 @@ defineExpose({
           />
           <div class="tags-hint">
             <span v-if="formState.tags.length < 10">
-              Нажмите Enter, Tab или пробел для добавления тега
+              Нажмите пробел для добавления тега
             </span>
             <span v-else class="tags-limit-reached">
               Достигнуто максимальное количество тегов (10)
