@@ -14,6 +14,15 @@ const routes = [
     component: () => import('@/components/features/Auth/AuthView.vue'),
     meta: { requiresGuest: true },
   },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/pages/ProfilePage.vue'),
+    meta: {
+      title: 'Профиль',
+      requiresAuth: true,
+    },
+  },
 ]
 
 const router = createRouter({

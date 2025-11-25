@@ -41,6 +41,10 @@ async function handleLogout() {
     console.error('Logout error:', error)
   }
 }
+
+function navigateToProfile() {
+  router.push('/profile')
+}
 </script>
 
 <template>
@@ -71,7 +75,7 @@ async function handleLogout() {
                 </a>
                 <template #overlay>
                   <a-menu>
-                    <a-menu-item key="profile">
+                    <a-menu-item key="profile" @click="navigateToProfile">
                       <UserOutlined /> Профиль
                     </a-menu-item>
                     <a-menu-item key="logout" @click="handleLogout">
