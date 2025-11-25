@@ -34,14 +34,6 @@ const cardTitle = computed(() => {
   return props.answer.type === 'joke' ? '🎭 Шутка от ИИ' : '💡 Ответ от ИИ'
 })
 
-const typeLabel = computed(() => {
-  return props.answer.type === 'joke' ? 'Шутка' : 'Объяснение'
-})
-
-const typeColor = computed(() => {
-  return props.answer.type === 'joke' ? 'orange' : 'green'
-})
-
 // Функция для сохранения ответа ИИ как пользовательского ответа
 async function saveToUserAnswer() {
   if (!props.answer.content)
@@ -49,14 +41,12 @@ async function saveToUserAnswer() {
 
   isSaving.value = true
   try {
-    // Эмитим событие с содержимым ответа ИИ
     emit('saveToUserAnswer', props.answer.content)
     isSaved.value = true
 
-    // Сбрасываем статус через 2 секунды
     setTimeout(() => {
       isSaved.value = false
-    }, 2000)
+    }, 5000)
   }
   catch (error) {
     console.error('Error saving AI answer to user answer:', error)
@@ -96,13 +86,11 @@ function regenerateAnswer() {
       <!-- Контент ответа -->
       <div class="answer-content">
         <div class="answer-header">
-          <a-tag :color="typeColor" class="type-tag">
-            <SmileOutlined v-if="answer.type === 'joke'" />
-            <BulbOutlined v-else />
-            {{ typeLabel }}
+          <a-tag v-if="answer.type !== 'joke'" color="green" class="type-tag">
+            <BulbOutlined />
+            'Объяснение'
           </a-tag>
 
-          <!-- Информация о причине шутки -->
           <div v-if="answer.type === 'joke'" class="joke-context">
             <InfoCircleOutlined />
             <span>ИИ распознал это как творческий подход 😄</span>
@@ -251,7 +239,6 @@ function regenerateAnswer() {
   background: linear-gradient(135deg, #fff7e6 0%, #fff2e8 100%);
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .answer-actions {
     flex-direction: column;

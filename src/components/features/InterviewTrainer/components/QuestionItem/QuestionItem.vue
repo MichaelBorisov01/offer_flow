@@ -519,6 +519,7 @@ watch(() => props.question, () => {
 .user-answer-section {
   margin-top: 16px;
   padding: 16px;
+  background: #fafafa;
   border-radius: 8px;
   border: 1px solid #f0f0f0;
 }
@@ -744,12 +745,6 @@ watch(() => props.question, () => {
   line-height: 1.4;
 }
 
-/* Для очень длинных тегов добавляем подсказку при наведении */
-.tag-tooltip-chip[title] {
-  cursor: help;
-}
-
-/* Адаптивность для мобильных устройств */
 @media (max-width: 480px) {
   .tags-tooltip .ant-tooltip-inner {
     max-width: 240px;

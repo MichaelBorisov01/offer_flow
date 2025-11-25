@@ -734,7 +734,6 @@ function openAddCategoryModal() {
   color: #1890ff;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .question-form-panel :deep(.ant-collapse-content-box) {
     padding: 16px;

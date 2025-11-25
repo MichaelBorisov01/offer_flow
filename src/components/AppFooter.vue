@@ -158,7 +158,6 @@ const currentYear = new Date().getFullYear()
   font-family: monospace;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .app-footer {
     padding: 30px 16px 16px;
