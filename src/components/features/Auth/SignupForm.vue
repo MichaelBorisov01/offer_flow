@@ -52,7 +52,6 @@ async function handleSignup() {
       formState.password,
       {
         displayName: formState.displayName,
-        experienceLevel: formState.experienceLevel,
       },
     )
 

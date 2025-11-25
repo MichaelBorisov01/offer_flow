@@ -1,8 +1,7 @@
 export interface QuestionForm {
   text: string
-  type: 'text' | 'code' | 'ai'
   category: string
-  difficulty: string
+  difficulty: 'junior' | 'middle' | 'senior'
   tags: string[]
 }
 
@@ -41,7 +40,7 @@ export interface InterviewSession {
 
 export interface AISettings {
   specialty: string
-  difficulty: string
+  difficulty: 'junior' | 'middle' | 'senior'
   questionsCount: number
   technology: string
   skill: string

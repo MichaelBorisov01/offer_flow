@@ -35,7 +35,6 @@ export function useInterviewQuestions() {
     try {
       const newQuestion: Omit<Question, 'id'> = {
         text: questionData.text,
-        type: questionData.type,
         category: questionData.category,
         difficulty: questionData.difficulty,
         tags: questionData.tags,

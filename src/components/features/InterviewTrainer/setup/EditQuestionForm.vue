@@ -33,7 +33,6 @@ const isEditing = computed(() => !!props.questionToEdit?.id)
 
 const formState = ref<QuestionForm>({
   text: '',
-  type: 'text',
   category: '',
   difficulty: 'middle',
   tags: [],
@@ -211,7 +210,6 @@ watch(() => props.questionToEdit, (newQuestion) => {
   if (newQuestion) {
     formState.value = {
       text: newQuestion.text,
-      type: newQuestion.type,
       category: newQuestion.category,
       difficulty: newQuestion.difficulty,
       tags: [...newQuestion.tags],
@@ -270,7 +268,6 @@ function removeTag(index: number) {
 function resetForm() {
   formState.value = {
     text: '',
-    type: 'text',
     category: categories.value[0]?.id || '',
     difficulty: 'middle',
     tags: [],

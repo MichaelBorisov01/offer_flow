@@ -1,4 +1,5 @@
 import type { User } from 'firebase/auth'
+import type { Question } from '@/types/interview'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -10,7 +11,7 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth'
-import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
 import { defineStore } from 'pinia'
 import { auth, db } from '@/services/firebase'
 import { ConsentManager } from '@/utils/consentManager'
@@ -60,6 +61,52 @@ function getFirebaseErrorMessage(errorCode: string): string {
   }
 
   return errorMessages[errorCode] || 'Произошла неизвестная ошибка. Попробуйте еще раз.'
+}
+
+// Функция для создания тестовых вопросов
+async function createSampleQuestions(userId: string): Promise<void> {
+  const sampleQuestions: Omit<Question, 'id'>[] = [
+    {
+      text: 'Что такое замыкание (closure) в JavaScript и как оно работает?',
+      category: 'JavaScript',
+      difficulty: 'junior',
+      tags: ['javascript', 'fundamentals', 'closure'],
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      text: 'В чем разница между let, const и var в JavaScript?',
+      category: 'JavaScript',
+      difficulty: 'middle',
+      tags: ['javascript', 'variables', 'es6'],
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      text: 'Как работает event loop в JavaScript?',
+      category: 'JavaScript',
+      difficulty: 'senior',
+      tags: ['javascript', 'event-loop', 'async'],
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]
+
+  try {
+    const questionsCollection = collection(db, 'questions')
+    const createPromises = sampleQuestions.map(question =>
+      addDoc(questionsCollection, question),
+    )
+
+    await Promise.all(createPromises)
+  }
+  catch (error) {
+    console.error('❌ Error creating sample questions:', error)
+    // Не прерываем регистрацию из-за ошибки создания вопросов
+  }
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -152,6 +199,8 @@ export const useAuthStore = defineStore('auth', {
             displayName: userData.displayName,
           })
         }
+
+        await createSampleQuestions(user.uid)
 
         await this.loadUserProfile(user.uid)
         return true
@@ -319,7 +368,6 @@ export const useAuthStore = defineStore('auth', {
         // Удаление основного профиля пользователя
         await deleteDoc(doc(db, 'users', userId))
 
-        // Удаление вопросов пользователя (если они хранятся отдельно)
         const questionsQuery = query(
           collection(db, 'questions'),
           where('userId', '==', userId),

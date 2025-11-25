@@ -183,7 +183,6 @@ async function saveQuestionToDB(question: Question, tempId: string) {
 
     await QuestionService.addQuestion({
       text: question.text,
-      type: 'text',
       category: question.category,
       difficulty: question.difficulty,
       tags: [...(question.tags || []), 'ai-generated'],
@@ -232,7 +231,6 @@ async function saveAllQuestions() {
       try {
         await QuestionService.addQuestion({
           text: question.text,
-          type: 'text',
           category: question.category,
           difficulty: question.difficulty,
           tags: [...(question.tags || []), 'ai-generated'],

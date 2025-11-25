@@ -74,7 +74,6 @@ export const QuestionService = {
 
       const questionData = {
         text: question.text,
-        type: question.type,
         category: question.category,
         difficulty: question.difficulty,
         tags: question.tags || [],
