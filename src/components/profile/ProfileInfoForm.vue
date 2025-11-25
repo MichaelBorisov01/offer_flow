@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { MailOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { computed, reactive, ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 interface Props {
@@ -22,7 +22,6 @@ const isLoading = ref(false)
 const formState = reactive({
   displayName: '',
   email: '',
-  experienceLevel: 'junior' as 'junior' | 'middle' | 'senior',
 })
 
 const rules = {
@@ -30,16 +29,12 @@ const rules = {
     { required: true, message: 'Введите ваше имя' },
     { min: 2, message: 'Имя должно содержать минимум 2 символа' },
   ],
-  experienceLevel: [
-    { required: true, message: 'Выберите уровень опыта' },
-  ],
 }
 
 // Заполняем форму данными пользователя
 watch(() => props.userProfile, (newProfile) => {
   if (newProfile) {
     formState.displayName = newProfile.displayName || ''
-    formState.experienceLevel = newProfile.experienceLevel || 'junior'
     formState.email = authStore.user?.email || ''
   }
 }, { immediate: true })
@@ -54,7 +49,6 @@ async function handleSubmit() {
     isLoading.value = true
     await authStore.updateUserProfile({
       displayName: formState.displayName,
-      experienceLevel: formState.experienceLevel,
     })
     message.success('Профиль обновлен')
   }
@@ -70,7 +64,6 @@ async function handleSubmit() {
 function getFormData() {
   return {
     displayName: formState.displayName,
-    experienceLevel: formState.experienceLevel,
   }
 }
 
@@ -114,25 +107,6 @@ defineExpose({
         <span style="color: #999;">Email нельзя изменить</span>
       </template>
     </a-form-item>
-
-    <a-form-item label="Уровень опыта" name="experienceLevel">
-      <a-select
-        v-model:value="formState.experienceLevel"
-        placeholder="Выберите уровень опыта"
-        size="large"
-      >
-        <a-select-option value="junior">
-          👶 Junior (0-2 года)
-        </a-select-option>
-        <a-select-option value="middle">
-          💼 Middle (2-5 лет)
-        </a-select-option>
-        <a-select-option value="senior">
-          🚀 Senior (5+ лет)
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-
     <a-form-item>
       <a-button type="primary" html-type="submit" :loading="isLoading">
         Сохранить изменения

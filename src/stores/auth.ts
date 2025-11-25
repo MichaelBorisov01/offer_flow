@@ -1,4 +1,3 @@
-// src/stores/auth.ts
 import type { User } from 'firebase/auth'
 import {
   createUserWithEmailAndPassword,
@@ -14,10 +13,6 @@ import { ConsentManager } from '@/utils/consentManager'
 
 interface UserProfile {
   displayName?: string
-  photoURL?: string
-  experienceLevel?: 'junior' | 'middle' | 'senior'
-  preferredCategories?: string[]
-  // Добавляем поле для согласий
   consent?: {
     privacyPolicy: boolean
     userAgreement: boolean
@@ -85,7 +80,6 @@ export const useAuthStore = defineStore('auth', {
 
           if (user) {
             await this.loadUserProfile(user.uid)
-            // Восстанавливаем согласия из Firebase при инициализации
             await this.syncConsentFromFirebase()
           }
           else {
@@ -113,7 +107,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Синхронизация согласий из Firebase в localStorage
     async syncConsentFromFirebase() {
       if (!this.user || !this.userProfile?.consent) {
         return
@@ -121,9 +114,7 @@ export const useAuthStore = defineStore('auth', {
 
       const firebaseConsent = this.userProfile.consent
 
-      // Если в Firebase есть более актуальные данные о согласии, синхронизируем
       if (firebaseConsent.privacyPolicy && firebaseConsent.userAgreement) {
-        // Восстанавливаем согласие в localStorage
         ConsentManager.acceptConsent()
       }
     },
@@ -133,7 +124,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        // Проверяем, дано ли согласие
         if (!ConsentManager.hasValidConsent()) {
           throw new Error('Необходимо принять пользовательское соглашение и политику конфиденциальности')
         }
@@ -245,7 +235,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Метод для проверки согласия (можно использовать в guards)
+    // Метод для проверки согласия
     hasValidConsent(): boolean {
       return ConsentManager.hasValidConsent()
     },
