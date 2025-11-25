@@ -95,7 +95,6 @@ function getQuestionButtonClass(index: number): string {
     <!-- Быстрая навигация -->
     <div v-if="questions.length > 1" class="quick-navigation">
       <a-divider />
-      <h4>Прогресс вопросов:</h4>
       <a-space wrap>
         <a-button
           v-for="(question, index) in questions"

@@ -1,4 +1,4 @@
-import type { InterviewSettings } from '@/types/interview'
+import type { AISettings, InterviewSettings } from '@/types/interview'
 import { useLocalStorage } from './useLocalStorage'
 
 export type InterviewMode = 'manual' | 'ai'
@@ -8,7 +8,7 @@ export type InterviewMode = 'manual' | 'ai'
  */
 export function useInterviewMode() {
   const mode = useLocalStorage<InterviewMode>('interview-trainer-mode', 'manual')
-  const aiSettings = useLocalStorage('interview-trainer-ai-settings', {
+  const aiSettings = useLocalStorage<AISettings>('interview-trainer-ai-settings', {
     specialty: 'frontend',
     difficulty: 'middle',
     questionsCount: 5,

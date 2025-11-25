@@ -139,8 +139,7 @@ watch(mode, (newMode, oldMode) => {
           @settings-changed="handleAISettingsChanged"
         />
 
-        <!-- Настройки собеседования -->
-        <a-card title="Настройки просмотра" style="margin-top: 24px;">
+        <a-card title="Настройки собеседования" style="margin-top: 24px;">
           <a-form layout="vertical">
             <a-form-item>
               <a-checkbox
