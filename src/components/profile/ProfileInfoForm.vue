@@ -31,7 +31,6 @@ const rules = {
   ],
 }
 
-// Заполняем форму данными пользователя
 watch(() => props.userProfile, (newProfile) => {
   if (newProfile) {
     formState.displayName = newProfile.displayName || ''
@@ -39,7 +38,6 @@ watch(() => props.userProfile, (newProfile) => {
   }
 }, { immediate: true })
 
-// Отслеживаем изменения формы
 watch(formState, () => {
   emit('change')
 }, { deep: true })

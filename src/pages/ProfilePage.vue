@@ -12,7 +12,6 @@ const router = useRouter()
 
 const profileInfoFormRef = ref()
 const passwordFormRef = ref()
-const learningFormRef = ref()
 
 const hasChanges = ref(false)
 const isSaving = ref(false)
@@ -32,14 +31,9 @@ async function saveAllChanges() {
   try {
     // Сохраняем данные профиля
     const profileData = await profileInfoFormRef.value?.getFormData()
-    const learningData = await learningFormRef.value?.getFormData()
 
     if (profileData) {
       await authStore.updateUserProfile(profileData)
-    }
-
-    if (learningData) {
-      await authStore.updateUserProfile(learningData)
     }
 
     // Сохраняем пароль если он был изменен
@@ -157,7 +151,7 @@ async function handleAccountDelete() {
         <a-alert
           type="warning"
           message="Внимание! Это действие необратимо"
-          description="Все ваши данные, включая историю тренировок, ответы и настройки, будут безвозвратно удалены."
+          description="Все ваши данные, включая все вопросы, будут безвозвратно удалены."
           show-icon
           class="delete-alert"
         />
