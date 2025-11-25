@@ -19,7 +19,6 @@ const formState = reactive({
   confirmPassword: '',
 })
 
-// Валидация пароля
 const hasMinLength = computed(() => formState.newPassword.length >= 8)
 const hasUpperCase = computed(() => /[A-Z]/.test(formState.newPassword))
 const hasLowerCase = computed(() => /[a-z]/.test(formState.newPassword))
@@ -38,20 +37,20 @@ const isFormValid = computed(() => {
 
 async function validatePassword(_rule: any, value: string) {
   if (!value) {
-    return Promise.reject('Введите пароль')
+    return Promise.reject(new Error('Введите пароль'))
   }
   if (!isPasswordStrong.value) {
-    return Promise.reject('Пароль не соответствует требованиям безопасности')
+    return Promise.reject(new Error('Пароль не соответствует требованиям безопасности'))
   }
   return Promise.resolve()
 }
 
 async function validateConfirmPassword(_rule: any, value: string) {
   if (!value) {
-    return Promise.reject('Подтвердите пароль')
+    return Promise.reject(new Error('Подтвердите пароль'))
   }
   if (value !== formState.newPassword) {
-    return Promise.reject('Пароли не совпадают')
+    return Promise.reject(new Error('Пароли не совпадают'))
   }
   return Promise.resolve()
 }
@@ -70,7 +69,6 @@ const rules = {
   ],
 }
 
-// Отслеживаем изменения формы
 watch(formState, () => {
   if (formState.currentPassword || formState.newPassword || formState.confirmPassword) {
     emit('change')
@@ -85,7 +83,6 @@ async function handleSubmit() {
 
     message.success('Пароль успешно изменен')
 
-    // Сбрасываем форму
     formState.currentPassword = ''
     formState.newPassword = ''
     formState.confirmPassword = ''
