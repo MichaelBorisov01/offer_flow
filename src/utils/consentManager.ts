@@ -1,4 +1,12 @@
+import { useBooleanStorage, useStringStorage } from '@/composables/useLocalStorage'
+
 export class ConsentManager {
+  // Реактивные ссылки на данные в localStorage
+  private static consentGiven = useBooleanStorage('consent_given', false)
+  private static consentDate = useStringStorage('consent_date', '')
+  private static privacyVersion = useStringStorage('privacy_version', '')
+  private static agreementVersion = useStringStorage('agreement_version', '')
+
   static acceptConsent() {
     const consentData = {
       given: true,
@@ -7,40 +15,52 @@ export class ConsentManager {
       agreementVersion: '1.0',
     }
 
-    // Сохраняем в localStorage
-    localStorage.setItem('consent_given', 'true')
-    localStorage.setItem('consent_date', consentData.date)
-    localStorage.setItem('privacy_version', consentData.privacyVersion)
-    localStorage.setItem('agreement_version', consentData.agreementVersion)
+    // Сохраняем через композаблы
+    this.consentGiven.value = true
+    this.consentDate.value = consentData.date
+    this.privacyVersion.value = consentData.privacyVersion
+    this.agreementVersion.value = consentData.agreementVersion
 
     return consentData
   }
 
   static hasValidConsent(): boolean {
-    const consentGiven = localStorage.getItem('consent_given')
-    const privacyVersion = localStorage.getItem('privacy_version')
-    const agreementVersion = localStorage.getItem('agreement_version')
+    // Проверяем актуальность версий через реактивные ссылки
+    const isPrivacyValid = this.privacyVersion.value === '1.0'
+    const isAgreementValid = this.agreementVersion.value === '1.0'
 
-    // Проверяем актуальность версий
-    const isPrivacyValid = privacyVersion === '1.0'
-    const isAgreementValid = agreementVersion === '1.0'
-
-    return consentGiven === 'true' && isPrivacyValid && isAgreementValid
+    return this.consentGiven.value && isPrivacyValid && isAgreementValid
   }
 
   static getConsentInfo() {
     return {
-      given: localStorage.getItem('consent_given') === 'true',
-      date: localStorage.getItem('consent_date'),
-      privacyVersion: localStorage.getItem('privacy_version'),
-      agreementVersion: localStorage.getItem('agreement_version'),
+      given: this.consentGiven.value,
+      date: this.consentDate.value,
+      privacyVersion: this.privacyVersion.value,
+      agreementVersion: this.agreementVersion.value,
     }
   }
 
   static revokeConsent() {
-    localStorage.removeItem('consent_given')
-    localStorage.removeItem('consent_date')
-    localStorage.removeItem('privacy_version')
-    localStorage.removeItem('agreement_version')
+    this.consentGiven.value = false
+    this.consentDate.value = ''
+    this.privacyVersion.value = ''
+    this.agreementVersion.value = ''
+  }
+
+  // Метод для проверки необходимости запроса согласия
+  static shouldRequestConsent(): boolean {
+    return !this.hasValidConsent()
+  }
+
+  // Метод для получения данных согласия для сохранения в Firebase
+  static getConsentDataForFirebase() {
+    return {
+      privacyPolicy: this.consentGiven.value,
+      userAgreement: this.consentGiven.value,
+      acceptedAt: this.consentDate.value,
+      privacyVersion: this.privacyVersion.value,
+      agreementVersion: this.agreementVersion.value,
+    }
   }
 }

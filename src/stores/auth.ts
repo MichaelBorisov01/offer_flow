@@ -1,19 +1,30 @@
+// src/stores/auth.ts
 import type { User } from 'firebase/auth'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
 } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { defineStore } from 'pinia'
 import { auth, db } from '@/services/firebase'
+import { ConsentManager } from '@/utils/consentManager'
 
 interface UserProfile {
   displayName?: string
   photoURL?: string
   experienceLevel?: 'junior' | 'middle' | 'senior'
   preferredCategories?: string[]
+  // Добавляем поле для согласий
+  consent?: {
+    privacyPolicy: boolean
+    userAgreement: boolean
+    acceptedAt: string
+    privacyVersion: string
+    agreementVersion: string
+  }
 }
 
 interface AuthState {
@@ -74,6 +85,8 @@ export const useAuthStore = defineStore('auth', {
 
           if (user) {
             await this.loadUserProfile(user.uid)
+            // Восстанавливаем согласия из Firebase при инициализации
+            await this.syncConsentFromFirebase()
           }
           else {
             this.userProfile = null
@@ -100,24 +113,57 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    // Синхронизация согласий из Firebase в localStorage
+    async syncConsentFromFirebase() {
+      if (!this.user || !this.userProfile?.consent) {
+        return
+      }
+
+      const firebaseConsent = this.userProfile.consent
+
+      // Если в Firebase есть более актуальные данные о согласии, синхронизируем
+      if (firebaseConsent.privacyPolicy && firebaseConsent.userAgreement) {
+        // Восстанавливаем согласие в localStorage
+        ConsentManager.acceptConsent()
+      }
+    },
+
     async signUp(email: string, password: string, userData: UserProfile): Promise<boolean> {
       this.isLoading = true
       this.error = null
 
       try {
+        // Проверяем, дано ли согласие
+        if (!ConsentManager.hasValidConsent()) {
+          throw new Error('Необходимо принять пользовательское соглашение и политику конфиденциальности')
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         const user = userCredential.user
 
+        // Получаем данные согласия для сохранения в Firebase
+        const consentData = ConsentManager.getConsentDataForFirebase()
+
+        // Сохраняем данные пользователя в Firestore с информацией о согласии
         await setDoc(doc(db, 'users', user.uid), {
           ...userData,
+          consent: consentData,
           createdAt: new Date(),
+          updatedAt: new Date(),
         })
+
+        // Обновляем профиль в Firebase Auth
+        if (userData.displayName) {
+          await updateProfile(user, {
+            displayName: userData.displayName,
+          })
+        }
 
         await this.loadUserProfile(user.uid)
         return true
       }
       catch (error: any) {
-        const errorMessage = getFirebaseErrorMessage(error.code)
+        const errorMessage = error.message || getFirebaseErrorMessage(error.code)
         this.error = errorMessage
         console.error('Sign up error:', error)
         throw new Error(errorMessage)
@@ -133,6 +179,12 @@ export const useAuthStore = defineStore('auth', {
 
       try {
         await signInWithEmailAndPassword(auth, email, password)
+
+        // После успешного входа синхронизируем согласия из Firebase
+        if (this.user) {
+          await this.syncConsentFromFirebase()
+        }
+
         return true
       }
       catch (error: any) {
@@ -154,6 +206,10 @@ export const useAuthStore = defineStore('auth', {
         await signOut(auth)
         this.user = null
         this.userProfile = null
+
+        // Не очищаем согласие при выходе, так как оно может пригодиться при следующем входе
+        // ConsentManager.revokeConsent() - НЕ вызываем
+
         return true
       }
       catch (error: any) {
@@ -167,6 +223,33 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    // Метод для обновления профиля пользователя
+    async updateUserProfile(updates: Partial<UserProfile>): Promise<boolean> {
+      if (!this.user) {
+        throw new Error('Пользователь не авторизован')
+      }
+
+      try {
+        await setDoc(doc(db, 'users', this.user.uid), {
+          ...this.userProfile,
+          ...updates,
+          updatedAt: new Date(),
+        }, { merge: true })
+
+        await this.loadUserProfile(this.user.uid)
+        return true
+      }
+      catch (error: any) {
+        console.error('Update profile error:', error)
+        throw new Error('Ошибка при обновлении профиля')
+      }
+    },
+
+    // Метод для проверки согласия (можно использовать в guards)
+    hasValidConsent(): boolean {
+      return ConsentManager.hasValidConsent()
+    },
+
     clearError() {
       this.error = null
     },
@@ -176,5 +259,8 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: state => !!state.user,
     userDisplayName: state =>
       state.userProfile?.displayName || state.user?.email?.split('@')[0] || 'User',
+
+    // Геттер для проверки согласия
+    consentGiven: () => ConsentManager.hasValidConsent(),
   },
 })

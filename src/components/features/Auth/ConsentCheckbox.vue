@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import LegalModal from '@/components/legal/LegalModal.vue'
+import { useConsent } from '@/composables/useConsent'
 
 interface Props {
   modelValue: boolean
@@ -17,9 +18,21 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+const { acceptConsent, revokeConsent, hasValidConsent } = useConsent()
+
 const internalValue = computed({
   get: () => props.modelValue,
-  set: value => emit('update:modelValue', value),
+  set: (value) => {
+    emit('update:modelValue', value)
+
+    // При изменении чекбокса обновляем согласие
+    if (value) {
+      acceptConsent()
+    }
+    else {
+      revokeConsent()
+    }
+  },
 })
 
 const privacyModalVisible = ref(false)
@@ -32,6 +45,13 @@ function showPrivacyPolicy() {
 function showAgreement() {
   agreementModalVisible.value = true
 }
+
+// При монтировании проверяем, есть ли уже согласие
+onMounted(() => {
+  if (hasValidConsent.value && !internalValue.value) {
+    internalValue.value = true
+  }
+})
 </script>
 
 <template>
