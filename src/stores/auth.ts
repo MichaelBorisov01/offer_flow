@@ -1,12 +1,16 @@
 import type { User } from 'firebase/auth'
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
   updateProfile,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
 import { defineStore } from 'pinia'
 import { auth, db } from '@/services/firebase'
 import { ConsentManager } from '@/utils/consentManager'
@@ -197,9 +201,6 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.userProfile = null
 
-        // Не очищаем согласие при выходе, так как оно может пригодиться при следующем входе
-        // ConsentManager.revokeConsent() - НЕ вызываем
-
         return true
       }
       catch (error: any) {
@@ -242,6 +243,98 @@ export const useAuthStore = defineStore('auth', {
 
     clearError() {
       this.error = null
+    },
+
+    async updatePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+      if (!this.user) {
+        throw new Error('Пользователь не авторизован')
+      }
+
+      this.isLoading = true
+      this.error = null
+
+      try {
+        // Проверка текущего пароля через реавторизацию
+        const credential = EmailAuthProvider.credential(this.user.email!, currentPassword)
+        await reauthenticateWithCredential(this.user, credential)
+
+        // Изменение пароля
+        await updatePassword(this.user, newPassword)
+
+        return true
+      }
+      catch (error: any) {
+        const errorMessage = getFirebaseErrorMessage(error.code)
+        this.error = errorMessage
+        console.error('Update password error:', error)
+        throw new Error(errorMessage)
+      }
+      finally {
+        this.isLoading = false
+      }
+    },
+
+    // Реальный метод удаления аккаунта
+    async deleteAccount(password: string): Promise<boolean> {
+      if (!this.user) {
+        throw new Error('Пользователь не авторизован')
+      }
+
+      this.isLoading = true
+      this.error = null
+
+      try {
+        // Реаутентификация для подтверждения
+        const credential = EmailAuthProvider.credential(this.user.email!, password)
+        await reauthenticateWithCredential(this.user, credential)
+
+        // Удаление всех данных пользователя из Firestore
+        await this.deleteAllUserData(this.user.uid)
+
+        // Удаление аккаунта из Firebase Auth
+        await deleteUser(this.user)
+
+        // Очистка локального состояния
+        this.user = null
+        this.userProfile = null
+
+        // Очистка согласий
+        ConsentManager.revokeConsent()
+
+        return true
+      }
+      catch (error: any) {
+        const errorMessage = getFirebaseErrorMessage(error.code)
+        this.error = errorMessage
+        console.error('Delete account error:', error)
+        throw new Error(errorMessage)
+      }
+      finally {
+        this.isLoading = false
+      }
+    },
+
+    async deleteAllUserData(userId: string): Promise<void> {
+      try {
+        // Удаление основного профиля пользователя
+        await deleteDoc(doc(db, 'users', userId))
+
+        // Удаление вопросов пользователя (если они хранятся отдельно)
+        const questionsQuery = query(
+          collection(db, 'questions'),
+          where('userId', '==', userId),
+        )
+        const questionsSnapshot = await getDocs(questionsQuery)
+
+        const deleteQuestionsPromises = questionsSnapshot.docs.map(doc =>
+          deleteDoc(doc.ref),
+        )
+        await Promise.all(deleteQuestionsPromises)
+      }
+      catch (error) {
+        console.error('Error deleting user data:', error)
+        // Не прерываем процесс удаления аккаунта из-за ошибок в данных
+      }
     },
   },
 

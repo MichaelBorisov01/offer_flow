@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 interface Emits {
@@ -41,7 +41,7 @@ async function validatePassword(_rule: any, value: string) {
     return Promise.reject('Введите пароль')
   }
   if (!isPasswordStrong.value) {
-    return Promise.reject('Пароль не соответствует требованиям')
+    return Promise.reject('Пароль не соответствует требованиям безопасности')
   }
   return Promise.resolve()
 }
@@ -72,16 +72,16 @@ const rules = {
 
 // Отслеживаем изменения формы
 watch(formState, () => {
-  emit('change')
+  if (formState.currentPassword || formState.newPassword || formState.confirmPassword) {
+    emit('change')
+  }
 }, { deep: true })
 
 async function handleSubmit() {
   try {
     isLoading.value = true
 
-    // Здесь будет вызов метода изменения пароля в authStore
-    // Пока заглушка
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await authStore.updatePassword(formState.currentPassword, formState.newPassword)
 
     message.success('Пароль успешно изменен')
 
@@ -90,9 +90,12 @@ async function handleSubmit() {
     formState.newPassword = ''
     formState.confirmPassword = ''
     formRef.value?.clearValidate()
+
+    return true
   }
   catch (error: any) {
     message.error(error.message || 'Ошибка при изменении пароля')
+    return false
   }
   finally {
     isLoading.value = false
@@ -102,12 +105,18 @@ async function handleSubmit() {
 // Метод для сохранения пароля (для родительского компонента)
 async function savePassword() {
   if (!isFormValid.value) {
+    message.error('Заполните все поля корректно')
     return false
   }
 
-  await handleSubmit()
-  return true
+  return await handleSubmit()
 }
+
+onUnmounted(() => {
+  formState.currentPassword = ''
+  formState.newPassword = ''
+  formState.confirmPassword = ''
+})
 
 defineExpose({
   savePassword,
@@ -127,6 +136,7 @@ defineExpose({
         v-model:value="formState.currentPassword"
         placeholder="Введите текущий пароль"
         size="large"
+        :disabled="isLoading"
       />
     </a-form-item>
 
@@ -135,22 +145,25 @@ defineExpose({
         v-model:value="formState.newPassword"
         placeholder="Введите новый пароль"
         size="large"
+        :disabled="isLoading"
       />
       <template #help>
         <div class="password-help">
-          Пароль должен содержать:
+          <div class="password-requirements">
+            Требования к паролю:
+          </div>
           <ul>
             <li :class="{ valid: hasMinLength }">
               Минимум 8 символов
             </li>
             <li :class="{ valid: hasUpperCase }">
-              Заглавные буквы
+              Хотя бы одна заглавная буква
             </li>
             <li :class="{ valid: hasLowerCase }">
-              Строчные буквы
+              Хотя бы одна строчная буква
             </li>
             <li :class="{ valid: hasNumbers }">
-              Цифры
+              Хотя бы одна цифра
             </li>
           </ul>
         </div>
@@ -162,6 +175,7 @@ defineExpose({
         v-model:value="formState.confirmPassword"
         placeholder="Повторите новый пароль"
         size="large"
+        :disabled="isLoading"
       />
     </a-form-item>
 
@@ -171,6 +185,7 @@ defineExpose({
         html-type="submit"
         :loading="isLoading"
         :disabled="!isFormValid"
+        size="large"
       >
         Изменить пароль
       </a-button>
@@ -184,9 +199,18 @@ defineExpose({
   color: #666;
 }
 
+.password-requirements {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
 .password-help ul {
   margin: 4px 0;
   padding-left: 16px;
+}
+
+.password-help li {
+  transition: color 0.3s;
 }
 
 .password-help li.valid {

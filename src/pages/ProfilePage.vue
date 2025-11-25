@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { message } from 'ant-design-vue'
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DataManagementSection from '@/components/profile/DataManagementSection.vue'
 import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
@@ -74,14 +74,13 @@ async function handleAccountDelete() {
   isDeleting.value = true
 
   try {
-    // Здесь будет логика удаления аккаунта
-    // Пока заглушка
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await authStore.deleteAccount(deletePassword.value)
 
-    message.success('Аккаунт успешно удален')
+    message.success('Аккаунт и все данные успешно удалены')
     deleteModalVisible.value = false
-    await authStore.signOut()
-    router.push('/auth')
+
+    // Перенаправляем на страницу авторизации
+    await router.push('/auth')
   }
   catch (error: any) {
     message.error(error.message || 'Ошибка при удалении аккаунта')
@@ -90,6 +89,10 @@ async function handleAccountDelete() {
     isDeleting.value = false
   }
 }
+
+onUnmounted(() => {
+  hasChanges.value = false
+})
 </script>
 
 <template>
@@ -100,7 +103,12 @@ async function handleAccountDelete() {
       @back="() => $router.back()"
     >
       <template #extra>
-        <a-button type="primary" :loading="isSaving" @click="saveAllChanges">
+        <a-button
+          type="primary"
+          :loading="isSaving"
+          :disabled="!hasChanges"
+          @click="saveAllChanges"
+        >
           Сохранить все изменения
         </a-button>
       </template>
@@ -145,6 +153,8 @@ async function handleAccountDelete() {
       cancel-text="Отмена"
       :ok-button-props="{ danger: true }"
       :confirm-loading="isDeleting"
+      :closable="!isDeleting"
+      :mask-closable="!isDeleting"
       @ok="handleAccountDelete"
     >
       <div class="delete-confirm-content">
@@ -157,7 +167,7 @@ async function handleAccountDelete() {
         />
 
         <div class="delete-checkbox">
-          <a-checkbox v-model:checked="deleteConfirmed">
+          <a-checkbox v-model:checked="deleteConfirmed" :disabled="isDeleting">
             Я понимаю, что все мои данные будут удалены без возможности восстановления
           </a-checkbox>
         </div>
@@ -172,6 +182,8 @@ async function handleAccountDelete() {
             v-model:value="deletePassword"
             placeholder="Введите ваш пароль"
             class="password-input"
+            :disabled="isDeleting"
+            @press-enter="handleAccountDelete"
           />
         </div>
       </div>
