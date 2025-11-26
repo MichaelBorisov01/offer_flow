@@ -86,7 +86,7 @@ function getQuestionButtonClass(index: number): string {
         size="large"
         @click="emit('finish')"
       >
-        Завершить собеседование
+        Завершить
       </a-button>
     </a-space>
 

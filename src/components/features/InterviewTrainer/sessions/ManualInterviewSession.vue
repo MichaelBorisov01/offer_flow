@@ -275,5 +275,9 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
   .user-answer-header :deep(.ant-btn) {
     align-self: flex-end;
   }
+
+  .question-section {
+    gap: 8px;
+  }
 }
 </style>

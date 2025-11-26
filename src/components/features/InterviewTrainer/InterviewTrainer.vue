@@ -222,4 +222,8 @@ watch(mode, (newMode, oldMode) => {
 :deep(.ant-card-body) {
   padding: 16px;
 }
+
+:deep(.ant-card-head) {
+  padding: 16px;
+}
 </style>

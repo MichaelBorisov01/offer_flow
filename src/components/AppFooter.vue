@@ -20,16 +20,6 @@ const currentYear = new Date().getFullYear()
       </div>
 
       <div class="footer-section">
-        <h4>Режимы работы</h4>
-        <ul class="footer-links">
-          <li>🤖 Генерация вопросов ИИ</li>
-          <li>✏️ Ручное добавление</li>
-          <li>🎯 Режим собеседования</li>
-          <li>📊 Отслеживание прогресса</li>
-        </ul>
-      </div>
-
-      <div class="footer-section">
         <h4>Поддержка</h4>
         <ul class="footer-links">
           <li>
@@ -50,9 +40,6 @@ const currentYear = new Date().getFullYear()
       <div class="copyright">
         © {{ currentYear }} Тренажер собеседований. Сделано с
         <HeartFilled class="heart-icon" /> для разработчиков
-      </div>
-      <div class="version">
-        v1.0.0
       </div>
     </div>
   </footer>
@@ -149,12 +136,6 @@ const currentYear = new Date().getFullYear()
   font-size: 12px;
 }
 
-.version {
-  color: #bfbfbf;
-  font-size: 12px;
-  font-family: monospace;
-}
-
 @media (max-width: 768px) {
   .app-footer {
     padding: 30px 16px 16px;
@@ -169,10 +150,6 @@ const currentYear = new Date().getFullYear()
     flex-direction: column;
     text-align: center;
     gap: 12px;
-  }
-
-  .tech-stack {
-    justify-content: center;
   }
 }
 

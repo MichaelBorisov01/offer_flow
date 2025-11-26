@@ -110,16 +110,14 @@ function navigateToProfile() {
 }
 
 .header {
-  background: #001529;
-  color: white;
-  padding: 0 24px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 64px;
 }
 
 .header h1 {
@@ -140,6 +138,11 @@ function navigateToProfile() {
 }
 
 @media (max-width: 480px) {
+  .header {
+    height: 40px !important;
+    line-height: 40px !important;
+  }
+
   .content {
     padding: 0;
     min-height: 0 !important;

@@ -69,27 +69,32 @@ const filteredTags = computed(() => {
         <a-tag :color="getCategoryColor(question.category)">
           {{ interviewStore.getCategoryName(question.category) }}
         </a-tag>
-        <a-button
-          v-if="showUserAnswerToggle"
-          type="link"
-          size="small"
-          :class="{ 'active-toggle': userAnswerVisible }"
-          @click="emit('toggleUserAnswer')"
-        >
-          <EditOutlined />
-          {{ userAnswerVisible ? 'Скрыть мой ответ' : 'Показать мой ответ' }}
-        </a-button>
-        <a-button
-          v-if="showAnswerToggle"
-          type="link"
-          :loading="answerGenerating"
-          size="small"
-          :class="{ 'active-toggle': answerVisible }"
-          @click="emit('toggleAnswer')"
-        >
-          <BulbOutlined />
-          {{ answerVisible ? 'Скрыть ответ ИИ' : 'Ответ ИИ' }}
-        </a-button>
+
+        <a-divider class="space-divider" type="vertical" />
+
+        <div class="answer-button">
+          <a-button
+            v-if="showUserAnswerToggle"
+            type="link"
+            size="small"
+            :class="{ 'active-toggle': userAnswerVisible }"
+            @click="emit('toggleUserAnswer')"
+          >
+            <EditOutlined />
+            {{ userAnswerVisible ? 'Скрыть мой ответ' : 'Мой ответ' }}
+          </a-button>
+          <a-button
+            v-if="showAnswerToggle"
+            type="link"
+            :loading="answerGenerating"
+            size="small"
+            :class="{ 'active-toggle': answerVisible }"
+            @click="emit('toggleAnswer')"
+          >
+            <BulbOutlined />
+            {{ answerVisible ? 'Скрыть ответ ИИ' : 'Ответ ИИ' }}
+          </a-button>
+        </div>
       </a-space>
     </template>
 
@@ -147,6 +152,15 @@ const filteredTags = computed(() => {
   align-items: center;
 }
 
+.space-divider {
+  height: 3em;
+}
+
+.answer-button {
+  display: flex;
+  gap: 8px;
+}
+
 .tag-item {
   margin: 0;
   flex-shrink: 0;
@@ -162,9 +176,21 @@ const filteredTags = computed(() => {
   border-color: #91d5ff;
 }
 
+:deep(.ant-tag) {
+    margin-inline-end: 0
+  }
+
 @media (max-width: 480px) {
   .question-content {
     padding: 0;
+  }
+
+  .answer-button {
+    flex-direction: column;
+  }
+
+  :deep(.ant-space) {
+    gap: 4px !important;
   }
 
   :deep(.ant-card-head-wrapper) {

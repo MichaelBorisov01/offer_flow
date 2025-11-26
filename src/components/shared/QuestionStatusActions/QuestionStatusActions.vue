@@ -82,8 +82,6 @@ function handleStatusChange(status: QuestionStatus) {
   background: #f6ffed;
   border-color: #52c41a;
   color: #135200;
-  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
-  transform: scale(1.05);
 }
 
 .status-repeat {
@@ -101,8 +99,6 @@ function handleStatusChange(status: QuestionStatus) {
   background: #fff7e6;
   border-color: #fa8c16;
   color: #873800;
-  box-shadow: 0 0 0 2px rgba(250, 140, 22, 0.2);
-  transform: scale(1.05);
 }
 
 .status-hard {
@@ -120,24 +116,12 @@ function handleStatusChange(status: QuestionStatus) {
   background: #fff2f0;
   border-color: #ff4d4f;
   color: #820014;
-  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
-  transform: scale(1.05);
-}
-
-.status-button :deep(.anticon) {
-  margin-right: 6px;
-  font-size: 14px;
 }
 
 @media (max-width: 768px) {
   .status-actions {
     flex-direction: column;
-    gap: 8px;
-  }
-
-  .status-button {
-    width: 100%;
-    justify-content: center;
+    gap: 6px;
   }
 }
 </style>
