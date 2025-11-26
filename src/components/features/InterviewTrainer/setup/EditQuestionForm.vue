@@ -403,7 +403,7 @@ function openAddCategoryModal() {
                         >
                           <a-button
                             type="text"
-                            size="small"
+                            size="large"
                             class="delete-category-btn"
                             :class="{ 'disabled-category': isCategoryUsed(option.value) }"
                             :loading="isDeletingCategory"
@@ -601,6 +601,7 @@ function openAddCategoryModal() {
 
 :deep(.ant-select-item-option) {
   padding: 8px 12px;
+  max-width: 100%;
 }
 
 :deep(.ant-select-item-option-content) {
@@ -609,10 +610,6 @@ function openAddCategoryModal() {
 
 :deep(.ant-select-dropdown) {
   max-width: 400px;
-}
-
-:deep(.ant-select-item-option) {
-  max-width: 100%;
 }
 
 :deep(.ant-collapse-header-text) {
@@ -741,12 +738,6 @@ function openAddCategoryModal() {
     width: 100%;
   }
 
-  .category-option {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
   .category-label {
     max-width: 100%;
   }
@@ -796,6 +787,11 @@ function openAddCategoryModal() {
     flex-direction: column;
     gap: 4px;
   }
+
+  .delete-category-btn {
+    width: 40px;
+    height: 40px;
+}
 
   .tag-item {
     max-width: 120px;

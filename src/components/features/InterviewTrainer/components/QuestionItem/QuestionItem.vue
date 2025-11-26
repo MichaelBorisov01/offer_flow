@@ -178,7 +178,7 @@ watch(() => props.question, () => {
         <a-button
           type="text"
           danger
-          size="small"
+          size="large"
           class="action-button"
           @click="emit('remove', index)"
         >
@@ -189,7 +189,7 @@ watch(() => props.question, () => {
       <Tooltip title="Редактировать вопрос">
         <a-button
           type="text"
-          size="small"
+          size="large"
           class="action-button"
           @click="emit('edit', question)"
         >
@@ -201,7 +201,7 @@ watch(() => props.question, () => {
         <a-button
           type="text"
           :loading="question.id === generatingAnswerId"
-          size="small"
+          size="large"
           class="action-button"
           @click="emit('generateAnswer', question)"
         >
@@ -463,7 +463,6 @@ watch(() => props.question, () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
   color: #8c8c8c;
   cursor: pointer;
 }
@@ -623,23 +622,9 @@ watch(() => props.question, () => {
     gap: 8px;
   }
 
-  .question-meta-icons {
-    align-self: flex-start;
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .category-badge {
-    max-width: 100px;
-  }
-
-  .question-text {
-    font-size: 14px;
-    width: 100%;
-  }
-
   .user-answer-edit-actions {
     flex-direction: column;
+    margin-top: 24px;
   }
 
   .user-answer-edit-actions .ant-btn {
@@ -654,25 +639,6 @@ watch(() => props.question, () => {
 @media (max-width: 480px) {
   .question-item {
     padding: 12px;
-  }
-
-  .question-text {
-    font-size: 14px;
-  }
-
-  .question-meta-icons {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .difficulty-badge {
-    font-size: 10px;
-    padding: 1px 4px;
-  }
-
-  .category-badge {
-    max-width: 80px;
-    font-size: 10px;
   }
 
   .user-answer-section {

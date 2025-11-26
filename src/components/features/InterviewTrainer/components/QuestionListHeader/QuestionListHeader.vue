@@ -26,8 +26,8 @@ const emit = defineEmits<Emits>()
       <Tooltip title="Свернуть/развернуть список">
         <a-button
           type="text"
-          size="small"
-          class="collapse-button"
+          size="large"
+          class="questions-button"
           @click="emit('toggleCollapse')"
         >
           <template #icon>
@@ -40,7 +40,8 @@ const emit = defineEmits<Emits>()
       <Tooltip title="Перемешать вопросы">
         <a-button
           type="text"
-          size="small"
+          size="large"
+          class="questions-button"
           @click="emit('shuffle')"
         >
           <SwapOutlined />
@@ -50,9 +51,9 @@ const emit = defineEmits<Emits>()
       <Tooltip title="Удалить все вопросы">
         <a-button
           type="text"
-          size="small"
+          size="large"
           danger
-          class="clear-button"
+          class="questions-button"
           @click="emit('clearAll')"
         >
           <DeleteOutlined />
@@ -85,12 +86,10 @@ const emit = defineEmits<Emits>()
   align-items: center;
 }
 
-.collapse-button,
-.clear-button {
+.questions-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
 }
 
 @media (max-width: 768px) {
@@ -102,6 +101,7 @@ const emit = defineEmits<Emits>()
   .list-controls {
     width: 100%;
     justify-content: flex-end;
+    gap: 32px;
   }
 }
 </style>

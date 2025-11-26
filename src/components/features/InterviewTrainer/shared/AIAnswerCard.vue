@@ -88,7 +88,7 @@ function regenerateAnswer() {
         <div class="answer-header">
           <a-tag v-if="answer.type !== 'joke'" color="green" class="type-tag">
             <BulbOutlined />
-            'Объяснение'
+            Объяснение
           </a-tag>
 
           <div v-if="answer.type === 'joke'" class="joke-context">
