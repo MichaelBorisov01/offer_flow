@@ -174,43 +174,48 @@ watch(() => props.question, () => {
     }"
   >
     <template #actions>
-      <Tooltip title="Удалить вопрос">
-        <a-button
-          type="text"
-          danger
-          size="large"
-          class="action-button"
-          @click="emit('remove', index)"
-        >
-          <DeleteOutlined />
-        </a-button>
-      </Tooltip>
+      <div class="action-buttons-mobile">
+        <Tooltip title="Удалить вопрос">
+          <a-button
+            type="text"
+            danger
+            size="large"
+            class="action-button"
+            @click="emit('remove', index)"
+          >
+            <DeleteOutlined />
+            <span class="action-text">Удалить</span>
+          </a-button>
+        </Tooltip>
 
-      <Tooltip title="Редактировать вопрос">
-        <a-button
-          type="text"
-          size="large"
-          class="action-button"
-          @click="emit('edit', question)"
-        >
-          <EditOutlined />
-        </a-button>
-      </Tooltip>
+        <Tooltip title="Редактировать вопрос">
+          <a-button
+            type="text"
+            size="large"
+            class="action-button"
+            @click="emit('edit', question)"
+          >
+            <EditOutlined />
+            <span class="action-text">Редактировать</span>
+          </a-button>
+        </Tooltip>
 
-      <Tooltip title="Сгенерировать ответ ИИ">
-        <a-button
-          type="text"
-          :loading="question.id === generatingAnswerId"
-          size="large"
-          class="action-button"
-          @click="emit('generateAnswer', question)"
-        >
-          <BulbOutlined />
-        </a-button>
-      </Tooltip>
+        <Tooltip title="Сгенерировать ответ ИИ">
+          <a-button
+            type="text"
+            :loading="question.id === generatingAnswerId"
+            size="large"
+            class="action-button"
+            @click="emit('generateAnswer', question)"
+          >
+            <BulbOutlined />
+            <span class="action-text">ИИ ответ</span>
+          </a-button>
+        </Tooltip>
+      </div>
     </template>
 
-    <a-list-item-meta>
+    <a-list-item-meta class="question-meta">
       <template #title>
         <div class="question-header">
           <span class="question-text">{{ question.text }}</span>
@@ -281,15 +286,16 @@ watch(() => props.question, () => {
           <a-button
             v-if="!isEditingUserAnswer && !hasUserAnswer"
             type="dashed"
-            size="small"
+            size="large"
+            class="mobile-action-btn"
             @click="startEditingUserAnswer"
           >
             Добавить ответ
           </a-button>
           <a-button
             v-else-if="!isEditingUserAnswer && hasUserAnswer"
-            type="text"
-            size="small"
+            size="large"
+            class="mobile-action-btn"
             @click="startEditingUserAnswer"
           >
             Редактировать
@@ -310,8 +316,9 @@ watch(() => props.question, () => {
         <div class="user-answer-edit-actions">
           <a-button
             type="primary"
-            size="small"
+            size="large"
             :loading="isLoadingUserAnswer"
+            class="mobile-action-btn"
             @click="saveUserAnswer"
           >
             <SaveOutlined />
@@ -321,14 +328,16 @@ watch(() => props.question, () => {
             v-if="hasUserAnswer"
             type="text"
             danger
-            size="small"
+            size="large"
             :loading="isLoadingUserAnswer"
+            class="mobile-action-btn"
             @click="clearUserAnswer"
           >
             Удалить
           </a-button>
           <a-button
-            size="small"
+            size="large"
+            class="mobile-action-btn"
             @click="cancelEditingUserAnswer"
           >
             <CloseOutlined />
@@ -348,8 +357,8 @@ watch(() => props.question, () => {
         <div v-if="isOverflowing || isAnswerExpanded" class="user-answer-expand">
           <a-button
             type="link"
-            size="small"
-            class="expand-button"
+            size="large"
+            class="expand-button mobile-action-btn"
             @click="toggleAnswerExpansion"
           >
             <template #icon>
@@ -390,11 +399,17 @@ watch(() => props.question, () => {
   padding: 16px;
   transition: all 0.2s ease;
   overflow: hidden;
+  position: relative;
 }
 
 .question-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-color: #d9d9d9;
+}
+
+.question-meta :deep(.ant-list-item-meta-content) {
+  flex: 1;
+  min-width: 0;
 }
 
 .question-header {
@@ -414,11 +429,12 @@ watch(() => props.question, () => {
   min-width: 0;
   color: #262626;
   margin: 0;
+  word-break: break-word;
 }
 
 .question-meta-icons {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
   align-items: center;
 }
@@ -426,20 +442,21 @@ watch(() => props.question, () => {
 .difficulty-badge {
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: #f5f5f5;
   border: 1px solid #e8e8e8;
   white-space: nowrap;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .category-badge {
   font-size: 11px;
   color: #8c8c8c;
   background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   border: 1px solid #e8e8e8;
   max-width: 120px;
   overflow: hidden;
@@ -447,6 +464,7 @@ watch(() => props.question, () => {
   white-space: nowrap;
   flex-shrink: 1;
   min-width: 0;
+  line-height: 1;
 }
 
 .question-footer {
@@ -456,6 +474,7 @@ watch(() => props.question, () => {
   min-width: 0;
   max-width: 100%;
   padding: 4px 0;
+  flex-wrap: wrap;
 }
 
 .tags-compact {
@@ -464,6 +483,7 @@ watch(() => props.question, () => {
   gap: 6px;
   color: #8c8c8c;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .tags-icon {
@@ -487,26 +507,52 @@ watch(() => props.question, () => {
   font-size: 11px;
   color: #8c8c8c;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 :deep(.ant-list-item-action) {
-  margin-top: 12px;
+  margin-top: 16px;
   display: flex;
-  gap: 4px;
+  gap: 8px;
+  width: 100%;
 }
 
 :deep(.ant-list-item-action li) {
   padding: 0;
+  flex: 1;
+}
+
+.action-buttons-mobile {
+  display: flex;
+  gap: 8px;
+  width: 100%;
 }
 
 .action-button {
-  min-width: 32px;
-  height: 32px;
+  min-width: auto;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   box-shadow: none;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background: #f5f5f5;
+}
+
+.action-text {
+  font-size: 10px;
+  line-height: 1;
+  display: block;
+  margin-inline-start: 0 !important;
 }
 
 /* Стили для блока пользовательского ответа */
@@ -523,6 +569,8 @@ watch(() => props.question, () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .user-answer-title {
@@ -533,6 +581,13 @@ watch(() => props.question, () => {
   font-size: 14px;
   font-weight: 600;
   color: #1890ff;
+  flex-shrink: 0;
+}
+
+.user-answer-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .user-answer-edit {
@@ -541,6 +596,12 @@ watch(() => props.question, () => {
 
 .user-answer-textarea {
   margin-bottom: 12px;
+  border-radius: 8px;
+}
+
+.user-answer-textarea :deep(textarea) {
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 .user-answer-edit-actions {
@@ -559,6 +620,9 @@ watch(() => props.question, () => {
   overflow: hidden;
   transition: max-height 0.3s ease;
   position: relative;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
 }
 
 .user-answer-content.expanded {
@@ -573,31 +637,37 @@ watch(() => props.question, () => {
   left: 0;
   right: 0;
   height: 40px;
-  background: linear-gradient(transparent, white);
+  background: linear-gradient(transparent, #fafafa);
   pointer-events: none;
+  border-radius: 0 0 6px 6px;
 }
 
 .user-answer-expand {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
   border-top: 1px solid #f0f0f0;
 }
 
 .expand-button {
   color: #1890ff;
-  font-size: 12px;
-  padding: 0;
+  font-size: 14px;
+  padding: 8px 16px;
   height: auto;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .expand-button:hover {
   color: #40a9ff;
+  background: #f0f7ff;
 }
 
 .user-answer-empty {
-  padding: 8px;
+  padding: 16px;
   text-align: center;
   color: #8c8c8c;
   font-style: italic;
@@ -610,11 +680,82 @@ watch(() => props.question, () => {
   font-size: 14px;
 }
 
+/* Универсальные стили для мобильных кнопок */
+.mobile-action-btn {
+  height: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+.mobile-action-btn :deep(.anticon) {
+  font-size: 16px;
+}
+
+/* Медиа-запросы для мобильных устройств */
 @media (max-width: 768px) {
+  .question-item {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
   .question-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .question-text {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .question-meta-icons {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .difficulty-badge,
+  .category-badge {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .question-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .tags-compact,
+  .date-info {
+    font-size: 12px;
+  }
+
+  .user-answer-section {
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .user-answer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .user-answer-actions {
+    width: 100%;
+  }
+
+  .user-answer-actions .mobile-action-btn {
+    width: 100%;
   }
 
   .user-answer-edit-actions {
@@ -622,27 +763,129 @@ watch(() => props.question, () => {
     margin-top: 24px;
   }
 
-  .user-answer-edit-actions .ant-btn {
+  .user-answer-edit-actions .mobile-action-btn {
     width: 100%;
+    margin: 0;
   }
 
   .user-answer-content {
     max-height: 120px;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .expand-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Action buttons на мобильных */
+  .action-buttons-mobile {
+    gap: 4px;
+  }
+
+  .action-button {
+    height: 52px;
+    padding: 8px 2px;
+    min-height: 52px;
+  }
+
+  .action-text {
+    font-size: 10px;
+    line-height: 1.2;
   }
 }
 
-@media (max-width: 480px) {
+/* Очень маленькие экраны */
+@media (max-width: 360px) {
   .question-item {
-    padding: 12px;
+    padding: 10px;
+  }
+
+  .question-text {
+    font-size: 15px;
+  }
+
+  .difficulty-badge,
+  .category-badge {
+    font-size: 11px;
+    padding: 5px 8px;
   }
 
   .user-answer-section {
-    padding: 6px;
+    padding: 10px;
   }
 
   .user-answer-content {
     max-height: 100px;
+    font-size: 13px;
   }
+
+  .mobile-action-btn {
+    height: 42px;
+    min-height: 42px;
+    font-size: 13px;
+  }
+
+  .action-button {
+    height: 48px;
+    min-height: 48px;
+  }
+
+  .action-text {
+    font-size: 9px;
+  }
+}
+
+/* Планшеты и маленькие десктопы */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .question-item {
+    padding: 14px;
+  }
+
+  .action-button {
+    height: 40px;
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  .action-text {
+    font-size: 11px;
+  }
+}
+
+/* Улучшение accessibility для касаний */
+@media (max-width: 768px) {
+  .action-button,
+  .mobile-action-btn,
+  .expand-button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .action-button:active,
+  .mobile-action-btn:active {
+    background-color: #f0f0f0;
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+.question-text {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.question-item,
+.action-button,
+.mobile-action-btn,
+.user-answer-content {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-answer-content {
+  -webkit-overflow-scrolling: touch;
 }
 </style>
 
@@ -687,7 +930,7 @@ watch(() => props.question, () => {
 .tag-tooltip-chip {
   background: #f0f7ff;
   color: #1890ff;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
   font-size: 11px;
   border: 1px solid #d6e4ff;
@@ -713,6 +956,13 @@ watch(() => props.question, () => {
   .tag-tooltip-chip {
     max-width: 100px;
     font-size: 10px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ant-tooltip {
+    pointer-events: none;
   }
 }
 </style>
