@@ -257,10 +257,6 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 }
 
 @media (max-width: 768px) {
-  .interview-session {
-    padding: 12px;
-  }
-
   .fixed-navigation-section {
     padding: 12px 0;
   }
@@ -268,10 +264,6 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
   .fixed-navigation-section :deep(.ant-space) {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .fixed-navigation-section :deep(.ant-btn) {
-    flex: 1;
   }
 
   .user-answer-header {

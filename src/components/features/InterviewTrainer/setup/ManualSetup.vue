@@ -352,7 +352,7 @@ onMounted(() => {
 
         <a-alert
           v-if="isQuestionsListCollapsed && displayedQuestions.length > 0"
-          :message="`Список свернут. Доступно вопросов: ${displayedQuestions.length}`"
+          message="Список свернут"
           type="info"
           show-icon
           class="collapsed-alert"
@@ -428,10 +428,6 @@ onMounted(() => {
 
 .spinner-content {
   min-height: 120px;
-}
-
-.collapsed-alert {
-  margin-bottom: 16px;
 }
 
 .questions-list {

@@ -62,35 +62,33 @@ function getQuestionButtonClass(index: number): string {
 <template>
   <div class="question-navigation">
     <!-- Основная навигация -->
-    <div class="navigation-buttons">
-      <a-space>
-        <a-button
-          :disabled="isFirstQuestion"
-          size="large"
-          @click="emit('previous')"
-        >
-          ← Предыдущий вопрос
-        </a-button>
+    <a-space class="space">
+      <a-button
+        :disabled="isFirstQuestion"
+        size="large"
+        @click="emit('previous')"
+      >
+        ← Назад
+      </a-button>
 
-        <a-button
-          v-if="!isLastQuestion"
-          type="primary"
-          size="large"
-          @click="emit('next')"
-        >
-          Следующий вопрос →
-        </a-button>
+      <a-button
+        v-if="!isLastQuestion"
+        type="primary"
+        size="large"
+        @click="emit('next')"
+      >
+        Далее →
+      </a-button>
 
-        <a-button
-          v-else
-          type="primary"
-          size="large"
-          @click="emit('finish')"
-        >
-          Завершить собеседование
-        </a-button>
-      </a-space>
-    </div>
+      <a-button
+        v-else
+        type="primary"
+        size="large"
+        @click="emit('finish')"
+      >
+        Завершить собеседование
+      </a-button>
+    </a-space>
 
     <!-- Быстрая навигация -->
     <div v-if="questions.length > 1" class="quick-navigation">
@@ -114,12 +112,8 @@ function getQuestionButtonClass(index: number): string {
 </template>
 
 <style scoped>
-.question-navigation {
-  margin-top: 24px;
-}
-
-.navigation-buttons {
-  margin-bottom: 16px;
+.space :deep(.ant-btn) {
+  min-width: 150px;
 }
 
 .quick-navigation h4 {

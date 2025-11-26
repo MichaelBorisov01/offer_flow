@@ -145,13 +145,12 @@ watch(
 
 <template>
   <div class="question-filters">
-    <!-- Панель фильтров -->
     <a-collapse v-model:active-key="activeCollapseKeys" :bordered="false" class="filters-panel">
       <a-collapse-panel key="1">
         <template #header>
           <div class="filters-header">
             <FilterOutlined class="filters-icon" />
-            <span class="filters-title">Фильтры вопросов</span>
+            <span class="filters-title">Фильтры</span>
             <a-badge
               v-if="hasActiveFilters"
               :count="getActiveFiltersCount()"
@@ -411,7 +410,6 @@ watch(
 
 .clear-filters-btn {
   color: #8c8c8c;
-  font-size: 12px;
   height: auto;
   padding: 0;
   margin-left: auto;
@@ -560,7 +558,6 @@ watch(
 }
 
 .active-filters-title {
-  font-size: 13px;
   font-weight: 500;
   color: #595959;
 }
@@ -607,8 +604,6 @@ watch(
 .filter-remove {
   color: #bfbfbf;
   cursor: pointer;
-  font-size: 10px;
-  margin-left: 4px;
   flex-shrink: 0;
 }
 
@@ -678,10 +673,6 @@ watch(
     gap: 16px;
   }
 
-  .active-filters-grid {
-    flex-direction: column;
-  }
-
   .active-filter-item {
     justify-content: space-between;
     max-width: 100%;
@@ -703,11 +694,6 @@ watch(
 }
 
 @media (max-width: 480px) {
-  .active-filter-item {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
   .filter-value {
     max-width: 120px;
   }

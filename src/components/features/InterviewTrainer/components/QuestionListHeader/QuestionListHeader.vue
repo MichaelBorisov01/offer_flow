@@ -100,7 +100,7 @@ const emit = defineEmits<Emits>()
 
   .list-controls {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 32px;
   }
 }

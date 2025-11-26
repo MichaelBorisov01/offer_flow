@@ -161,4 +161,27 @@ const filteredTags = computed(() => {
   background: #e6f7ff;
   border-color: #91d5ff;
 }
+
+@media (max-width: 480px) {
+  .question-content {
+    padding: 0;
+  }
+
+  :deep(.ant-card-head-wrapper) {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :deep(.ant-card-head-title) {
+    display: none;
+  }
+
+  :deep(.ant-card-extra) {
+    margin-inline-end: auto;
+  }
+
+  :deep(.ant-card-body) {
+    padding: 8px !important;
+  }
+}
 </style>

@@ -44,7 +44,7 @@ withDefaults(defineProps<Props>(), {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 16px;
   color: #8c8c8c;
   flex-wrap: wrap;
   gap: 8px;
@@ -61,13 +61,5 @@ withDefaults(defineProps<Props>(), {
   background: #f6ffed;
   padding: 2px 8px;
   border-radius: 4px;
-}
-
-@media (max-width: 768px) {
-  .progress-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
 }
 </style>

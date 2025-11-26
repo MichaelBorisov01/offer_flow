@@ -94,7 +94,7 @@ watch(mode, (newMode, oldMode) => {
 
 <template>
   <div>
-    <a-card title="Тренажер собеседований" class="trainer-card">
+    <a-card class="trainer-card">
       <template #extra>
         <a-button
           v-if="isInterviewStarted"
@@ -217,5 +217,9 @@ watch(mode, (newMode, oldMode) => {
   display: block;
   margin-left: auto;
   margin-right: auto;
+}
+
+:deep(.ant-card-body) {
+  padding: 16px;
 }
 </style>

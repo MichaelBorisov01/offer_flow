@@ -39,7 +39,6 @@ function toggleTagsVisibility() {
         v-for="(tag, index) in visibleTags"
         :key="index"
         color="blue"
-        size="small"
         class="tag-item"
       >
         {{ tag }}
@@ -48,7 +47,6 @@ function toggleTagsVisibility() {
       <a-button
         v-if="hasManyTags"
         type="link"
-        size="small"
         class="tags-toggle-button"
         @click="toggleTagsVisibility"
       >
@@ -118,33 +116,5 @@ function toggleTagsVisibility() {
   color: #1890ff;
   border-color: #1890ff;
   background: #f0f8ff;
-}
-
-@media (max-width: 768px) {
-  .tag-item {
-    max-width: 100px;
-    font-size: 11px;
-  }
-
-  .question-tags {
-    max-height: 60px;
-    gap: 4px;
-  }
-
-  .tags-toggle-button {
-    font-size: 11px;
-    height: 20px;
-    padding: 0 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .tag-item {
-    max-width: 80px;
-  }
-
-  .question-tags {
-    max-height: 50px;
-  }
 }
 </style>
