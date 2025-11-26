@@ -284,30 +284,33 @@ onMounted(() => {
         :message="aiStatusMessage"
         :type="aiStatusType"
         show-icon
-        style="margin-bottom: 16px;"
+        class="status-alert"
       />
     </div>
 
-    <h3>Настройки генерации вопросов ИИ</h3>
+    <h3 class="section-title">
+      Настройки генерации вопросов ИИ
+    </h3>
 
     <a-form layout="vertical" class="ai-settings-form">
-      <a-form-item label="Тип навыков">
-        <a-radio-group v-model:value="aiSettings.skill" @change="handleSkillChange">
-          <a-radio value="hard">
-            Hard Skills (технические)
+      <a-form-item label="Тип навыков" class="form-item-mobile">
+        <a-radio-group v-model:value="aiSettings.skill" class="radio-group-mobile" @change="handleSkillChange">
+          <a-radio value="hard" class="radio-option">
+            Hard Skills
           </a-radio>
-          <a-radio value="soft">
-            Soft Skills (социальные)
+          <a-radio value="soft" class="radio-option">
+            Soft Skills
           </a-radio>
         </a-radio-group>
       </a-form-item>
 
-      <a-row :gutter="16">
-        <a-col v-if="showSpecialtyAndDifficulty" :span="8">
-          <a-form-item label="Специализация">
+      <a-row :gutter="[16, 8]" class="settings-row">
+        <a-col v-if="showSpecialtyAndDifficulty" :xs="24" :sm="12" :md="8" class="settings-col">
+          <a-form-item label="Специализация" class="form-item-mobile">
             <a-select
               v-model:value="aiSettings.specialty"
               size="large"
+              class="select-mobile"
               @change="handleFieldChange"
             >
               <a-select-option value="frontend">
@@ -329,9 +332,26 @@ onMounted(() => {
           </a-form-item>
         </a-col>
 
-        <a-col v-if="showSpecialtyAndDifficulty" :span="8">
-          <a-form-item label="Уровень сложности">
-            <a-select v-model:value="aiSettings.difficulty" size="large">
+        <a-col v-if="showSpecialtyAndDifficulty" :xs="24" :sm="12" :md="8" class="settings-col">
+          <a-form-item v-if="showTechnologySelect" label="Технология" class="form-item-mobile">
+            <a-select v-model:value="aiSettings.technology" size="large" class="select-mobile">
+              <a-select-option
+                v-for="tech in availableTechnologies"
+                :key="tech.value"
+                :value="tech.value"
+              >
+                {{ tech.label }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+        </a-col>
+
+        <a-col
+          v-if="showSpecialtyAndDifficulty"
+          :xs="24" :sm="24" :md="showSpecialtyAndDifficulty ? 8 : 24" class="settings-col"
+        >
+          <a-form-item label="Уровень сложности" class="form-item-mobile">
+            <a-select v-model:value="aiSettings.difficulty" size="large" class="select-mobile">
               <a-select-option value="junior">
                 Junior
               </a-select-option>
@@ -344,70 +364,62 @@ onMounted(() => {
             </a-select>
           </a-form-item>
         </a-col>
-
-        <a-col :span="showSpecialtyAndDifficulty ? 8 : 24">
-          <a-form-item label="Количество вопросов">
-            <a-select v-model:value="aiSettings.questionsCount" size="large">
-              <a-select-option value="5">
-                5 вопросов
-              </a-select-option>
-              <a-select-option value="10">
-                10 вопросов
-              </a-select-option>
-              <a-select-option value="15">
-                15 вопросов
-              </a-select-option>
-              <a-select-option value="20">
-                20 вопросов
-              </a-select-option>
-            </a-select>
-          </a-form-item>
-        </a-col>
       </a-row>
 
-      <a-form-item v-if="showTechnologySelect" label="Технология">
-        <a-select v-model:value="aiSettings.technology" size="large">
-          <a-select-option
-            v-for="tech in availableTechnologies"
-            :key="tech.value"
-            :value="tech.value"
-          >
-            {{ tech.label }}
+      <a-form-item label="Количество вопросов" class="form-item-mobile">
+        <a-select v-model:value="aiSettings.questionsCount" size="large" class="select-mobile">
+          <a-select-option value="5">
+            5 вопросов
+          </a-select-option>
+          <a-select-option value="10">
+            10 вопросов
+          </a-select-option>
+          <a-select-option value="15">
+            15 вопросов
+          </a-select-option>
+          <a-select-option value="20">
+            20 вопросов
           </a-select-option>
         </a-select>
       </a-form-item>
 
-      <a-form-item>
-        <a-button
-          type="primary"
-          :loading="isGenerating"
-          size="large"
-          @click="generateQuestions"
-        >
-          {{ hasQuestions ? 'Сгенерировать новые вопросы' : 'Сгенерировать вопросы' }}
-        </a-button>
+      <a-form-item class="actions-form-item">
+        <div class="action-buttons">
+          <a-button
+            type="primary"
+            :loading="isGenerating"
+            size="large"
+            class="generate-button"
+            @click="generateQuestions"
+          >
+            {{ hasQuestions ? 'Сгенерировать новые вопросы' : 'Сгенерировать вопросы' }}
+          </a-button>
 
-        <a-button
-          v-if="hasQuestions"
-          style="margin-left: 8px;"
-          size="large"
-          @click="clearQuestions"
-        >
-          Очистить вопросы
-        </a-button>
+          <a-button
+            v-if="hasQuestions"
+            size="large"
+            class="clear-button"
+            @click="clearQuestions"
+          >
+            Очистить вопросы
+          </a-button>
+        </div>
       </a-form-item>
     </a-form>
 
     <div v-if="hasQuestions" class="questions-preview">
-      <a-divider />
+      <a-divider class="mobile-divider" />
 
       <div class="preview-header">
-        <h4>Сгенерированные вопросы ({{ aiQuestions.length }})</h4>
+        <h4 class="preview-title">
+          Сгенерированные вопросы ({{ aiQuestions.length }})
+        </h4>
         <a-button
           type="primary"
-          size="small"
+          size="large"
           :loading="isSavingAll"
           :disabled="isSavingAll"
+          class="save-all-button"
           @click="saveAllQuestions"
         >
           Сохранить все вопросы
@@ -418,7 +430,7 @@ onMounted(() => {
         :message="aiSettings.skill === 'hard' ? 'Вопросы готовы! Вы можете сохранить их в свою коллекцию.' : 'Soft skills вопросы готовы! Вы можете сохранить их в свою коллекцию.'"
         type="success"
         show-icon
-        style="margin-bottom: 16px;"
+        class="success-alert"
       />
 
       <a-list
@@ -428,17 +440,17 @@ onMounted(() => {
       >
         <template #renderItem="{ item }">
           <a-list-item class="preview-item">
-            <a-list-item-meta>
+            <a-list-item-meta class="preview-meta">
               <template #title>
                 <div class="question-preview">
                   <span class="question-text">{{ item.text }}</span>
                   <div class="question-actions">
-                    <a-tag color="green">
+                    <a-tag color="green" class="ai-tag">
                       AI
                     </a-tag>
                     <a-button
                       type="primary"
-                      size="small"
+                      size="large"
                       :loading="savingQuestionIds.has(item.tempId!)"
                       class="save-single-button"
                       @click="saveQuestionToDB(item, item.tempId!)"
@@ -450,11 +462,11 @@ onMounted(() => {
               </template>
 
               <template #description>
-                <div class="preview-meta">
-                  <a-tag :color="getDifficultyColor(item.difficulty)">
+                <div class="preview-meta-tags">
+                  <a-tag :color="getDifficultyColor(item.difficulty)" class="meta-tag">
                     {{ item.difficulty }}
                   </a-tag>
-                  <a-tag color="blue">
+                  <a-tag color="blue" class="meta-tag">
                     {{ item.category }}
                   </a-tag>
                 </div>
@@ -471,34 +483,143 @@ onMounted(() => {
 .ai-setup {
   max-width: 900px;
   margin: 0 auto;
+  padding: 0 8px;
+}
+
+.status-alert {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #262626;
 }
 
 .ai-settings-form {
   margin-bottom: 24px;
 }
 
+.form-item-mobile :deep(.ant-form-item-label) {
+  padding-bottom: 6px;
+}
+
+.form-item-mobile :deep(.ant-form-item-label > label) {
+  font-size: 14px;
+  font-weight: 500;
+  height: auto;
+}
+
+.radio-group-mobile {
+  width: 100%;
+}
+
+.radio-group-mobile :deep(.ant-radio-wrapper) {
+  display: flex;
+  align-items: center;
+  margin-right: 16px;
+  font-size: 14px;
+}
+
+.radio-option {
+  padding: 8px 0;
+}
+
+.settings-row {
+  margin-bottom: 0;
+}
+
+.settings-col {
+  margin-bottom: 8px;
+}
+
+.select-mobile {
+  width: 100%;
+}
+
+.select-mobile :deep(.ant-select-selector) {
+  height: 44px !important;
+  border-radius: 8px;
+}
+
+.select-mobile :deep(.ant-select-selection-item) {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.actions-form-item {
+  margin-bottom: 0;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.generate-button,
+.clear-button,
+.save-all-button {
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-button {
+  border: 1px solid #d9d9d9;
+  background: #fff;
+}
+
 .questions-preview {
   margin-top: 24px;
 }
 
+.mobile-divider {
+  margin: 20px 0;
+}
+
 .preview-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.preview-title {
+  margin: 0;
+  color: #262626;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.save-all-button {
+  width: 100%;
+}
+
+.success-alert {
   margin-bottom: 16px;
 }
 
 .preview-list {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
 .preview-item {
   border: 1px solid #f0f0f0;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 16px;
   transition: all 0.3s ease;
+  background: #fff;
 }
 
 .preview-item:hover {
@@ -506,34 +627,46 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
 }
 
+.preview-meta :deep(.ant-list-item-meta-content) {
+  width: 100%;
+}
+
 .question-preview {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 .question-text {
-  flex: 1;
-  line-height: 1.4;
-  max-width: 550px;
+  line-height: 1.5;
+  font-size: 15px;
+  color: #262626;
+  word-break: break-word;
 }
 
 .question-actions {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  flex-shrink: 0;
+}
+
+.ai-tag {
+  margin: 0;
+  font-size: 12px;
+  padding: 2px 8px;
 }
 
 .save-single-button {
   background: #52c41a;
   border-color: #52c41a;
   color: white;
-  padding: 0 12px;
-  height: 28px;
-  font-size: 12px;
-  transition: all 0.3s ease;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .save-single-button:hover {
@@ -543,21 +676,121 @@ onMounted(() => {
   box-shadow: 0 2px 6px rgba(82, 196, 26, 0.3);
 }
 
-.save-single-button:active {
-  transform: translateY(0);
-}
-
-.preview-meta {
+.preview-meta-tags {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.preview-tags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+.meta-tag {
+  margin: 0;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* Планшеты */
+@media (min-width: 768px) {
+  .ai-setup {
+    padding: 0 16px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .action-buttons {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .generate-button,
+  .clear-button {
+    width: auto;
+    flex: 1;
+  }
+
+  .preview-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .preview-title {
+    text-align: left;
+  }
+
+  .save-all-button {
+    width: auto;
+    min-width: 200px;
+  }
+
+  .question-preview {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .question-text {
+    max-width: 70%;
+  }
+}
+
+/* Десктоп */
+@media (min-width: 1024px) {
+  .ai-setup {
+    padding: 0;
+  }
+
+  .settings-row {
+    margin-bottom: 0;
+  }
+
+  .question-text {
+    max-width: 550px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 360px) {
+  .section-title {
+    font-size: 18px;
+  }
+
+  .question-text {
+    font-size: 14px;
+  }
+
+  .generate-button,
+  .clear-button,
+  .save-all-button,
+  .save-single-button {
+    font-size: 14px;
+    height: 40px;
+  }
+
+  .preview-item {
+    padding: 12px;
+  }
+}
+
+/* Улучшение скролла на мобильных */
+.preview-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.preview-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.preview-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.preview-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>

@@ -156,6 +156,7 @@ const currentYear = new Date().getFullYear()
 @media (max-width: 480px) {
   .app-footer {
     padding: 20px 12px 12px;
+    margin: 0;
   }
 
   .footer-section h4 {
