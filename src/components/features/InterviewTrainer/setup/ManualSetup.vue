@@ -312,8 +312,6 @@ onMounted(() => {
       />
     </div>
 
-    <a-divider />
-
     <div class="questions-list-section">
       <a-spin
         v-if="isSectionLoading"

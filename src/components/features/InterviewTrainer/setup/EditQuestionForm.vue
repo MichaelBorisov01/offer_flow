@@ -418,35 +418,33 @@ function openAddCategoryModal() {
                   </a-select-option>
                 </a-select>
 
-                <div class="category-buttons-group">
-                  <Tooltip title="Создать новую категорию" placement="top">
-                    <a-button
-                      type="dashed"
-                      size="large"
-                      class="add-category-btn"
-                      @click="openAddCategoryModal"
-                    >
-                      <PlusOutlined />
-                    </a-button>
-                  </Tooltip>
-
-                  <Tooltip
-                    v-if="hasDeletableCategories"
-                    :title="`Удалить все пользовательские категории (${deletableCategories.length})`"
-                    placement="top"
+                <Tooltip title="Создать новую категорию" placement="top">
+                  <a-button
+                    type="dashed"
+                    size="large"
+                    class="add-category-btn"
+                    @click="openAddCategoryModal"
                   >
-                    <a-button
-                      type="dashed"
-                      size="large"
-                      danger
-                      class="delete-all-categories-btn"
-                      :loading="isDeletingAllCategories"
-                      @click="handleDeleteAllCustomCategories"
-                    >
-                      <DeleteOutlined />
-                    </a-button>
-                  </Tooltip>
-                </div>
+                    <PlusOutlined />
+                  </a-button>
+                </Tooltip>
+
+                <Tooltip
+                  v-if="hasDeletableCategories"
+                  :title="`Удалить все пользовательские категории (${deletableCategories.length})`"
+                  placement="top"
+                >
+                  <a-button
+                    type="dashed"
+                    size="large"
+                    danger
+                    class="delete-all-categories-btn"
+                    :loading="isDeletingAllCategories"
+                    @click="handleDeleteAllCustomCategories"
+                  >
+                    <DeleteOutlined />
+                  </a-button>
+                </Tooltip>
               </div>
             </a-form-item>
           </a-col>
@@ -546,12 +544,6 @@ function openAddCategoryModal() {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-}
-
-.category-buttons-group {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .add-category-btn,

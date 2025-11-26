@@ -142,9 +142,6 @@ const currentYear = new Date().getFullYear()
 
 .copyright {
   color: #8c8c8c;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .heart-icon {

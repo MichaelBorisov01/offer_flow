@@ -638,12 +638,6 @@ watch(() => props.question, () => {
     width: 100%;
   }
 
-  .question-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
   .user-answer-edit-actions {
     flex-direction: column;
   }

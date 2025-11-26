@@ -658,11 +658,6 @@ watch(
   cursor: pointer !important;
 }
 
-:deep(.ant-collapse-arrow) {
-  color: #8c8c8c !important;
-  font-size: 12px !important;
-}
-
 /* Стили для выбранных тегов в select */
 :deep(.ant-select-selection-item) {
   max-width: 150px !important;
