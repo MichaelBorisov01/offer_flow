@@ -79,6 +79,7 @@ function showAIAnswer() {
           show-count
           :maxlength="2000"
           :disabled="evaluating"
+          class="answer-textarea"
         />
       </a-form-item>
 
@@ -88,18 +89,20 @@ function showAIAnswer() {
           :loading="evaluating"
           :disabled="!localAnswer.trim()"
           size="large"
+          class="submit-button mobile-action-btn"
           @click="submitAnswer"
         >
           <CheckOutlined />
-          Отправить на оценку
+          <span class="button-text">Отправить на оценку</span>
         </a-button>
 
         <a-button
           :disabled="evaluating"
           size="large"
+          class="skip-button mobile-action-btn"
           @click="skipAnswer"
         >
-          Пропустить вопрос
+          <span class="button-text">Пропустить вопрос</span>
         </a-button>
       </div>
     </div>
@@ -115,7 +118,10 @@ function showAIAnswer() {
 
         <!-- Обратная связь -->
         <div class="feedback-section">
-          <h4>💡 Обратная связь:</h4>
+          <h4 class="section-title">
+            <span class="emoji">💡</span>
+            Обратная связь:
+          </h4>
           <p class="feedback-text">
             {{ submittedAnswer.evaluation!.feedback }}
           </p>
@@ -123,9 +129,16 @@ function showAIAnswer() {
 
         <!-- Предложения для улучшения -->
         <div class="suggestions-section">
-          <h4>🚀 Предложения для улучшения:</h4>
+          <h4 class="section-title">
+            <span class="emoji">🚀</span>
+            Предложения для улучшения:
+          </h4>
           <ul class="suggestions-list">
-            <li v-for="(suggestion, index) in submittedAnswer.evaluation!.suggestions" :key="index">
+            <li
+              v-for="(suggestion, index) in submittedAnswer.evaluation!.suggestions"
+              :key="index"
+              class="suggestion-item"
+            >
               {{ suggestion }}
             </li>
           </ul>
@@ -133,21 +146,23 @@ function showAIAnswer() {
 
         <!-- Действия после оценки -->
         <div class="post-evaluation-actions">
-          <a-space>
+          <div class="action-buttons">
             <a-button
               type="primary"
               size="large"
+              class="next-button mobile-action-btn"
               @click="nextQuestion"
             >
-              Следующий вопрос
+              <span class="button-text">Следующий вопрос</span>
             </a-button>
 
             <a-button
               size="large"
+              class="edit-button mobile-action-btn"
               @click="editAnswer"
             >
               <EditOutlined />
-              Исправить ответ
+              <span class="button-text">Исправить ответ</span>
             </a-button>
 
             <a-button
@@ -155,12 +170,15 @@ function showAIAnswer() {
               size="large"
               :loading="aiAnswerLoading"
               :disabled="aiAnswerLoading"
+              class="ai-answer-button mobile-action-btn"
               @click="showAIAnswer"
             >
               <BulbOutlined />
-              {{ aiAnswerLoading ? 'Генерация ответа...' : 'Посмотреть ответ ИИ' }}
+              <span class="button-text">
+                {{ aiAnswerLoading ? 'Генерация ответа...' : 'Посмотреть ответ ИИ' }}
+              </span>
             </a-button>
-          </a-space>
+          </div>
         </div>
       </a-card>
     </div>
@@ -174,7 +192,7 @@ function showAIAnswer() {
 
 .answer-input-section {
   border: 2px dashed #e8f4ff;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   background: #fafafa;
 }
@@ -182,70 +200,425 @@ function showAIAnswer() {
 .answer-input :deep(.ant-form-item-label) {
   font-weight: 600;
   font-size: 16px;
+  padding-bottom: 8px;
+}
+
+.answer-input :deep(.ant-form-item-label > label) {
+  font-size: 16px;
+  height: auto;
+}
+
+.answer-textarea :deep(textarea) {
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
 }
 
 .answer-actions {
   display: flex;
   gap: 12px;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 20px;
+  flex-wrap: wrap;
 }
 
 .evaluation-card {
   border: 2px solid #e8f4ff;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.evaluation-card :deep(.ant-card-head) {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+}
+
+.evaluation-card :deep(.ant-card-body) {
+  padding: 20px;
 }
 
 .score-tag {
   font-size: 16px;
   font-weight: bold;
-  padding: 4px 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin: 0;
 }
 
 .feedback-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.feedback-section h4 {
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #1890ff;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.emoji {
+  font-size: 18px;
 }
 
 .feedback-text {
   line-height: 1.6;
   color: #262626;
   background: #f6ffed;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 16px;
+  border-radius: 8px;
   border-left: 4px solid #52c41a;
+  margin: 0;
+  font-size: 14px;
 }
 
 .suggestions-section {
   margin-bottom: 24px;
 }
 
-.suggestions-section h4 {
+.suggestions-section .section-title {
   color: #722ed1;
-  margin-bottom: 8px;
 }
 
 .suggestions-list {
-  padding-left: 20px;
-  color: #262626;
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
 }
 
-.suggestions-list li {
-  margin-bottom: 8px;
+.suggestion-item {
+  margin-bottom: 12px;
   line-height: 1.5;
+  padding: 12px 16px;
+  background: #f9f0ff;
+  border-radius: 8px;
+  border-left: 4px solid #722ed1;
+  font-size: 14px;
+  position: relative;
+}
+
+.suggestion-item:before {
+  content: "•";
+  color: #722ed1;
+  font-weight: bold;
+  position: absolute;
+  left: 8px;
 }
 
 .post-evaluation-actions {
   border-top: 1px solid #f0f0f0;
-  padding-top: 16px;
-  text-align: center;
+  padding-top: 20px;
 }
 
-:deep(.ant-modal-body) {
-  padding: 40px 24px;
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Универсальные стили для мобильных кнопок */
+.mobile-action-btn {
+  height: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  border-radius: 8px;
+  padding: 0 20px;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-action-btn :deep(.anticon) {
+  font-size: 16px;
+}
+
+.button-text {
+  display: inline-block;
+  font-weight: 500;
+}
+
+.submit-button {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.submit-button:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.skip-button {
+  border: 1px solid #d9d9d9;
+  background: #ffffff;
+  color: #595959;
+}
+
+.skip-button:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+  transform: translateY(-1px);
+}
+
+.next-button {
+  background: #52c41a;
+  border-color: #52c41a;
+}
+
+.next-button:hover {
+  background: #73d13d;
+  border-color: #73d13d;
+  transform: translateY(-1px);
+}
+
+.edit-button {
+  border: 1px solid #1890ff;
+  color: #1890ff;
+  background: #ffffff;
+}
+
+.edit-button:hover {
+  background: #f0f7ff;
+  border-color: #40a9ff;
+  color: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.ai-answer-button {
+  color: #722ed1;
+  height: auto;
+  min-height: 44px;
+  padding: 12px 16px;
+}
+
+.ai-answer-button:hover {
+  color: #9254de;
+  background: #f9f0ff;
+}
+
+@media (max-width: 768px) {
+  .answer-evaluation {
+    margin-top: 16px;
+  }
+
+  .answer-input-section {
+    padding: 16px;
+    border-width: 1px;
+    margin: 0 -8px;
+    border-radius: 8px;
+  }
+
+  .answer-input :deep(.ant-form-item-label) {
+    font-size: 15px;
+  }
+
+  .answer-textarea :deep(textarea) {
+    font-size: 16px;
+    min-height: 140px;
+  }
+
+  .answer-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .answer-actions .mobile-action-btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .evaluation-card {
+    margin: 0 -8px;
+    border-radius: 8px;
+    border-width: 1px;
+  }
+
+  .evaluation-card :deep(.ant-card-head) {
+    padding: 12px 16px;
+  }
+
+  .evaluation-card :deep(.ant-card-body) {
+    padding: 16px;
+  }
+
+  .evaluation-card :deep(.ant-card-head-title) {
+    font-size: 16px;
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .score-tag {
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .feedback-text {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .suggestion-item {
+    padding: 10px 12px 10px 20px;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .suggestion-item:before {
+    left: 6px;
+  }
+
+  .post-evaluation-actions {
+    padding-top: 16px;
+  }
+
+  .action-buttons {
+    gap: 8px;
+  }
+
+  .mobile-action-btn {
+    height: 44px;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  .ai-answer-button {
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+
+  /* Улучшение accessibility для касаний */
+  .mobile-action-btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+@media (max-width: 360px) {
+  .answer-input-section {
+    padding: 12px;
+  }
+
+  .answer-input :deep(.ant-form-item-label) {
+    font-size: 14px;
+  }
+
+  .answer-textarea :deep(textarea) {
+    font-size: 15px;
+    min-height: 120px;
+  }
+
+  .evaluation-card :deep(.ant-card-head) {
+    padding: 10px 12px;
+  }
+
+  .evaluation-card :deep(.ant-card-body) {
+    padding: 12px;
+  }
+
+  .feedback-text {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .suggestion-item {
+    padding: 8px 10px 8px 18px;
+    font-size: 13px;
+  }
+
+  .mobile-action-btn {
+    height: 42px;
+    min-height: 42px;
+    font-size: 13px;
+    padding: 0 16px;
+  }
+
+  .button-text {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .answer-actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .answer-actions .mobile-action-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .action-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .action-buttons .mobile-action-btn {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .ai-answer-button {
+    flex-basis: 100%;
+    margin-top: 8px;
+  }
+}
+
+/* Улучшение читаемости длинного текста */
+.feedback-text,
+.suggestion-item {
+  word-break: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* Плавные анимации для всех интерактивных элементов */
+.answer-input-section,
+.evaluation-card,
+.mobile-action-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Улучшение фокуса для accessibility */
+.mobile-action-btn:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.answer-textarea :deep(textarea:focus) {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+</style>
+
+<style>
+/* Глобальные стили для улучшения мобильного опыта */
+@media (max-width: 768px) {
+  .answer-evaluation .ant-form-item {
+    margin-bottom: 16px;
+  }
+
+  .answer-evaluation .ant-btn-loading-icon {
+    font-size: 16px;
+  }
+
+  .answer-evaluation .ant-btn > .anticon + span {
+    margin-left: 6px;
+  }
 }
 </style>

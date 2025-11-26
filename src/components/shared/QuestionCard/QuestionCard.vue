@@ -70,7 +70,7 @@ const filteredTags = computed(() => {
           {{ interviewStore.getCategoryName(question.category) }}
         </a-tag>
 
-        <a-divider class="space-divider" type="vertical" />
+        <a-divider v-if="showAnswerToggle" class="space-divider" type="vertical" />
 
         <div class="answer-button">
           <a-button
