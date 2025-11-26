@@ -20,7 +20,7 @@ const emit = defineEmits<Emits>()
 
 <template>
   <div class="questions-list-header">
-    <h4>Добавленные вопросы ({{ filteredCount }}/{{ totalCount }})</h4>
+    <h4>Вопросы</h4>
 
     <div v-if="totalCount > 0" class="list-controls">
       <Tooltip title="Свернуть/развернуть список">
@@ -93,14 +93,7 @@ const emit = defineEmits<Emits>()
 }
 
 @media (max-width: 768px) {
-  .questions-list-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .list-controls {
-    width: 100%;
-    justify-content: center;
     gap: 32px;
   }
 }

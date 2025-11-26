@@ -388,7 +388,6 @@ watch(() => props.question, () => {
   border-radius: 8px;
   margin-bottom: 12px;
   padding: 16px;
-  background: white;
   transition: all 0.2s ease;
   overflow: hidden;
 }

@@ -77,7 +77,7 @@ function handleSegmentClick(status: AllQuestionStatus) {
 <template>
   <div class="status-progress-bar">
     <div class="progress-header">
-      <h4>Прогресс по статусам</h4>
+      <h4>Статусы</h4>
       <span class="total-questions">Всего: {{ questions.length }} вопросов</span>
     </div>
 

@@ -199,13 +199,9 @@ watch(
         <!-- Основные фильтры -->
         <div v-else class="filters-grid">
           <!-- Фильтр по статусам -->
-          <div class="filter-group">
+          <div v-if="availableFilters.statuses.length !== 0" class="filter-group">
             <h4>Статус</h4>
-            <div v-if="availableFilters.statuses.length === 0" class="filter-empty">
-              <span class="empty-text">Нет вопросов со статусами</span>
-            </div>
             <a-checkbox-group
-              v-else
               v-model:value="filterState.statuses"
               class="filter-options"
               @change="handleFilterChange"
@@ -223,13 +219,9 @@ watch(
           </div>
 
           <!-- Фильтр по сложности -->
-          <div class="filter-group">
+          <div v-if="availableFilters.difficulties.length !== 0" class="filter-group">
             <h4>Сложность</h4>
-            <div v-if="availableFilters.difficulties.length === 0" class="filter-empty">
-              <span class="empty-text">Нет вопросов с разной сложностью</span>
-            </div>
             <a-checkbox-group
-              v-else
               v-model:value="filterState.difficulties"
               class="filter-options"
               @change="handleFilterChange"
@@ -248,12 +240,10 @@ watch(
           </div>
 
           <!-- Фильтр по категориям -->
-          <div class="filter-group">
+          <div v-if="availableFilters.categories.length !== 0" class="filter-group">
             <h4>Категории</h4>
-            <div v-if="availableFilters.categories.length === 0" class="filter-empty">
-              <span class="empty-text">Нет вопросов с категориями</span>
-            </div>
-            <div v-else class="categories-container">
+
+            <div class="categories-container">
               <a-checkbox-group
                 v-model:value="filterState.categories"
                 class="filter-options"
@@ -274,13 +264,9 @@ watch(
           </div>
 
           <!-- Фильтр по тегам -->
-          <div class="filter-group">
+          <div v-if="availableFilters.tags.length !== 0" class="filter-group">
             <h4>Теги</h4>
-            <div v-if="availableFilters.tags.length === 0" class="filter-empty">
-              <span class="empty-text">Нет вопросов с тегами</span>
-            </div>
             <a-select
-              v-else
               v-model:value="filterState.tags"
               mode="multiple"
               placeholder="Выберите теги"
@@ -443,19 +429,6 @@ watch(
   margin: 0;
   font-size: 12px;
   color: #8c8c8c;
-}
-
-.filter-empty {
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.empty-text {
-  font-size: 12px;
-  color: #8c8c8c;
-  font-style: italic;
 }
 
 .filters-grid {

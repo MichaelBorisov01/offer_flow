@@ -324,22 +324,19 @@ onMounted(() => {
 
       <template v-else>
         <QuestionFilters
+          v-if="allQuestions.length > 0"
           :questions="allQuestions"
           @filter-change="handleFilterChange"
         />
 
         <StatusProgressBar
-          v-if="allQuestions.length > 0"
+          v-if="displayedQuestions.length > 0"
           :questions="displayedQuestions"
           class="inline-progress"
           @status-click="handleStatusClick"
         />
 
-        <SearchInput
-          :questions="allQuestions"
-          @search-change="handleSearchChange"
-          @search-clear="handleSearchClear"
-        />
+        <a-divider class="divider" />
 
         <QuestionListHeader
           :total-count="allQuestions.length"
@@ -348,6 +345,12 @@ onMounted(() => {
           @toggle-collapse="toggleQuestionsList"
           @shuffle="shuffleQuestions"
           @clear-all="showClearConfirmation"
+        />
+
+        <SearchInput
+          :questions="allQuestions"
+          @search-change="handleSearchChange"
+          @search-clear="handleSearchClear"
         />
 
         <a-alert
@@ -433,6 +436,10 @@ onMounted(() => {
 .questions-list {
   max-height: 600px;
   overflow-y: auto;
+}
+
+.divider {
+  margin: 12px 0;
 }
 
 :deep(.edit-question-form) {
