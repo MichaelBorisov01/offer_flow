@@ -35,18 +35,8 @@ export function useQuestionSearch(questions: Question[]) {
     })
   })
 
-  const clearSearch = () => {
-    searchQuery.value = ''
-  }
-
-  const hasActiveSearch = computed(() =>
-    searchQuery.value.length > 0,
-  )
-
   return {
     searchQuery,
     searchResults,
-    clearSearch,
-    hasActiveSearch,
   }
 }

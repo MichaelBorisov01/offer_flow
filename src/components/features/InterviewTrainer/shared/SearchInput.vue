@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
+import { SearchOutlined } from '@ant-design/icons-vue'
 import { watch } from 'vue'
 import { useQuestionSearch } from '@/composables/useQuestionSearch'
 
@@ -18,8 +19,6 @@ const emit = defineEmits<Emits>()
 const {
   searchQuery,
   searchResults,
-  clearSearch,
-  hasActiveSearch,
 } = useQuestionSearch(props.questions)
 
 watch(searchResults, (results) => {
@@ -33,19 +32,16 @@ function handleSearch() {
 
 <template>
   <div class="search-input">
-    <a-input-search
+    <a-input
       v-model:value="searchQuery"
-      placeholder="Поиск по вопросам, категориям, тегам и ответам..."
-      size="large"
-      class="search-input__field"
+      placeholder="Поиск по вопросам, категориям, тегам и ответам"
+      allow-clear
       @search="handleSearch"
-    />
-
-    <div v-if="hasActiveSearch" class="search-input__results">
-      <a-tag color="blue" closable @close="clearSearch">
-        Найдено: {{ searchResults.length }} вопросов
-      </a-tag>
-    </div>
+    >
+      <template #suffix>
+        <SearchOutlined />
+      </template>
+    </a-input>
   </div>
 </template>
 
@@ -54,24 +50,10 @@ function handleSearch() {
   margin-bottom: 16px;
 }
 
-.search-input__field {
-  width: 100%;
-}
-
 .search-input__results {
   margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-@media (max-width: 768px) {
-  .search-input__field :deep(.ant-input-group-wrapper) {
-    display: flex;
-  }
-
-  .search-input__field :deep(.ant-input) {
-    flex: 1;
-  }
 }
 </style>

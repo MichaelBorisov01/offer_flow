@@ -122,7 +122,6 @@ function regenerateAnswer() {
           <a-button
             v-if="mode === 'manual'"
             type="primary"
-            size="small"
             :loading="isSaving"
             :disabled="isSaved || answerGenerating"
             class="save-btn"
@@ -143,10 +142,6 @@ function regenerateAnswer() {
 
 <style scoped>
 @import '@/assets/styles/markdown-content.scss';
-
-.ai-answer-card {
-  margin-top: 16px;
-}
 
 .answer-card {
   border: 2px solid #e8f4ff;
@@ -244,21 +239,11 @@ function regenerateAnswer() {
     flex-direction: column;
     align-items: stretch;
   }
-
-  .action-btn,
-  .save-btn {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 @media (max-width: 480px) {
   .answer-actions {
     gap: 6px;
-  }
-
-  .save-btn {
-    font-size: 12px;
   }
 }
 </style>

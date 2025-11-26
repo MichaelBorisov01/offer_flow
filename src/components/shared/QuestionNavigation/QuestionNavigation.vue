@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview'
-import { CheckCircleOutlined } from '@ant-design/icons-vue'
+import { CheckCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import { computed } from 'vue'
 
 interface Props {
@@ -68,7 +68,7 @@ function getQuestionButtonClass(index: number): string {
         size="large"
         @click="emit('previous')"
       >
-        ← Назад
+        <LeftOutlined /> Назад
       </a-button>
 
       <a-button
@@ -77,7 +77,7 @@ function getQuestionButtonClass(index: number): string {
         size="large"
         @click="emit('next')"
       >
-        Далее →
+        Далее <RightOutlined />
       </a-button>
 
       <a-button

@@ -509,10 +509,6 @@ watch(() => props.question, () => {
   box-shadow: none;
 }
 
-.ai-answer-card {
-  margin-top: 12px;
-}
-
 /* Стили для блока пользовательского ответа */
 .user-answer-section {
   margin-top: 16px;

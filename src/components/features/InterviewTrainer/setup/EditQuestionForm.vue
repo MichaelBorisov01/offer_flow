@@ -362,7 +362,7 @@ function openAddCategoryModal() {
 
         <a-row :gutter="16">
           <a-col :xs="24" :sm="12" :md="8">
-            <a-form-item label="Сложность" required>
+            <a-form-item label="Сложность">
               <a-select v-model:value="formState.difficulty" size="large">
                 <a-select-option value="junior">
                   👶 Junior
@@ -377,7 +377,7 @@ function openAddCategoryModal() {
             </a-form-item>
           </a-col>
           <a-col :xs="24" :sm="12" :md="8">
-            <a-form-item label="Категория" required>
+            <a-form-item label="Категория">
               <div class="category-select-wrapper">
                 <a-select
                   v-model:value="formState.category"
@@ -777,6 +777,12 @@ function openAddCategoryModal() {
   .question-form-panel :deep(.ant-collapse-header) {
     padding: 12px 16px !important;
     font-size: 14px;
+  }
+
+  :deep(.ant-form-item-control-input-content) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .category-label {

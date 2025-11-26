@@ -18,8 +18,7 @@ const emit = defineEmits<Emits>()
     <!-- Когда вообще нет вопросов -->
     <a-alert
       v-if="!hasQuestions"
-      message="Нет добавленных вопросов"
-      description="Добавьте первый вопрос, чтобы начать работу"
+      message="Нет вопросов"
       type="info"
       show-icon
       class="empty-alert"
@@ -35,7 +34,6 @@ const emit = defineEmits<Emits>()
     <a-alert
       v-else-if="hasActiveFilters"
       message="Нет вопросов, соответствующих выбранным фильтрам"
-      description="Попробуйте изменить параметры фильтрации или очистить фильтры"
       type="warning"
       show-icon
       class="empty-alert"
@@ -62,10 +60,6 @@ const emit = defineEmits<Emits>()
 <style scoped>
 .empty-states {
   margin-top: 20px;
-}
-
-.empty-alert {
-  border-radius: 8px;
 }
 
 .empty-alert :deep(.ant-alert-message) {

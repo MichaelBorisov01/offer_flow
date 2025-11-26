@@ -291,7 +291,7 @@ onMounted(() => {
     <h3>Настройки генерации вопросов ИИ</h3>
 
     <a-form layout="vertical" class="ai-settings-form">
-      <a-form-item label="Тип навыков" required>
+      <a-form-item label="Тип навыков">
         <a-radio-group v-model:value="aiSettings.skill" @change="handleSkillChange">
           <a-radio value="hard">
             Hard Skills (технические)
@@ -304,7 +304,7 @@ onMounted(() => {
 
       <a-row :gutter="16">
         <a-col v-if="showSpecialtyAndDifficulty" :span="8">
-          <a-form-item label="Специализация" required>
+          <a-form-item label="Специализация">
             <a-select
               v-model:value="aiSettings.specialty"
               size="large"
@@ -330,7 +330,7 @@ onMounted(() => {
         </a-col>
 
         <a-col v-if="showSpecialtyAndDifficulty" :span="8">
-          <a-form-item label="Уровень сложности" required>
+          <a-form-item label="Уровень сложности">
             <a-select v-model:value="aiSettings.difficulty" size="large">
               <a-select-option value="junior">
                 Junior
@@ -346,7 +346,7 @@ onMounted(() => {
         </a-col>
 
         <a-col :span="showSpecialtyAndDifficulty ? 8 : 24">
-          <a-form-item label="Количество вопросов" required>
+          <a-form-item label="Количество вопросов">
             <a-select v-model:value="aiSettings.questionsCount" size="large">
               <a-select-option value="5">
                 5 вопросов

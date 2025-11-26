@@ -261,11 +261,6 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
     padding: 12px 0;
   }
 
-  .fixed-navigation-section :deep(.ant-space) {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .user-answer-header {
     flex-direction: column;
     align-items: flex-start;
