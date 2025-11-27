@@ -17,21 +17,7 @@ export function useQuestionSearch(questions: Question[]) {
 
     return questions.filter((question) => {
       const questionMatches = normalizeText(question.text).includes(query)
-      const categoryMatches = question.category
-        ? normalizeText(question.category).includes(query)
-        : false
-      const tagsMatches = question.tags?.some(tag =>
-        normalizeText(tag).includes(query),
-      ) || false
-      const userAnswerMatches = question.userAnswer
-        ? normalizeText(question.userAnswer).includes(query)
-        : false
-      const aiAnswerMatches = question.aiAnswer?.content
-        ? normalizeText(question.aiAnswer.content).includes(query)
-        : false
-
-      return questionMatches || categoryMatches || tagsMatches
-        || userAnswerMatches || aiAnswerMatches
+      return questionMatches
     })
   })
 

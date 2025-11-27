@@ -34,7 +34,7 @@ function handleSearch() {
   <div class="search-input">
     <a-input
       v-model:value="searchQuery"
-      placeholder="Поиск по вопросам, категориям, тегам и ответам"
+      placeholder="Поиск по вопросам"
       allow-clear
       @search="handleSearch"
     >
