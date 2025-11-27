@@ -8,6 +8,7 @@ import { QuestionNavigation } from '@/components/shared/QuestionNavigation'
 import { QuestionStatusActions } from '@/components/shared/QuestionStatusActions'
 import { QuestionTags } from '@/components/shared/QuestionTags'
 import { useInterviewStore } from '@/stores/interview'
+import { sanitizedContent } from '@/utils/helpers/answerHelpers'
 import AIAnswerCard from '../shared/AIAnswerCard.vue'
 
 interface Emits {
@@ -158,9 +159,10 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
               </a-button>
             </div>
           </template>
-          <div class="user-answer-content">
-            {{ currentQuestion.userAnswer }}
-          </div>
+          <div
+            class="answer-text"
+            v-html="sanitizedContent(currentQuestion.userAnswer)"
+          />
         </a-card>
 
         <QuestionStatusActions
@@ -195,6 +197,8 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 </template>
 
 <style scoped>
+@import '@/assets/styles/markdown-content.scss';
+
 .interview-session {
    height: 100%;
 }
@@ -236,13 +240,6 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.user-answer-content {
-  padding: 8px 0;
-  line-height: 1.6;
-  color: #262626;
-  white-space: pre-line;
 }
 
 .fixed-navigation-section {
