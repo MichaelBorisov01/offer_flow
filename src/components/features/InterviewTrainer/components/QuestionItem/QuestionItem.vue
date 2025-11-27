@@ -208,7 +208,9 @@ watch(() => props.question, () => {
             class="action-button"
             @click="emit('generateAnswer', question)"
           >
-            <BulbOutlined />
+            <template #icon>
+              <BulbOutlined />
+            </template>
             <span class="action-text">ИИ ответ</span>
           </a-button>
         </Tooltip>

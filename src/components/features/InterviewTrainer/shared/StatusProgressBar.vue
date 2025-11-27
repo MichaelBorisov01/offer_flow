@@ -87,11 +87,6 @@ function formatPercentage(value: number) {
         </h4>
         <span class="total-questions">Всего: {{ questions.length }}</span>
       </div>
-      <div v-if="questions.length > 0" class="mobile-stats">
-        <span class="completion-rate">
-          Выполнено: {{ Math.round(statusStats.known + statusStats.repeat) }}%
-        </span>
-      </div>
     </div>
 
     <!-- Прогресс-бар -->
@@ -210,20 +205,6 @@ function formatPercentage(value: number) {
   font-size: 12px;
   color: #8c8c8c;
   font-weight: 500;
-}
-
-.mobile-stats {
-  flex-shrink: 0;
-}
-
-.completion-rate {
-  font-size: 11px;
-  color: #52c41a;
-  font-weight: 600;
-  background: rgba(82, 196, 26, 0.1);
-  padding: 4px 8px;
-  border-radius: 12px;
-  white-space: nowrap;
 }
 
 /* Прогресс-бар */
@@ -451,15 +432,6 @@ function formatPercentage(value: number) {
     font-size: 11px;
   }
 
-  .mobile-stats {
-    align-self: flex-end;
-  }
-
-  .completion-rate {
-    font-size: 10px;
-    padding: 3px 6px;
-  }
-
   .progress-track {
     height: 20px;
     border-radius: 10px;
@@ -551,11 +523,6 @@ function formatPercentage(value: number) {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-  }
-
-  .mobile-stats {
-    align-self: flex-start;
-    margin-top: 4px;
   }
 
   .progress-track {

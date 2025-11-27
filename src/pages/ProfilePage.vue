@@ -98,7 +98,7 @@ onUnmounted(() => {
 <template>
   <div class="profile-page">
     <a-page-header
-      title="Профиль пользователя"
+      title="Профиль"
       class="profile-header"
       @back="() => $router.back()"
     >
@@ -107,9 +107,10 @@ onUnmounted(() => {
           type="primary"
           :loading="isSaving"
           :disabled="!hasChanges"
+          class="save-button"
           @click="saveAllChanges"
         >
-          Сохранить все изменения
+          Сохранить
         </a-button>
       </template>
     </a-page-header>
@@ -199,6 +200,7 @@ onUnmounted(() => {
 }
 
 .profile-header {
+  width: 100%;
   background: white;
   margin-bottom: 24px;
   border-radius: 8px;

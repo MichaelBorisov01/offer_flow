@@ -161,7 +161,7 @@ watch(mode, (newMode, oldMode) => {
 
               <a-alert
                 v-if="interviewSettings.enableAnswerInput"
-                message="В режиме с ИИ вы сможете отвечать на вопросы и получать оценку ваших ответов."
+                message="В режиме с ИИ вы сможете отвечать на вопросы и получать оценку ваших ответов"
                 type="info"
                 show-icon
                 style="margin-top: 8px;"
