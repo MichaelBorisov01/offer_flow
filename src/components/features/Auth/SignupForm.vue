@@ -32,13 +32,11 @@ const router = useRouter()
 const isLoading = ref(false)
 
 async function handleSignup() {
-  // Проверяем согласие
   if (!formState.consent) {
     message.error('Необходимо принять пользовательское соглашение и политику конфиденциальности')
     return
   }
 
-  // Проверяем пароль
   if (formState.password.length < 8) {
     message.error('Пароль должен содержать не менее 8 символов')
     return

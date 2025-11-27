@@ -42,7 +42,6 @@ const panelTitle = computed(() => {
   return isEditing.value ? 'Редактирование вопроса' : 'Добавление вопроса'
 })
 
-// Опции для селекта категорий
 const categoryOptions = computed(() => {
   return categories.value.map(cat => ({
     value: cat.id,
@@ -51,29 +50,24 @@ const categoryOptions = computed(() => {
   }))
 })
 
-// Получаем категории, доступные для удаления
 const deletableCategories = computed(() => {
   return categories.value.filter(cat =>
     cat.isCustom && !isCategoryUsed(cat.id),
   )
 })
 
-// Проверяем, есть ли категории для удаления
 const hasDeletableCategories = computed(() => {
   return deletableCategories.value.length > 0
 })
 
-// Проверяем, используется ли категория в вопросах
 function isCategoryUsed(categoryId: string): boolean {
   return interviewStore.questions.some(question => question.category === categoryId)
 }
 
-// Получаем количество вопросов в категории
 function getQuestionsCountInCategory(categoryId: string): number {
   return interviewStore.questions.filter(question => question.category === categoryId).length
 }
 
-// Загрузка категорий
 async function loadCategories() {
   loadingCategories.value = true
   try {
@@ -97,15 +91,12 @@ async function loadCategories() {
   }
 }
 
-// Обработчик успешного создания категории
 async function handleCategoryCreated(categoryId: string) {
   await loadCategories()
   formState.value.category = categoryId
 }
 
-// Удаление категории
 async function handleDeleteCategory(categoryId: string, categoryName: string) {
-  // Находим категорию для проверки, можно ли ее удалить
   const categoryToDelete = categories.value.find(cat => cat.id === categoryId)
 
   if (!categoryToDelete) {
@@ -113,7 +104,6 @@ async function handleDeleteCategory(categoryId: string, categoryName: string) {
     return
   }
 
-  // Проверяем, используется ли категория в вопросах
   if (isCategoryUsed(categoryId)) {
     const questionsCount = getQuestionsCountInCategory(categoryId)
     message.error(`Нельзя удалить категорию "${categoryName}", так как она используется в ${questionsCount} вопросе(ах)`)
@@ -132,12 +122,10 @@ async function handleDeleteCategory(categoryId: string, categoryName: string) {
       try {
         await CategoryService.deleteCategory(categoryId)
 
-        // Если удаляемая категория была выбрана, сбрасываем выбор
         if (formState.value.category === categoryId) {
           formState.value.category = categories.value[0]?.id || ''
         }
 
-        // Перезагружаем категории
         await loadCategories()
 
         message.success('Категория удалена')
@@ -153,7 +141,6 @@ async function handleDeleteCategory(categoryId: string, categoryName: string) {
   })
 }
 
-// Удаление всех пользовательских категорий, доступных для удаления
 async function handleDeleteAllCustomCategories() {
   if (!hasDeletableCategories.value) {
     message.warning('Нет категорий для удаления')
@@ -181,7 +168,6 @@ async function handleDeleteAllCustomCategories() {
 
         await Promise.all(deletePromises)
 
-        // Проверяем, была ли выбрана одна из удаленных категорий
         const deletedCategoryIds = categoriesToDelete.map(cat => cat.id)
         if (deletedCategoryIds.includes(formState.value.category)) {
           formState.value.category = categories.value
@@ -189,7 +175,6 @@ async function handleDeleteAllCustomCategories() {
             ?.id || ''
         }
 
-        // Перезагружаем категории
         await loadCategories()
 
         message.success(`Успешно удалено ${categoriesToDelete.length} категорий`)

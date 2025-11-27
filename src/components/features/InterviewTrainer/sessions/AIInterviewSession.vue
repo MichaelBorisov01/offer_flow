@@ -21,12 +21,10 @@ const interviewSettings = computed(() => interviewStore.interviewSettings)
 // Добавляем ключ для принудительного пересоздания AnswerEvaluation
 const answerEvaluationKey = ref(0)
 
-// Вычисляем текущий ответ пользователя
 const currentUserAnswer = computed(() => {
   return interviewStore.getUserAnswer(currentQuestion.value.id!)
 })
 
-// Вычисляем общий счет
 const totalScore = computed(() => {
   const answeredQuestions = interviewStore.userAnswers.filter(a => a.evaluation)
   if (answeredQuestions.length === 0)
@@ -39,7 +37,6 @@ const totalScore = computed(() => {
   return total / answeredQuestions.length
 })
 
-// Проверяем, отвечен ли вопрос
 function isQuestionAnswered(questionId: string): boolean {
   return !!interviewStore.getUserAnswer(questionId)
 }
@@ -58,7 +55,6 @@ function previousQuestion() {
   answerEvaluationKey.value++
 }
 
-// Обработчики событий
 async function handleAnswerSubmit(answer: string) {
   try {
     await interviewStore.submitAnswer(
@@ -115,7 +111,6 @@ function goToQuestion(index: number) {
   }
 }
 
-// При завершении собеседования показываем итоги
 function finishInterview() {
   interviewStore.finishInterview()
 

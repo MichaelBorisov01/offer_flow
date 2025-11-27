@@ -56,7 +56,6 @@ const aiStatusType = computed(() => {
 
 const aiQuestions = ref<Question[]>([])
 
-// Технологии для разных специализаций
 const technologies = {
   frontend: [
     { value: 'javascript', label: 'JavaScript' },

@@ -20,7 +20,6 @@ const emit = defineEmits<Emits>()
 const newCategoryName = ref('')
 const isCreatingCategory = ref(false)
 
-// Сбрасываем форму при открытии модалки
 watch(() => props.open, (newValue) => {
   if (newValue) {
     newCategoryName.value = ''
@@ -33,7 +32,6 @@ async function handleCreateCategory() {
     return
   }
 
-  // Проверяем, нет ли уже категории с таким названием
   const existingCategory = props.existingCategories.find(
     cat => cat.name.toLowerCase() === newCategoryName.value.trim().toLowerCase(),
   )

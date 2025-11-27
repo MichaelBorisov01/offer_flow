@@ -64,7 +64,6 @@ async function checkContentOverflow() {
   }
 }
 
-// Сбрасываем состояние расширения при изменении ответа
 function resetExpansionState() {
   isAnswerExpanded.value = false
   // Перепроверяем переполнение после изменения контента
@@ -73,19 +72,16 @@ function resetExpansionState() {
   })
 }
 
-// Начинаем редактирование пользовательского ответа
 function startEditingUserAnswer() {
   userAnswerText.value = props.question.userAnswer || ''
   isEditingUserAnswer.value = true
 }
 
-// Отменяем редактирование
 function cancelEditingUserAnswer() {
   isEditingUserAnswer.value = false
   userAnswerText.value = ''
 }
 
-// Сохраняем пользовательский ответ
 async function saveUserAnswer() {
   if (!userAnswerText.value.trim())
     return
@@ -94,7 +90,6 @@ async function saveUserAnswer() {
   try {
     emit('updateUserAnswer', props.question, userAnswerText.value.trim())
     isEditingUserAnswer.value = false
-    // Сбрасываем состояние расширения после сохранения
     resetExpansionState()
   }
   catch (error) {
@@ -105,7 +100,6 @@ async function saveUserAnswer() {
   }
 }
 
-// Удаляем пользовательский ответ
 async function clearUserAnswer() {
   isLoadingUserAnswer.value = true
   try {
@@ -122,33 +116,26 @@ async function clearUserAnswer() {
   }
 }
 
-// Обработчик сохранения ответа ИИ как пользовательского ответа
 function handleSaveAiToUserAnswer(aiAnswer: string) {
   emit('saveAiToUserAnswer', props.question, aiAnswer)
-  // Сбрасываем состояние расширения после сохранения ИИ ответа
   resetExpansionState()
 }
 
-// Проверяем, есть ли пользовательский ответ
 const hasUserAnswer = computed(() => {
   return props.question.userAnswer && props.question.userAnswer.trim().length > 0
 })
 
-// Переключаем состояние развертывания/свертывания
 function toggleAnswerExpansion() {
   isAnswerExpanded.value = !isAnswerExpanded.value
 }
 
-// При монтировании проверяем переполнение
 onMounted(() => {
   if (hasUserAnswer.value) {
     checkContentOverflow()
   }
 })
 
-// Следим за изменениями пользовательского ответа
 watch(() => props.question.userAnswer, (newAnswer, oldAnswer) => {
-  // Если ответ изменился (не только при первой загрузке)
   if (newAnswer !== oldAnswer) {
     resetExpansionState()
   }
@@ -157,7 +144,6 @@ watch(() => props.question.userAnswer, (newAnswer, oldAnswer) => {
 // Также следим за изменениями самого вопроса (на случай перерисовки)
 watch(() => props.question, () => {
   if (hasUserAnswer.value) {
-    // Даем время на обновление DOM перед проверкой
     nextTick(() => {
       checkContentOverflow()
     })

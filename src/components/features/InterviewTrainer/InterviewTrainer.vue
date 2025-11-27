@@ -25,12 +25,10 @@ const {
 const questions = computed(() => interviewStore.questions)
 const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
 
-// Обработчик сгенерированных вопросов от ИИ
 function handleQuestionsGenerated() {
   message.success('Вопросы сгенерированы! Теперь можно начать собеседование.')
 }
 
-// Обработчик изменения настроек ИИ
 function handleAISettingsChanged(newSettings: AISettings) {
   setAISettings(newSettings)
 }
@@ -38,11 +36,9 @@ function handleAISettingsChanged(newSettings: AISettings) {
 function handleModeChange(event: any) {
   const newMode = event.target.value as InterviewMode
   setMode(newMode)
-  // При смене режима очищаем вопросы
   interviewStore.questions = []
 }
 
-// Обработчик изменения настроек
 function handleSettingsChange() {
   setInterviewSettings({ ...interviewSettings.value })
 }
@@ -69,7 +65,6 @@ function exitInterview() {
   message.info('Собеседование прервано')
 }
 
-// Обработчик сохранения ответа ИИ как пользовательского ответа
 async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
   if (!question.id)
     return
@@ -84,7 +79,6 @@ async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
   }
 }
 
-// Следим за изменением режима и очищаем вопросы
 watch(mode, (newMode, oldMode) => {
   if (newMode !== oldMode) {
     interviewStore.questions = []
