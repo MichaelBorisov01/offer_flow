@@ -386,8 +386,6 @@ function openAddCategoryModal() {
                   v-model:value="formState.category"
                   :loading="loadingCategories"
                   size="large"
-                  show-search
-                  option-filter-prop="label"
                   placeholder="Выберите категорию"
                   class="category-select-mobile"
                 >
@@ -647,6 +645,7 @@ function openAddCategoryModal() {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  height: 30px;
 }
 
 .delete-category-btn {
@@ -917,11 +916,6 @@ function openAddCategoryModal() {
   .category-label {
     max-width: 180px;
     font-size: 13px;
-  }
-
-  .category-actions {
-    flex-direction: column;
-    gap: 4px;
   }
 
   .delete-category-btn {
