@@ -124,8 +124,6 @@ watch(mode, (newMode, oldMode) => {
           </a-radio-button>
         </a-radio-group>
 
-        <a-divider />
-
         <!-- Контент в зависимости от режима -->
         <ManualSetup
           v-if="mode === 'manual'"
