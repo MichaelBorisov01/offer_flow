@@ -330,7 +330,6 @@ onMounted(() => {
         />
 
         <StatusProgressBar
-          v-if="displayedQuestions.length > 0"
           :questions="displayedQuestions"
           class="inline-progress"
           @status-click="handleStatusClick"
