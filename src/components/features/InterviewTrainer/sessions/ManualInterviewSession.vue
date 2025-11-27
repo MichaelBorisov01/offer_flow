@@ -250,7 +250,6 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
   bottom: 0;
   background: white;
   padding: 16px 0;
-  border-top: 1px solid #f0f0f0;
   margin-top: auto;
   flex-shrink: 0;
   z-index: 10;
