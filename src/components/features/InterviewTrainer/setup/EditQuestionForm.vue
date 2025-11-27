@@ -461,7 +461,7 @@ function openAddCategoryModal() {
         <a-form-item :label="`Теги ${formState.tags.length}/10`" class="form-item-mobile">
           <a-input
             v-model:value="tagsInput"
-            placeholder="Введите тег и нажмите пробел"
+            placeholder="Введите тег"
             size="large"
             show-count
             :maxlength="10"

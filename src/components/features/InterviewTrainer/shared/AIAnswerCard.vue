@@ -68,19 +68,21 @@ function regenerateAnswer() {
       :title="cardTitle"
     >
       <template #extra>
-        <a-space>
-          <a-tag v-if="answer.type === 'joke'" color="orange">
+        <div class="card-extra">
+          <a-tag v-if="answer.type === 'joke'" color="orange" class="type-tag-mobile">
             <SmileOutlined />
-            IT-Юмор
+            <span class="tag-text">IT-Юмор</span>
           </a-tag>
           <a-button
             type="link"
             size="small"
+            class="close-btn"
             @click="$emit('close')"
           >
             <CloseOutlined />
+            <span class="close-text">Закрыть</span>
           </a-button>
-        </a-space>
+        </div>
       </template>
 
       <!-- Контент ответа -->
@@ -88,12 +90,12 @@ function regenerateAnswer() {
         <div class="answer-header">
           <a-tag v-if="answer.type !== 'joke'" color="green" class="type-tag">
             <BulbOutlined />
-            Объяснение
+            <span class="tag-text">Объяснение</span>
           </a-tag>
 
           <div v-if="answer.type === 'joke'" class="joke-context">
-            <InfoCircleOutlined />
-            <span>ИИ распознал это как творческий подход 😄</span>
+            <InfoCircleOutlined class="info-icon" />
+            <span class="context-text">ИИ распознал это как творческий подход 😄</span>
           </div>
         </div>
 
@@ -104,36 +106,46 @@ function regenerateAnswer() {
           v-html="sanitizedContent(answer.content)"
         />
 
-        <div v-if="answer.type === 'serious'" class="answer-actions">
-          <a-button
-            type="link"
-            size="small"
-            class="action-btn"
-            :loading="answerGenerating"
-            :disabled="answerGenerating"
-            @click="regenerateAnswer"
-          >
-            <template #icon>
-              <ReloadOutlined />
-            </template>
-            {{ answerGenerating ? 'Генерация...' : 'Перегенерировать ответ' }}
-          </a-button>
+        <div class="answer-actions">
+          <div class="actions-left">
+            <a-button
+              type="link"
+              size="small"
+              class="action-btn regenerate-btn"
+              :loading="answerGenerating"
+              :disabled="answerGenerating"
+              @click="regenerateAnswer"
+            >
+              <template #icon>
+                <ReloadOutlined />
+              </template>
+              <span class="btn-text full-text">Перегенерировать ответ</span>
+              <span class="btn-text short-text">Перегенерировать</span>
+            </a-button>
+          </div>
 
-          <a-button
-            v-if="mode === 'manual'"
-            type="primary"
-            :loading="isSaving"
-            :disabled="isSaved || answerGenerating"
-            class="save-btn"
-            :class="{ saved: isSaved }"
-            @click="saveToUserAnswer"
-          >
-            <template #icon>
-              <CheckOutlined v-if="isSaved" />
-              <SaveOutlined v-else />
-            </template>
-            {{ isSaved ? 'Сохранено!' : 'Сохранить как мой ответ' }}
-          </a-button>
+          <div class="actions-right">
+            <a-button
+              v-if="mode === 'manual'"
+              type="primary"
+              :loading="isSaving"
+              :disabled="isSaved || answerGenerating"
+              class="save-btn"
+              :class="{ saved: isSaved }"
+              @click="saveToUserAnswer"
+            >
+              <template #icon>
+                <CheckOutlined v-if="isSaved" />
+                <SaveOutlined v-else />
+              </template>
+              <span class="btn-text full-text">
+                {{ isSaved ? 'Сохранено!' : 'Сохранить как мой ответ' }}
+              </span>
+              <span class="btn-text short-text">
+                {{ isSaved ? 'Сохранено!' : 'Сохранить' }}
+              </span>
+            </a-button>
+          </div>
         </div>
       </div>
     </a-card>
@@ -143,90 +155,19 @@ function regenerateAnswer() {
 <style scoped>
 @import '@/assets/styles/markdown-content.scss';
 
+.ai-answer-card {
+  width: 100%;
+}
+
 .answer-card {
   border: 2px solid #e8f4ff;
-  border-radius: 8px;
-}
-
-.answer-card.joke {
-  border-color: #fff2e8;
-  background: #fffcf5;
-}
-
-.answer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.type-tag {
-  font-weight: 500;
-}
-
-.answer-actions {
-  margin-top: 16px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.action-btn {
-  color: #8c8c8c;
-}
-
-.save-btn {
-  background: linear-gradient(135deg, #52c41a, #73d13d);
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.save-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
-}
-
-.save-btn.saved {
-  background: linear-gradient(135deg, #b7eb8f, #95de64);
-  color: #237804;
-  cursor: default;
-}
-
-.save-btn.saved:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-:deep(.ant-card-head) {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 12px 16px;
-}
-
-:deep(.ant-card-body) {
-  padding: 16px;
-}
-
-.joke-context {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #d46b08;
-  background: #fff7e6;
-  padding: 4px 8px;
-  border-radius: 4px;
-  flex: 1;
-  margin: 0 12px;
-}
-
-.joke-context span {
-  font-size: 12px;
+.answer-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .answer-card.joke {
@@ -234,16 +175,464 @@ function regenerateAnswer() {
   background: linear-gradient(135deg, #fff7e6 0%, #fff2e8 100%);
 }
 
+:deep(.ant-card-head) {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 20px;
+  min-height: auto;
+}
+
+:deep(.ant-card-head-title) {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-btn {
+  color: #8c8c8c;
+  padding: 4px 8px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.close-text {
+  font-size: 12px;
+}
+
+.type-tag-mobile {
+  display: none;
+}
+
+:deep(.ant-card-body) {
+  padding: 20px;
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.type-tag {
+  font-weight: 500;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.tag-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.joke-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #d46b08;
+  background: #fff7e6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.info-icon {
+  flex-shrink: 0;
+}
+
+.context-text {
+  font-size: 13px;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.answer-text {
+  line-height: 1.6;
+  color: #262626;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.answer-text.joke-text {
+  color: #d46b08;
+  font-style: italic;
+}
+
+.answer-actions {
+  margin-top: 20px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions-left,
+.actions-right {
+  display: flex;
+  align-items: center;
+}
+
+.action-btn {
+  color: #8c8c8c;
+  padding: 6px 12px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.regenerate-btn {
+  transition: all 0.2s ease;
+}
+
+.regenerate-btn:hover {
+  color: #1890ff;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+  height: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(82, 196, 26, 0.2);
+}
+
+.save-btn:hover:not(.saved) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.save-btn.saved {
+  background: linear-gradient(135deg, #b7eb8f, #95de64);
+  color: #237804;
+  cursor: default;
+  box-shadow: 0 1px 2px rgba(82, 196, 26, 0.1);
+}
+
+.save-btn.saved:hover {
+  transform: none;
+  box-shadow: 0 1px 2px rgba(82, 196, 26, 0.1);
+}
+
+.btn-text.full-text {
+  display: inline;
+}
+
+.btn-text.short-text {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  :deep(.ant-card-head) {
+    padding: 14px 18px;
+  }
+
+  :deep(.ant-card-body) {
+    padding: 18px;
+  }
+
+  .answer-header {
+    margin-bottom: 14px;
+  }
+
+  .answer-text {
+    font-size: 13.5px;
+  }
+
+  .save-btn {
+    padding: 7px 14px;
+  }
+}
+
 @media (max-width: 768px) {
+  .answer-card {
+    border-radius: 10px;
+    margin: 8px 0;
+  }
+
+  :deep(.ant-card-head) {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  :deep(.ant-card-head-title) {
+    font-size: 15px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  :deep(.ant-card-extra) {
+    width: 100%;
+    margin-left: 0;
+    padding: 0;
+  }
+
+  .card-extra {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .type-tag-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .type-tag {
+    display: none;
+  }
+
+  .close-btn {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .close-text {
+    font-size: 11px;
+  }
+
+  :deep(.ant-card-body) {
+    padding: 16px;
+  }
+
+  .answer-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .joke-context {
+    margin: 0;
+    padding: 6px 10px;
+  }
+
+  .context-text {
+    font-size: 12px;
+  }
+
+  .answer-text {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
   .answer-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .actions-left,
+  .actions-right {
+    justify-content: center;
+  }
+
+  .action-btn {
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .save-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .btn-text.full-text {
+    display: none;
+  }
+
+  .btn-text.short-text {
+    display: inline;
   }
 }
 
 @media (max-width: 480px) {
-  .answer-actions {
+  .answer-card {
+    border-radius: 8px;
+    margin: 6px 0;
+  }
+
+  :deep(.ant-card-head) {
+    padding: 10px 12px;
+  }
+
+  :deep(.ant-card-head-title) {
+    font-size: 14px;
+  }
+
+  .card-extra {
     gap: 6px;
   }
+
+  .close-btn {
+    padding: 4px 8px;
+  }
+
+  .close-text {
+    display: none;
+  }
+
+  :deep(.ant-card-body) {
+    padding: 12px;
+  }
+
+  .answer-header {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .joke-context {
+    padding: 5px 8px;
+  }
+
+  .context-text {
+    font-size: 11px;
+  }
+
+  .answer-text {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .answer-actions {
+    margin-top: 14px;
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .save-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .tag-text {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  :deep(.ant-card-head) {
+    padding: 8px 10px;
+  }
+
+  :deep(.ant-card-head-title) {
+    font-size: 13px;
+  }
+
+  :deep(.ant-card-body) {
+    padding: 10px;
+  }
+
+  .answer-text {
+    font-size: 11px;
+  }
+
+  .action-btn,
+  .save-btn {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .joke-context {
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .context-text {
+    font-size: 10px;
+  }
+}
+
+/* Улучшения для touch-устройств */
+@media (hover: none) and (pointer: coarse) {
+  .answer-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .save-btn:hover:not(.saved) {
+    transform: none;
+  }
+
+  .action-btn,
+  .save-btn,
+  .close-btn {
+    min-height: 36px;
+  }
+
+  .answer-actions {
+    gap: 12px;
+  }
+}
+
+.save-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.save-btn:active:not(.saved) {
+  transform: scale(0.98);
+}
+
+.regenerate-btn:active {
+  transform: scale(0.95);
+}
+
+:deep(.answer-text h1),
+:deep(.answer-text h2),
+:deep(.answer-text h3) {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+:deep(.answer-text p) {
+  margin-bottom: 12px;
+}
+
+:deep(.answer-text ul),
+:deep(.answer-text ol) {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+:deep(.answer-text li) {
+  margin-bottom: 4px;
 }
 </style>
