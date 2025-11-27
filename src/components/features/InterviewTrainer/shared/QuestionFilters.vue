@@ -119,6 +119,26 @@ function getActiveFiltersCount() {
     + filterState.value.tags.length
 }
 
+function removeStatusFilter(status: string) {
+  filterState.value.statuses = filterState.value.statuses.filter(s => s !== status)
+  handleFilterChange()
+}
+
+function removeDifficultyFilter(difficulty: string) {
+  filterState.value.difficulties = filterState.value.difficulties.filter(d => d !== difficulty)
+  handleFilterChange()
+}
+
+function removeCategoryFilter(category: string) {
+  filterState.value.categories = filterState.value.categories.filter(c => c !== category)
+  handleFilterChange()
+}
+
+function removeTagFilter(tag: string) {
+  filterState.value.tags = filterState.value.tags.filter(t => t !== tag)
+  handleFilterChange()
+}
+
 const hasActiveFilters = computed(() => getActiveFiltersCount() > 0)
 
 // Автоматически применяем сохраненные фильтры при загрузке
@@ -149,22 +169,24 @@ watch(
       <a-collapse-panel key="1">
         <template #header>
           <div class="filters-header">
-            <FilterOutlined class="filters-icon" />
-            <span class="filters-title">Фильтры</span>
-            <a-badge
-              v-if="hasActiveFilters"
-              :count="getActiveFiltersCount()"
-              class="filters-badge"
-              :number-style="{
-                backgroundColor: '#1890ff',
-                boxShadow: '0 0 0 1px #fff',
-                fontSize: '11px',
-                fontWeight: '500',
-                height: '18px',
-                minWidth: '18px',
-                lineHeight: '18px',
-              }"
-            />
+            <div class="filters-header-content">
+              <FilterOutlined class="filters-icon" />
+              <span class="filters-title">Фильтры</span>
+              <a-badge
+                v-if="hasActiveFilters"
+                :count="getActiveFiltersCount()"
+                class="filters-badge"
+                :number-style="{
+                  backgroundColor: '#1890ff',
+                  boxShadow: '0 0 0 1px #fff',
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  height: '18px',
+                  minWidth: '18px',
+                  lineHeight: '18px',
+                }"
+              />
+            </div>
             <a-button
               v-if="hasActiveFilters"
               type="link"
@@ -173,7 +195,7 @@ watch(
               @click.stop="clearFilters"
             >
               <ClearOutlined />
-              Очистить
+              <span class="clear-text">Очистить</span>
             </a-button>
           </div>
         </template>
@@ -197,96 +219,98 @@ watch(
         </div>
 
         <!-- Основные фильтры -->
-        <div v-else class="filters-grid">
-          <!-- Фильтр по статусам -->
-          <div v-if="availableFilters.statuses.length !== 0" class="filter-group">
-            <h4>Статус</h4>
-            <a-checkbox-group
-              v-model:value="filterState.statuses"
-              class="filter-options"
-              @change="handleFilterChange"
-            >
-              <a-checkbox
-                v-for="status in availableFilters.statuses"
-                :key="status"
-                :value="status"
-                class="filter-option status-option"
-                :style="{ color: getStatusColor(status) }"
-              >
-                {{ getStatusLabel(status) }}
-              </a-checkbox>
-            </a-checkbox-group>
-          </div>
-
-          <!-- Фильтр по сложности -->
-          <div v-if="availableFilters.difficulties.length !== 0" class="filter-group">
-            <h4>Сложность</h4>
-            <a-checkbox-group
-              v-model:value="filterState.difficulties"
-              class="filter-options"
-              @change="handleFilterChange"
-            >
-              <a-checkbox
-                v-for="difficulty in availableFilters.difficulties"
-                :key="difficulty"
-                :value="difficulty"
-                class="filter-option"
-              >
-                <span :class="`difficulty-${difficulty}`">
-                  {{ getDifficultyLabel(difficulty) }}
-                </span>
-              </a-checkbox>
-            </a-checkbox-group>
-          </div>
-
-          <!-- Фильтр по категориям -->
-          <div v-if="availableFilters.categories.length !== 0" class="filter-group">
-            <h4>Категории</h4>
-
-            <div class="categories-container">
+        <div v-else class="filters-container">
+          <div class="filters-grid">
+            <!-- Фильтр по статусам -->
+            <div v-if="availableFilters.statuses.length !== 0" class="filter-group">
+              <h4>Статус</h4>
               <a-checkbox-group
-                v-model:value="filterState.categories"
+                v-model:value="filterState.statuses"
                 class="filter-options"
                 @change="handleFilterChange"
               >
                 <a-checkbox
-                  v-for="category in availableFilters.categories"
-                  :key="category"
-                  :value="category"
-                  class="filter-option category-option"
+                  v-for="status in availableFilters.statuses"
+                  :key="status"
+                  :value="status"
+                  class="filter-option status-option"
+                  :style="{ color: getStatusColor(status) }"
                 >
-                  <span class="category-text">
-                    {{ interviewStore.getCategoryName(category) }}
+                  <span class="filter-text">
+                    {{ getStatusLabel(status) }}
                   </span>
                 </a-checkbox>
               </a-checkbox-group>
             </div>
-          </div>
 
-          <!-- Фильтр по тегам -->
-          <div v-if="availableFilters.tags.length !== 0" class="filter-group">
-            <h4>Теги</h4>
-            <a-select
-              v-model:value="filterState.tags"
-              mode="multiple"
-              placeholder="Выберите теги"
-              size="small"
-              class="tags-select"
-              :max-tag-count="2"
-              :max-tag-text-length="20"
-              style="width: 100%"
-              @change="handleFilterChange"
-            >
-              <a-select-option
-                v-for="tag in availableFilters.tags"
-                :key="tag"
-                :value="tag"
+            <!-- Фильтр по сложности -->
+            <div v-if="availableFilters.difficulties.length !== 0" class="filter-group">
+              <h4>Сложность</h4>
+              <a-checkbox-group
+                v-model:value="filterState.difficulties"
+                class="filter-options"
+                @change="handleFilterChange"
               >
-                <span class="tag-option-text">
-                  {{ tag }}
-                </span>
-              </a-select-option>
-            </a-select>
+                <a-checkbox
+                  v-for="difficulty in availableFilters.difficulties"
+                  :key="difficulty"
+                  :value="difficulty"
+                  class="filter-option"
+                >
+                  <span class="filter-text" :class="`difficulty-${difficulty}`">
+                    {{ getDifficultyLabel(difficulty) }}
+                  </span>
+                </a-checkbox>
+              </a-checkbox-group>
+            </div>
+
+            <!-- Фильтр по категориям -->
+            <div v-if="availableFilters.categories.length !== 0" class="filter-group">
+              <h4>Категории</h4>
+              <div class="categories-container">
+                <a-checkbox-group
+                  v-model:value="filterState.categories"
+                  class="filter-options"
+                  @change="handleFilterChange"
+                >
+                  <a-checkbox
+                    v-for="category in availableFilters.categories"
+                    :key="category"
+                    :value="category"
+                    class="filter-option category-option"
+                  >
+                    <span class="filter-text category-text">
+                      {{ interviewStore.getCategoryName(category) }}
+                    </span>
+                  </a-checkbox>
+                </a-checkbox-group>
+              </div>
+            </div>
+
+            <!-- Фильтр по тегам -->
+            <div v-if="availableFilters.tags.length !== 0" class="filter-group">
+              <h4>Теги</h4>
+              <a-select
+                v-model:value="filterState.tags"
+                mode="multiple"
+                placeholder="Выберите теги"
+                size="small"
+                class="tags-select"
+                :max-tag-count="1"
+                :max-tag-text-length="10"
+                @change="handleFilterChange"
+              >
+                <a-select-option
+                  v-for="tag in availableFilters.tags"
+                  :key="tag"
+                  :value="tag"
+                >
+                  <span class="filter-text tag-option-text">
+                    {{ tag }}
+                  </span>
+                </a-select-option>
+              </a-select>
+            </div>
           </div>
         </div>
       </a-collapse-panel>
@@ -296,6 +320,14 @@ watch(
     <div v-if="hasActiveFilters" class="active-filters">
       <div class="active-filters-header">
         <span class="active-filters-title">Активные фильтры:</span>
+        <a-button
+          type="link"
+          size="small"
+          class="clear-all-filters-btn"
+          @click="clearFilters"
+        >
+          Очистить все
+        </a-button>
       </div>
       <div class="active-filters-grid">
         <!-- Статусы -->
@@ -310,7 +342,7 @@ watch(
           <span class="filter-value">
             {{ getStatusLabel(status) }}
           </span>
-          <ClearOutlined class="filter-remove" @click="filterState.statuses = filterState.statuses.filter(s => s !== status); handleFilterChange()" />
+          <ClearOutlined class="filter-remove" @click="removeStatusFilter(status)" />
         </div>
 
         <!-- Сложности -->
@@ -324,7 +356,7 @@ watch(
           <span class="filter-value">
             {{ getDifficultyLabel(difficulty) }}
           </span>
-          <ClearOutlined class="filter-remove" @click="filterState.difficulties = filterState.difficulties.filter(d => d !== difficulty); handleFilterChange()" />
+          <ClearOutlined class="filter-remove" @click="removeDifficultyFilter(difficulty)" />
         </div>
 
         <!-- Категории -->
@@ -337,7 +369,7 @@ watch(
           <span class="filter-value">
             {{ interviewStore.getCategoryName(category) }}
           </span>
-          <ClearOutlined class="filter-remove" @click="filterState.categories = filterState.categories.filter(c => c !== category); handleFilterChange()" />
+          <ClearOutlined class="filter-remove" @click="removeCategoryFilter(category)" />
         </div>
 
         <!-- Теги -->
@@ -350,7 +382,7 @@ watch(
           <span class="filter-value">
             {{ tag }}
           </span>
-          <ClearOutlined class="filter-remove" @click="filterState.tags = filterState.tags.filter(t => t !== tag); handleFilterChange()" />
+          <ClearOutlined class="filter-remove" @click="removeTagFilter(tag)" />
         </div>
       </div>
     </div>
@@ -372,16 +404,28 @@ watch(
 .filters-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 8px;
+}
+
+.filters-header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .filters-icon {
   color: #1890ff;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .filters-title {
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .filters-badge :deep(.ant-badge-count) {
@@ -398,7 +442,11 @@ watch(
   color: #8c8c8c;
   height: auto;
   padding: 0;
-  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.clear-text {
+  white-space: nowrap;
 }
 
 /* Стили для пустых состояний */
@@ -431,11 +479,14 @@ watch(
   color: #8c8c8c;
 }
 
+.filters-container {
+  padding: 8px 0;
+}
+
 .filters-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
-  padding: 8px 0;
 }
 
 .filter-group h4 {
@@ -453,18 +504,25 @@ watch(
 
 .filter-option {
   margin: 0;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  width: 100%;
 }
 
 .filter-option :deep(.ant-checkbox-wrapper) {
-  align-items: center;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .filter-option :deep(.ant-checkbox) {
-  margin-right: 8px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.filter-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .status-option {
@@ -503,18 +561,17 @@ watch(
   vertical-align: bottom;
 }
 
-/* Цвета сложности - используем :deep для доступа к содержимому */
-.filter-option :deep(.difficulty-junior) {
+:deep(.difficulty-junior) {
   color: #52c41a !important;
   font-weight: 500;
 }
 
-.filter-option :deep(.difficulty-middle) {
+:deep(.difficulty-middle) {
   color: #fa8c16 !important;
   font-weight: 500;
 }
 
-.filter-option :deep(.difficulty-senior) {
+:deep(.difficulty-senior) {
   color: #ff4d4f !important;
   font-weight: 500;
 }
@@ -527,17 +584,30 @@ watch(
 }
 
 .active-filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
+  gap: 12px;
 }
 
 .active-filters-title {
   font-weight: 500;
   color: #595959;
+  white-space: nowrap;
+}
+
+.clear-all-filters-btn {
+  color: #1890ff;
+  height: auto;
+  padding: 0;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .active-filters-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
 }
 
@@ -545,13 +615,14 @@ watch(
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: white;
   border-radius: 6px;
   border: 1px solid #e8e8e8;
+  border-left-width: 3px;
   font-size: 12px;
   transition: all 0.2s ease;
-  max-width: 300px;
+  min-width: 0;
 }
 
 .active-filter-item:hover {
@@ -562,6 +633,7 @@ watch(
   color: #8c8c8c;
   font-weight: 400;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .filter-value {
@@ -578,43 +650,45 @@ watch(
   color: #bfbfbf;
   cursor: pointer;
   flex-shrink: 0;
+  padding: 2px;
 }
 
 .filter-remove:hover {
   color: #ff4d4f;
+  background: #fff2f0;
+  border-radius: 50%;
 }
 
-/* Цветовые акценты для разных типов фильтров */
 .active-filter-item.difficulty-junior {
-  border-left: 3px solid #52c41a;
+  border-left-color: #52c41a;
 }
 
 .active-filter-item.difficulty-middle {
-  border-left: 3px solid #fa8c16;
+  border-left-color: #fa8c16;
 }
 
 .active-filter-item.difficulty-senior {
-  border-left: 3px solid #ff4d4f;
+  border-left-color: #ff4d4f;
 }
 
 .active-filter-item.category {
-  border-left: 3px solid #1890ff;
+  border-left-color: #1890ff;
 }
 
 .active-filter-item.tag {
-  border-left: 3px solid #722ed1;
+  border-left-color: #722ed1;
 }
 
 .active-filter-item.status-known {
-  border-left: 3px solid #52c41a;
+  border-left-color: #52c41a;
 }
 
 .active-filter-item.status-repeat {
-  border-left: 3px solid #fa8c16;
+  border-left-color: #fa8c16;
 }
 
 .active-filter-item.status-hard {
-  border-left: 3px solid #ff4d4f;
+  border-left-color: #ff4d4f;
 }
 
 :deep(.ant-collapse-content-box) {
@@ -628,7 +702,7 @@ watch(
 
 /* Стили для выбранных тегов в select */
 :deep(.ant-select-selection-item) {
-  max-width: 150px !important;
+  max-width: 120px !important;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -640,35 +714,150 @@ watch(
   white-space: nowrap;
 }
 
+@media (max-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .active-filters-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .filters-header {
+    flex-wrap: wrap;
+  }
+
+  .filters-header-content {
+    flex: 1 1 auto;
+  }
+
+  .clear-filters-btn {
+    flex-shrink: 0;
+  }
+
   .filters-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
+  .filters-container {
+    padding: 4px 0;
+  }
+
+  .active-filters {
+    padding: 12px;
+  }
+
+  .active-filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .active-filters-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
   .active-filter-item {
     justify-content: space-between;
     max-width: 100%;
+    padding: 10px 12px;
   }
 
   .empty-state {
     flex-direction: column;
     text-align: center;
     gap: 8px;
+    padding: 16px;
   }
 
   .categories-container {
     max-height: 150px;
   }
 
-  .active-filter-item {
-    max-width: 100%;
+  :deep(.ant-collapse-content-box) {
+    padding: 5px 12px !important;
+  }
+
+  :deep(.ant-collapse-header) {
+    padding: 10px 12px !important;
   }
 }
 
 @media (max-width: 480px) {
+  .question-filters {
+    margin-bottom: 16px;
+  }
+
+  .filters-panel {
+    margin-bottom: 8px;
+  }
+
+  .filters-header {
+    gap: 6px;
+  }
+
+  .filters-title {
+    font-size: 13px;
+  }
+
+  .clear-text {
+    font-size: 12px;
+  }
+
+  .filter-group h4 {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .active-filters {
+    padding: 10px;
+  }
+
+  .active-filters-title {
+    font-size: 13px;
+  }
+
+  .active-filter-item {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
   .filter-value {
-    max-width: 120px;
+    max-width: 100px;
+  }
+
+  :deep(.ant-select) {
+    font-size: 12px;
+  }
+
+  :deep(.ant-checkbox-wrapper) {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .clear-filters-btn {
+    align-self: flex-end;
+    margin-top: -8px;
+  }
+
+  .filter-value {
+    max-width: 80px;
+  }
+
+  .active-filters-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
