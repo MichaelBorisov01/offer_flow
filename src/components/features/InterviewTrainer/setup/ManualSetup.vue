@@ -356,7 +356,6 @@ onMounted(() => {
           v-if="isQuestionsListCollapsed && displayedQuestions.length > 0"
           message="Список свернут"
           type="info"
-          show-icon
           class="collapsed-alert"
         >
           <template #action>
