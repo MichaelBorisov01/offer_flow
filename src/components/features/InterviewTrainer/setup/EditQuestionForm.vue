@@ -2,7 +2,7 @@
 import type { Category, QuestionForm } from '@/types/interview'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { message, Modal, Tooltip } from 'ant-design-vue'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, defineExpose, h, onMounted, ref, watch } from 'vue'
 import CreateCategoryModal from '@/components/features/InterviewTrainer/modal/CreateCategoryModal.vue'
 import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
@@ -58,6 +58,22 @@ const deletableCategories = computed(() => {
 
 const hasDeletableCategories = computed(() => {
   return deletableCategories.value.length > 0
+})
+
+function expandForm() {
+  if (!activeKey.value.includes('form')) {
+    activeKey.value = ['form']
+  }
+}
+
+function collapseForm() {
+  activeKey.value = activeKey.value.filter(key => key !== 'form')
+}
+
+defineExpose({
+  expandForm,
+  collapseForm,
+  isExpanded: computed(() => activeKey.value.includes('form')),
 })
 
 function isCategoryUsed(categoryId: string): boolean {
@@ -190,7 +206,6 @@ async function handleDeleteAllCustomCategories() {
   })
 }
 
-// При начале редактирования автоматически разворачиваем форму
 watch(() => props.questionToEdit, (newQuestion) => {
   if (newQuestion) {
     formState.value = {
@@ -200,10 +215,7 @@ watch(() => props.questionToEdit, (newQuestion) => {
       tags: [...newQuestion.tags],
     }
     tagsInput.value = ''
-    // Разворачиваем форму при редактировании
-    if (activeKey.value.length === 0) {
-      activeKey.value = ['form']
-    }
+    expandForm()
   }
 }, { immediate: true })
 
@@ -226,13 +238,11 @@ function addTag() {
   const tagText = tagsInput.value.trim()
 
   if (tagText) {
-    // Проверяем, не достигли ли мы лимита в 10 тегов
     if (formState.value.tags.length >= 10) {
       tagsInput.value = ''
       return
     }
 
-    // Проверяем, нет ли уже такого тега
     if (!formState.value.tags.includes(tagText)) {
       formState.value.tags = [...formState.value.tags, tagText]
     }
@@ -262,7 +272,7 @@ function resetForm() {
 
 function handleCancel() {
   resetForm()
-  activeKey.value = []
+  collapseForm()
   emit('cancel')
 }
 
@@ -282,7 +292,6 @@ async function handleSubmit() {
     return
   }
 
-  // Проверка на максимальное количество тегов при сохранении
   if (formState.value.tags.length > 10) {
     message.error('Максимальное количество тегов - 10')
     return
@@ -293,12 +302,11 @@ async function handleSubmit() {
   try {
     emit('submit', { ...formState.value })
     resetForm()
-    // После успешного сохранения оставляем форму развернутой для добавления следующего вопроса
     if (!isEditing.value) {
-      activeKey.value = ['form']
+      expandForm()
     }
     else {
-      activeKey.value = [] // Сворачиваем после редактирования
+      collapseForm()
     }
   }
   catch (error) {
@@ -320,205 +328,207 @@ function openAddCategoryModal() {
 </script>
 
 <template>
-  <a-collapse
-    v-model:active-key="activeKey"
-    :bordered="false"
-    class="question-form-collapse"
-    @change="handleCollapseChange"
-  >
-    <a-collapse-panel
-      key="form"
-      :header="panelTitle"
-      class="question-form-panel"
+  <div id="edit-question-form">
+    <a-collapse
+      v-model:active-key="activeKey"
+      :bordered="false"
+      class="question-form-collapse"
+      @change="handleCollapseChange"
     >
-      <a-form :model="formState" layout="vertical" @finish="handleSubmit">
-        <a-form-item label="Вопрос" required class="form-item-mobile">
-          <a-textarea
-            v-model:value="formState.text"
-            placeholder="Введите вопрос для собеседования"
-            :rows="3"
-            size="large"
-            :maxlength="500"
-            show-count
-            class="question-textarea"
-          />
-        </a-form-item>
+      <a-collapse-panel
+        key="form"
+        :header="panelTitle"
+        class="question-form-panel"
+      >
+        <a-form :model="formState" layout="vertical" @finish="handleSubmit">
+          <a-form-item label="Вопрос" required class="form-item-mobile">
+            <a-textarea
+              v-model:value="formState.text"
+              placeholder="Введите вопрос для собеседования"
+              :rows="3"
+              size="large"
+              :maxlength="500"
+              show-count
+              class="question-textarea"
+            />
+          </a-form-item>
 
-        <a-row :gutter="[16, 8]" class="form-row-mobile">
-          <a-col :xs="24" :sm="12" :md="8" class="form-col-mobile">
-            <a-form-item label="Сложность" class="form-item-mobile">
-              <a-select
-                v-model:value="formState.difficulty"
-                size="large"
-                class="select-mobile"
-              >
-                <a-select-option value="junior">
-                  👶 Junior
-                </a-select-option>
-                <a-select-option value="middle">
-                  💼 Middle
-                </a-select-option>
-                <a-select-option value="senior">
-                  🎯 Senior
-                </a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12" :md="8" class="form-col-mobile">
-            <a-form-item label="Категория" class="form-item-mobile">
-              <div class="category-select-wrapper">
+          <a-row :gutter="[16, 8]" class="form-row-mobile">
+            <a-col :xs="24" :sm="12" :md="8" class="form-col-mobile">
+              <a-form-item label="Сложность" class="form-item-mobile">
                 <a-select
-                  v-model:value="formState.category"
-                  :loading="loadingCategories"
+                  v-model:value="formState.difficulty"
                   size="large"
-                  placeholder="Выберите категорию"
-                  class="category-select-mobile"
+                  class="select-mobile"
                 >
-                  <a-select-option
-                    v-for="option in categoryOptions"
-                    :key="option.value"
-                    :value="option.value"
-                    :label="option.label"
-                  >
-                    <div class="category-option">
-                      <span class="category-label">{{ option.label }}</span>
-                      <div class="category-actions">
-                        <Tooltip
-                          v-if="option.isCustom"
-                          :title="isCategoryUsed(option.value) ? `Категория используется в ${getQuestionsCountInCategory(option.value)} вопросе(ах)` : 'Удалить категорию'"
-                          placement="top"
-                        >
-                          <a-button
-                            type="text"
-                            size="large"
-                            class="delete-category-btn mobile-action-btn"
-                            :class="{ 'disabled-category': isCategoryUsed(option.value) }"
-                            :loading="isDeletingCategory"
-                            :disabled="isCategoryUsed(option.value)"
-                            @click.stop="handleDeleteCategory(option.value, option.label)"
-                          >
-                            <DeleteOutlined />
-                          </a-button>
-                        </Tooltip>
-                      </div>
-                    </div>
+                  <a-select-option value="junior">
+                    👶 Junior
+                  </a-select-option>
+                  <a-select-option value="middle">
+                    💼 Middle
+                  </a-select-option>
+                  <a-select-option value="senior">
+                    🎯 Senior
                   </a-select-option>
                 </a-select>
-
-                <div class="category-buttons-group">
-                  <Tooltip title="Создать новую категорию" placement="top">
-                    <a-button
-                      type="dashed"
-                      size="large"
-                      class="add-category-btn mobile-action-btn"
-                      @click="openAddCategoryModal"
-                    >
-                      <PlusOutlined />
-                      <span class="button-text">Добавить</span>
-                    </a-button>
-                  </Tooltip>
-
-                  <Tooltip
-                    v-if="hasDeletableCategories"
-                    :title="`Удалить все пользовательские категории (${deletableCategories.length})`"
-                    placement="top"
+              </a-form-item>
+            </a-col>
+            <a-col :xs="24" :sm="12" :md="8" class="form-col-mobile">
+              <a-form-item label="Категория" class="form-item-mobile">
+                <div class="category-select-wrapper">
+                  <a-select
+                    v-model:value="formState.category"
+                    :loading="loadingCategories"
+                    size="large"
+                    placeholder="Выберите категорию"
+                    class="category-select-mobile"
                   >
-                    <a-button
-                      type="dashed"
-                      size="large"
-                      danger
-                      class="delete-all-categories-btn mobile-action-btn"
-                      :loading="isDeletingAllCategories"
-                      @click="handleDeleteAllCustomCategories"
+                    <a-select-option
+                      v-for="option in categoryOptions"
+                      :key="option.value"
+                      :value="option.value"
+                      :label="option.label"
                     >
-                      <DeleteOutlined />
-                      <span class="button-text">Удалить все</span>
-                    </a-button>
-                  </Tooltip>
+                      <div class="category-option">
+                        <span class="category-label">{{ option.label }}</span>
+                        <div class="category-actions">
+                          <Tooltip
+                            v-if="option.isCustom"
+                            :title="isCategoryUsed(option.value) ? `Категория используется в ${getQuestionsCountInCategory(option.value)} вопросе(ах)` : 'Удалить категорию'"
+                            placement="top"
+                          >
+                            <a-button
+                              type="text"
+                              size="large"
+                              class="delete-category-btn mobile-action-btn"
+                              :class="{ 'disabled-category': isCategoryUsed(option.value) }"
+                              :loading="isDeletingCategory"
+                              :disabled="isCategoryUsed(option.value)"
+                              @click.stop="handleDeleteCategory(option.value, option.label)"
+                            >
+                              <DeleteOutlined />
+                            </a-button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    </a-select-option>
+                  </a-select>
+
+                  <div class="category-buttons-group">
+                    <Tooltip title="Создать новую категорию" placement="top">
+                      <a-button
+                        type="dashed"
+                        size="large"
+                        class="add-category-btn mobile-action-btn"
+                        @click="openAddCategoryModal"
+                      >
+                        <PlusOutlined />
+                        <span class="button-text">Добавить</span>
+                      </a-button>
+                    </Tooltip>
+
+                    <Tooltip
+                      v-if="hasDeletableCategories"
+                      :title="`Удалить все пользовательские категории (${deletableCategories.length})`"
+                      placement="top"
+                    >
+                      <a-button
+                        type="dashed"
+                        size="large"
+                        danger
+                        class="delete-all-categories-btn mobile-action-btn"
+                        :loading="isDeletingAllCategories"
+                        @click="handleDeleteAllCustomCategories"
+                      >
+                        <DeleteOutlined />
+                        <span class="button-text">Удалить все</span>
+                      </a-button>
+                    </Tooltip>
+                  </div>
                 </div>
-              </div>
-            </a-form-item>
-          </a-col>
-        </a-row>
+              </a-form-item>
+            </a-col>
+          </a-row>
 
-        <a-form-item :label="`Теги ${formState.tags.length}/10`" class="form-item-mobile">
-          <a-input
-            v-model:value="tagsInput"
-            placeholder="Введите тег"
-            size="large"
-            show-count
-            :maxlength="10"
-            :disabled="formState.tags.length >= 10"
-            class="tags-input-mobile"
-            @blur="handleTagsBlur"
-            @keypress.enter="addTag"
-            @input="handleTagInput"
-          />
-          <div class="tags-hint">
-            <span v-if="formState.tags.length < 10" class="hint-text">
-              Нажмите пробел для добавления тега
-            </span>
-            <span v-else class="tags-limit-reached">
-              Достигнуто максимальное количество тегов (10)
-            </span>
-          </div>
-          <div v-if="formState.tags.length > 0" class="tags-preview">
-            <a-tag
-              v-for="(tag, index) in formState.tags"
-              :key="`${tag}-${index}`"
-              closable
-              color="blue"
-              class="tag-item mobile-tag"
-              @close="removeTag(index)"
-            >
-              <span class="tag-text">#{{ tag }}</span>
-            </a-tag>
-          </div>
-        </a-form-item>
-
-        <a-form-item class="form-actions">
-          <div class="action-buttons-mobile">
-            <a-button
-              type="primary"
-              html-type="submit"
-              :loading="isLoading"
-              :disabled="!formState.text.trim()"
-              class="submit-btn mobile-action-btn"
-            >
-              <template #icon>
-                <CheckOutlined />
-              </template>
-              <span class="button-text">
-                {{ isEditing ? 'Сохранить' : 'Добавить вопрос' }}
+          <a-form-item :label="`Теги ${formState.tags.length}/10`" class="form-item-mobile">
+            <a-input
+              v-model:value="tagsInput"
+              placeholder="Введите тег"
+              size="large"
+              show-count
+              :maxlength="10"
+              :disabled="formState.tags.length >= 10"
+              class="tags-input-mobile"
+              @blur="handleTagsBlur"
+              @keypress.enter="addTag"
+              @input="handleTagInput"
+            />
+            <div class="tags-hint">
+              <span v-if="formState.tags.length < 10" class="hint-text">
+                Нажмите пробел для добавления тега
               </span>
-            </a-button>
+              <span v-else class="tags-limit-reached">
+                Достигнуто максимальное количество тегов (10)
+              </span>
+            </div>
+            <div v-if="formState.tags.length > 0" class="tags-preview">
+              <a-tag
+                v-for="(tag, index) in formState.tags"
+                :key="`${tag}-${index}`"
+                closable
+                color="blue"
+                class="tag-item mobile-tag"
+                @close="removeTag(index)"
+              >
+                <span class="tag-text">#{{ tag }}</span>
+              </a-tag>
+            </div>
+          </a-form-item>
 
-            <a-button
-              v-if="isEditing"
-              class="cancel-btn mobile-action-btn"
-              @click="handleCancel"
-            >
-              <template #icon>
-                <CloseOutlined />
-              </template>
-              <span class="button-text">Отмена</span>
-            </a-button>
+          <a-form-item class="form-actions">
+            <div class="action-buttons-mobile">
+              <a-button
+                type="primary"
+                html-type="submit"
+                :loading="isLoading"
+                :disabled="!formState.text.trim()"
+                class="submit-btn mobile-action-btn"
+              >
+                <template #icon>
+                  <CheckOutlined />
+                </template>
+                <span class="button-text">
+                  {{ isEditing ? 'Сохранить' : 'Добавить вопрос' }}
+                </span>
+              </a-button>
 
-            <a-button
-              v-else
-              class="clear-btn mobile-action-btn"
-              @click="resetForm"
-            >
-              <template #icon>
-                <DeleteOutlined />
-              </template>
-              <span class="button-text">Очистить</span>
-            </a-button>
-          </div>
-        </a-form-item>
-      </a-form>
-    </a-collapse-panel>
-  </a-collapse>
+              <a-button
+                v-if="isEditing"
+                class="cancel-btn mobile-action-btn"
+                @click="handleCancel"
+              >
+                <template #icon>
+                  <CloseOutlined />
+                </template>
+                <span class="button-text">Отмена</span>
+              </a-button>
+
+              <a-button
+                v-else
+                class="clear-btn mobile-action-btn"
+                @click="resetForm"
+              >
+                <template #icon>
+                  <DeleteOutlined />
+                </template>
+                <span class="button-text">Очистить</span>
+              </a-button>
+            </div>
+          </a-form-item>
+        </a-form>
+      </a-collapse-panel>
+    </a-collapse>
+  </div>
 
   <CreateCategoryModal
     :open="showAddCategoryModal"

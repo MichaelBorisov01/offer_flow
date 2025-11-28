@@ -26,6 +26,7 @@ const {
 
 const editingQuestion = ref<Question>()
 const generatingAnswerId = ref<string | null>(null)
+const editFormComponentRef = ref<InstanceType<typeof EditQuestionForm>>()
 const editFormRef = ref<HTMLElement>()
 
 const isSectionLoading = ref(true)
@@ -147,15 +148,13 @@ function expandQuestionsList() {
   setQuestionsListCollapsed(false)
 }
 
-function scrollToEditForm() {
-  nextTick(() => {
-    if (editFormRef.value) {
-      editFormRef.value.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-    }
+async function scrollToEditForm() {
+  await nextTick()
+  editFormRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
   })
+  editFormComponentRef.value?.expandForm()
 }
 
 async function addQuestion(questionData: QuestionForm) {
@@ -306,6 +305,7 @@ onMounted(() => {
   <div class="manual-setup">
     <div ref="editFormRef">
       <EditQuestionForm
+        ref="editFormComponentRef"
         :question-to-edit="editingQuestion"
         @submit="addQuestion"
         @cancel="cancelEditing"
