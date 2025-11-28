@@ -2,7 +2,7 @@
 import type { InterviewMode } from '@/composables/useInterviewMode'
 import type { AISettings, Question } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import AppFooter from '@/components/AppFooter.vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
@@ -25,6 +25,18 @@ const {
 const questions = computed(() => interviewStore.questions)
 const isInterviewStarted = computed(() => interviewStore.isInterviewStarted)
 
+// Для управления фокусом
+const mainHeadingRef = ref<HTMLElement>()
+const modeSelectorRef = ref<HTMLElement>()
+const startButtonRef = ref<HTMLElement>()
+
+onMounted(() => {
+  // Устанавливаем фокус на заголовок при монтировании
+  if (mainHeadingRef.value) {
+    mainHeadingRef.value.focus()
+  }
+})
+
 function handleQuestionsGenerated() {
   message.success('Вопросы сгенерированы! Теперь можно начать собеседование.')
 }
@@ -37,6 +49,9 @@ function handleModeChange(event: any) {
   const newMode = event.target.value as InterviewMode
   setMode(newMode)
   interviewStore.questions = []
+
+  // Озвучиваем изменение режима для скринридеров
+  announceToScreenReader(`Режим изменен на ${newMode === 'manual' ? 'ручной' : 'искусственный интеллект'}`)
 }
 
 function handleSettingsChange() {
@@ -46,6 +61,7 @@ function handleSettingsChange() {
 function startInterview() {
   if (questions.value.length === 0) {
     message.error('Добавьте вопросы для начала собеседования')
+    announceToScreenReader('Нельзя начать собеседование: нет вопросов. Добавьте вопросы сначала.')
     return
   }
 
@@ -56,6 +72,7 @@ function startInterview() {
   }
 
   interviewStore.startInterview()
+  announceToScreenReader('Собеседование начато. Удачи!')
 }
 
 function exitInterview() {
@@ -63,6 +80,12 @@ function exitInterview() {
   interviewStore.isSessionActive = false
   interviewStore.clearUserAnswers()
   message.info('Собеседование прервано')
+  announceToScreenReader('Собеседование прервано. Вы вернулись в меню выбора режима.')
+
+  // Возвращаем фокус на кнопку начала собеседования
+  setTimeout(() => {
+    startButtonRef.value?.focus()
+  }, 100)
 }
 
 async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
@@ -72,10 +95,20 @@ async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
   try {
     await interviewStore.updateUserAnswer(question.id, aiAnswer)
     message.success('Ответ ИИ сохранен как ваш ответ!')
+    announceToScreenReader('Ответ искусственного интеллекта сохранен как ваш ответ')
   }
   catch (error) {
     console.error('Error saving AI answer to user answer:', error)
     message.error('Ошибка при сохранении ответа ИИ')
+    announceToScreenReader('Ошибка при сохранении ответа искусственного интеллекта')
+  }
+}
+
+// Функция для объявлений скринридерам
+function announceToScreenReader(message: string) {
+  const announcer = document.getElementById('a11y-announcer')
+  if (announcer) {
+    announcer.textContent = message
   }
 }
 
@@ -88,6 +121,14 @@ watch(mode, (newMode, oldMode) => {
 
 <template>
   <div class="interview-trainer">
+    <!-- Область для объявлений скринридера -->
+    <div
+      id="a11y-announcer"
+      aria-live="polite"
+      aria-atomic="true"
+      class="sr-only"
+    />
+
     <a-card class="trainer-card">
       <template #extra>
         <a-button
@@ -95,6 +136,7 @@ watch(mode, (newMode, oldMode) => {
           danger
           size="small"
           class="exit-button"
+          aria-label="Выйти из собеседования и вернуться к настройкам"
           @click="exitInterview"
         >
           <span class="exit-text full-text">Выйти из собеседования</span>
@@ -104,30 +146,67 @@ watch(mode, (newMode, oldMode) => {
 
       <div v-if="!isInterviewStarted" class="setup-container">
         <div class="welcome-section">
-          <p class="welcome-text">
+          <h1
+            ref="mainHeadingRef"
+            class="welcome-heading"
+            tabindex="-1"
+          >
+            Тренажер собеседований
+          </h1>
+
+          <p id="welcome-description" class="welcome-text">
             Добро пожаловать в тренажер собеседований! Выберите режим работы:
           </p>
 
           <!-- Режимы работы -->
-          <a-radio-group
-            v-model:value="mode"
-            class="mode-selector"
-            button-style="solid"
-            @change="handleModeChange"
+          <div
+            ref="modeSelectorRef"
+            class="mode-selector-container"
+            role="radiogroup"
+            aria-labelledby="welcome-description"
+            aria-describedby="mode-description"
           >
-            <a-radio-button value="manual" class="mode-button">
-              <div class="mode-content">
-                <span class="mode-icon">✋</span>
-                <span class="mode-text">Ручной режим</span>
-              </div>
-            </a-radio-button>
-            <a-radio-button value="ai" class="mode-button">
-              <div class="mode-content">
-                <span class="mode-icon">🤖</span>
-                <span class="mode-text">Режим с ИИ</span>
-              </div>
-            </a-radio-button>
-          </a-radio-group>
+            <span id="mode-description" class="sr-only">
+              Выберите между ручным режимом, где вы добавляете вопросы самостоятельно,
+              и режимом с искусственным интеллектом, который генерирует вопросы автоматически
+            </span>
+
+            <a-radio-group
+              v-model:value="mode"
+              class="mode-selector"
+              button-style="solid"
+              @change="handleModeChange"
+            >
+              <a-radio-button
+                value="manual"
+                class="mode-button"
+                aria-label="Ручной режим: самостоятельное добавление вопросов"
+              >
+                <div class="mode-content">
+                  <span
+                    class="mode-icon"
+                    aria-hidden="true"
+                    role="presentation"
+                  >✋</span>
+                  <span class="mode-text">Ручной режим</span>
+                </div>
+              </a-radio-button>
+              <a-radio-button
+                value="ai"
+                class="mode-button"
+                aria-label="Режим с искусственным интеллектом: автоматическая генерация вопросов"
+              >
+                <div class="mode-content">
+                  <span
+                    class="mode-icon"
+                    aria-hidden="true"
+                    role="presentation"
+                  >🤖</span>
+                  <span class="mode-text">Режим с ИИ</span>
+                </div>
+              </a-radio-button>
+            </a-radio-group>
+          </div>
         </div>
 
         <!-- Контент в зависимости от режима -->
@@ -147,12 +226,23 @@ watch(mode, (newMode, oldMode) => {
           />
         </div>
 
-        <a-card title="Настройки собеседования" class="settings-card">
+        <a-card
+          title="Настройки собеседования"
+          class="settings-card"
+          aria-labelledby="settings-title"
+        >
+          <template #title>
+            <h2 id="settings-title" class="settings-title">
+              Настройки собеседования
+            </h2>
+          </template>
+
           <a-form layout="vertical">
             <a-form-item class="setting-item">
               <a-checkbox
                 v-model:checked="interviewSettings.showProgress"
                 class="setting-checkbox"
+                aria-label="Показывать прогресс прохождения собеседования"
                 @change="handleSettingsChange"
               >
                 Показывать прогресс
@@ -165,6 +255,7 @@ watch(mode, (newMode, oldMode) => {
                 <a-checkbox
                   v-model:checked="interviewSettings.enableAnswerInput"
                   class="setting-checkbox"
+                  aria-label="Включить возможность ввода ответов на вопросы с оценкой искусственного интеллекта"
                   @change="handleSettingsChange"
                 >
                   Включить ввод ответа на вопрос
@@ -177,27 +268,46 @@ watch(mode, (newMode, oldMode) => {
                 type="info"
                 show-icon
                 class="info-alert"
+                role="status"
+                aria-live="polite"
               />
             </div>
           </a-form>
         </a-card>
 
-        <a-button
-          type="primary"
-          size="large"
-          :disabled="questions.length === 0"
-          class="start-button"
-          @click="startInterview"
-        >
-          <span class="start-text full-text">Начать подготовку</span>
-          <span class="start-text short-text">Начать</span>
-          <template #loading>
-            <span class="button-loading">
-              <a-spin size="small" />
-              <span class="loading-text">Запуск...</span>
-            </span>
-          </template>
-        </a-button>
+        <div class="start-button-container">
+          <a-button
+            ref="startButtonRef"
+            type="primary"
+            size="large"
+            :disabled="questions.length === 0"
+            class="start-button"
+            :aria-disabled="questions.length === 0"
+            :aria-label="questions.length === 0
+              ? 'Нельзя начать собеседование: сначала добавьте вопросы'
+              : 'Начать подготовку к собеседованию'"
+            @click="startInterview"
+          >
+            <span class="start-text full-text">Начать подготовку</span>
+            <span class="start-text short-text">Начать</span>
+            <template #loading>
+              <span class="button-loading">
+                <a-spin size="small" />
+                <span class="loading-text">Запуск...</span>
+              </span>
+            </template>
+          </a-button>
+
+          <div
+            v-if="questions.length === 0"
+            class="start-button-hint"
+            role="status"
+            aria-live="polite"
+          >
+            <span class="sr-only">Для начала собеседования необходимо добавить вопросы</span>
+            <span aria-hidden="true">Добавьте вопросы чтобы начать</span>
+          </div>
+        </div>
       </div>
 
       <div v-else class="interview-container">
@@ -228,6 +338,19 @@ watch(mode, (newMode, oldMode) => {
   overflow: hidden;
 }
 
+/* Стили для скринридеров */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .exit-button {
   transition: all 0.3s ease;
 }
@@ -249,6 +372,21 @@ watch(mode, (newMode, oldMode) => {
   margin-bottom: 24px;
 }
 
+.welcome-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #262626;
+  margin-bottom: 16px;
+  line-height: 1.3;
+  outline: none;
+}
+
+.welcome-heading:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .welcome-text {
   font-size: 16px;
   color: #666;
@@ -256,9 +394,12 @@ watch(mode, (newMode, oldMode) => {
   line-height: 1.5;
 }
 
-.mode-selector {
+.mode-selector-container {
   margin: 0 auto;
   max-width: 400px;
+}
+
+.mode-selector {
   display: flex;
   border-radius: 8px;
   overflow: hidden;
@@ -270,6 +411,13 @@ watch(mode, (newMode, oldMode) => {
   border: none;
   height: auto;
   padding: 16px 8px;
+  position: relative;
+}
+
+.mode-button:focus-visible {
+  outline: 3px solid #1890ff;
+  outline-offset: -2px;
+  z-index: 1;
 }
 
 .mode-content {
@@ -301,12 +449,28 @@ watch(mode, (newMode, oldMode) => {
   border-radius: 8px;
 }
 
+.settings-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #262626;
+}
+
 .setting-item {
   margin-bottom: 12px;
 }
 
 .setting-checkbox {
   font-size: 14px;
+}
+
+.setting-checkbox :deep(.ant-checkbox) {
+  border-radius: 4px;
+}
+
+.setting-checkbox :deep(.ant-checkbox-input:focus-visible + .ant-checkbox-inner) {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
 }
 
 .ai-settings {
@@ -317,17 +481,34 @@ watch(mode, (newMode, oldMode) => {
   margin-top: 12px;
 }
 
-.start-button {
+.start-button-container {
   margin-top: 32px;
+  text-align: center;
+}
+
+.start-button {
   width: 100%;
   max-width: 300px;
   height: 48px;
   font-weight: 600;
   border-radius: 8px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.start-button:focus-visible {
+  outline: 3px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.start-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.start-button:disabled:focus-visible {
+  outline-color: #8c8c8c;
 }
 
 .start-text.full-text {
@@ -349,6 +530,13 @@ watch(mode, (newMode, oldMode) => {
   font-weight: 500;
 }
 
+.start-button-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8c8c8c;
+  font-style: italic;
+}
+
 .trainer-footer {
   margin-top: 32px;
 }
@@ -357,6 +545,7 @@ watch(mode, (newMode, oldMode) => {
   min-height: 400px;
 }
 
+/* Улучшенная доступность для карточки */
 :deep(.trainer-card .ant-card-body) {
   padding: 20px;
 }
@@ -370,6 +559,21 @@ watch(mode, (newMode, oldMode) => {
   padding: 0;
 }
 
+/* Улучшенная доступность для радиокнопок */
+:deep(.mode-selector .ant-radio-button-wrapper) {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+:deep(.mode-selector .ant-radio-button-wrapper:focus-within) {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+:deep(.mode-selector .ant-radio-button-wrapper-checked) {
+  border-color: #1890ff;
+}
+
 @media (max-width: 1024px) {
   .interview-trainer {
     padding: 12px;
@@ -379,11 +583,15 @@ watch(mode, (newMode, oldMode) => {
     max-width: 900px;
   }
 
+  .welcome-heading {
+    font-size: 22px;
+  }
+
   .welcome-text {
     font-size: 15px;
   }
 
-  .mode-selector {
+  .mode-selector-container {
     max-width: 350px;
   }
 
@@ -423,14 +631,22 @@ watch(mode, (newMode, oldMode) => {
     margin-bottom: 20px;
   }
 
+  .welcome-heading {
+    font-size: 20px;
+    text-align: left;
+  }
+
   .welcome-text {
     font-size: 14px;
     margin-bottom: 16px;
     text-align: left;
   }
 
-  .mode-selector {
+  .mode-selector-container {
     max-width: 100%;
+  }
+
+  .mode-selector {
     flex-direction: column;
     border-radius: 12px;
     overflow: visible;
@@ -441,7 +657,7 @@ watch(mode, (newMode, oldMode) => {
   .mode-button {
     border-radius: 8px !important;
     padding: 12px 16px;
-    border: 1px solid #d9d9d9 !important;
+    border: 2px solid #d9d9d9 !important;
   }
 
   .mode-content {
@@ -466,8 +682,11 @@ watch(mode, (newMode, oldMode) => {
     margin-top: 20px;
   }
 
-  .start-button {
+  .start-button-container {
     margin-top: 24px;
+  }
+
+  .start-button {
     max-width: 100%;
     height: 44px;
     border-radius: 8px;
@@ -497,6 +716,10 @@ watch(mode, (newMode, oldMode) => {
 
   .trainer-card {
     border-radius: 6px;
+  }
+
+  .welcome-heading {
+    font-size: 18px;
   }
 
   .welcome-text {
@@ -560,6 +783,10 @@ watch(mode, (newMode, oldMode) => {
 }
 
 @media (max-width: 360px) {
+  .welcome-heading {
+    font-size: 16px;
+  }
+
   .welcome-text {
     font-size: 12px;
   }
@@ -586,6 +813,7 @@ watch(mode, (newMode, oldMode) => {
   }
 }
 
+/* Улучшения для touch-устройств */
 @media (hover: none) and (pointer: coarse) {
   .mode-button {
     min-height: 50px;
@@ -599,8 +827,52 @@ watch(mode, (newMode, oldMode) => {
     min-height: 36px;
     padding: 8px 12px;
   }
+
+  /* Увеличиваем области касания */
+  .setting-checkbox :deep(.ant-checkbox-wrapper) {
+    padding: 8px 0;
+  }
 }
 
+/* Улучшения для пользователей, предпочитающих убрать анимацию */
+@media (prefers-reduced-motion: reduce) {
+  .mode-button,
+  .start-button,
+  .exit-button,
+  .setting-checkbox {
+    transition: none;
+  }
+
+  .start-button:not(:disabled):hover {
+    transform: none;
+  }
+}
+
+/* Высококонтрастный режим */
+@media (prefers-contrast: high) {
+  .interview-trainer {
+    background: #ffffff;
+    border: 2px solid #000000;
+  }
+
+  .trainer-card {
+    border: 2px solid #000000;
+  }
+
+  .mode-button {
+    border-color: #000000 !important;
+  }
+
+  .mode-button:focus-visible {
+    outline: 3px solid #000000;
+  }
+
+  .start-button:focus-visible {
+    outline: 3px solid #000000;
+  }
+}
+
+/* Улучшенная фокусировка для клавиатурной навигации */
 .mode-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
