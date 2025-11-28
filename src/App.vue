@@ -134,7 +134,6 @@ function navigateToProfile() {
 .content {
   background: #f0f2f5;
   min-height: calc(100vh - 64px) !important;
-  padding-top: 24px;
 }
 
 @media (max-width: 480px) {
