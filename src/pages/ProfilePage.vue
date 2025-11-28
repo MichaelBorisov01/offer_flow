@@ -107,7 +107,6 @@ onUnmounted(() => {
           type="primary"
           :loading="isSaving"
           :disabled="!hasChanges"
-          class="save-button"
           @click="saveAllChanges"
         >
           Сохранить
@@ -254,6 +253,12 @@ onUnmounted(() => {
 
   .profile-card {
     margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  :deep(.ant-page-header-heading-title) {
+    display: none;
   }
 }
 </style>
