@@ -206,7 +206,7 @@ export const useAuthStore = defineStore('auth', {
         return true
       }
       catch (error: any) {
-        const errorMessage = error.message || getFirebaseErrorMessage(error.code)
+        const errorMessage = getFirebaseErrorMessage(error.code) || error.message
         this.error = errorMessage
         console.error('Sign up error:', error)
         throw new Error(errorMessage)

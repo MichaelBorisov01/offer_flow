@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import AppFooter from '@/components/AppFooter.vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
 import { useInterviewStore } from '@/stores/interview'
+import { announceToScreenReader } from '@/utils/a11y'
 import AIInterviewSession from './sessions/AIInterviewSession.vue'
 import ManualInterviewSession from './sessions/ManualInterviewSession.vue'
 import AISetup from './setup/AISetup.vue'
@@ -101,14 +102,6 @@ async function saveAiToUserAnswer(question: Question, aiAnswer: string) {
     console.error('Error saving AI answer to user answer:', error)
     message.error('Ошибка при сохранении ответа ИИ')
     announceToScreenReader('Ошибка при сохранении ответа искусственного интеллекта')
-  }
-}
-
-// Функция для объявлений скринридерам
-function announceToScreenReader(message: string) {
-  const announcer = document.getElementById('a11y-announcer')
-  if (announcer) {
-    announcer.textContent = message
   }
 }
 
