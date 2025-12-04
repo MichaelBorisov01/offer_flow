@@ -11,7 +11,7 @@ export function sanitizedContent(answer?: string) {
       gfm: true,
     })
 
-    return DOMPurify.sanitize(html.toString(), {
+    const sanitized = DOMPurify.sanitize(html.toString(), {
       ALLOWED_TAGS: [
         'strong',
         'em',
@@ -31,9 +31,21 @@ export function sanitizedContent(answer?: string) {
         'h6',
         'blockquote',
         'hr',
+        'img',
       ],
-      ALLOWED_ATTR: ['class', 'style'],
+      ALLOWED_ATTR: [
+        'class',
+        'style',
+        'src',
+        'alt',
+        'title',
+        'width',
+        'height',
+        'loading',
+      ],
     })
+
+    return sanitized.replace(/<img(?![^>]*\sloading=)/g, '<img loading="lazy"')
   }
   catch (error) {
     console.error('Ошибка при обработке Markdown:', error)

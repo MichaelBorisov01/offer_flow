@@ -49,6 +49,7 @@ const interviewStore = useInterviewStore()
 const isEditingUserAnswer = ref(false)
 const userAnswerText = ref('')
 const isLoadingUserAnswer = ref(false)
+const userAnswerTextarea = ref<HTMLTextAreaElement>()
 
 // Состояние для сворачивания/разворачивания ответа
 const isAnswerExpanded = ref(false)
@@ -127,6 +128,63 @@ const hasUserAnswer = computed(() => {
 
 function toggleAnswerExpansion() {
   isAnswerExpanded.value = !isAnswerExpanded.value
+}
+
+function insertAroundSelection(prefix: string, suffix: string) {
+  const textarea = userAnswerTextarea.value
+
+  if (!textarea) {
+    return
+  }
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = userAnswerText.value
+  const selected = value.slice(start, end)
+  const nextValue = `${value.slice(0, start)}${prefix}${selected || 'текст'}${suffix}${value.slice(end)}`
+
+  userAnswerText.value = nextValue
+
+  nextTick(() => {
+    const cursor = start + prefix.length + (selected ? selected.length : 'текст'.length)
+    textarea.focus()
+    textarea.setSelectionRange(cursor, cursor)
+  })
+}
+
+function insertCodeBlock() {
+  const textarea = userAnswerTextarea.value
+
+  if (!textarea) {
+    return
+  }
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const value = userAnswerText.value
+  const selected = value.slice(start, end)
+
+  const codeBlock = selected
+    ? `\`\`\`\n${selected}\n\`\`\``
+    : '```\nкод\n```'
+
+  const nextValue = `${value.slice(0, start)}${codeBlock}${value.slice(end)}`
+  userAnswerText.value = nextValue
+
+  nextTick(() => {
+    if (selected) {
+      // Если был выделен текст, курсор ставим после блока кода
+      const cursor = start + codeBlock.length
+      textarea.focus()
+      textarea.setSelectionRange(cursor, cursor)
+    }
+    else {
+      // Если текста не было, курсор ставим внутри блока кода
+      const cursor = start + 4 // после ```
+      textarea.focus()
+      textarea.setSelectionRange(cursor, cursor)
+    }
+  })
 }
 
 onMounted(() => {
@@ -293,13 +351,45 @@ watch(() => props.question, () => {
 
       <!-- Режим редактирования -->
       <div v-if="isEditingUserAnswer" class="user-answer-edit">
-        <a-textarea
-          v-model:value="userAnswerText"
+        <div class="user-answer-toolbar">
+          <span class="toolbar-label">Форматирование:</span>
+          <a-button
+            size="small"
+            class="toolbar-button"
+            @click="insertAroundSelection('**', '**')"
+          >
+            <strong>B</strong>
+          </a-button>
+          <a-button
+            size="small"
+            class="toolbar-button"
+            @click="insertAroundSelection('*', '*')"
+          >
+            <em>i</em>
+          </a-button>
+          <a-button
+            size="small"
+            class="toolbar-button"
+            @click="insertAroundSelection('`', '`')"
+          >
+            <code>`код`</code>
+          </a-button>
+          <a-button
+            size="small"
+            class="toolbar-button"
+            @click="insertCodeBlock"
+          >
+            <code>```блок```</code>
+          </a-button>
+        </div>
+
+        <textarea
+          ref="userAnswerTextarea"
+          v-model="userAnswerText"
+          class="user-answer-textarea ant-input"
           placeholder="Введите ваш ответ на этот вопрос..."
-          :rows="4"
-          :maxlength="2000"
-          show-count
-          class="user-answer-textarea"
+          rows="6"
+          maxlength="4000"
         />
         <div class="user-answer-edit-actions">
           <a-button
@@ -583,7 +673,9 @@ watch(() => props.question, () => {
 }
 
 .user-answer-textarea {
-  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
   border-radius: 8px;
 }
 
@@ -668,6 +760,36 @@ watch(() => props.question, () => {
   font-size: 14px;
 }
 
+.user-answer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #595959;
+}
+
+.toolbar-label {
+  font-weight: 500;
+}
+
+.toolbar-button {
+  padding: 0 8px;
+  height: 26px;
+  font-size: 12px;
+}
+
+.toolbar-button code {
+  font-size: 11px;
+}
+
+.toolbar-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
 /* Универсальные стили для мобильных кнопок */
 .mobile-action-btn {
   height: 44px;
@@ -730,6 +852,17 @@ watch(() => props.question, () => {
   .user-answer-section {
     padding: 12px;
     margin-top: 12px;
+  }
+
+  .user-answer-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .toolbar-hint {
+    margin-left: 0;
+    font-size: 10px;
   }
 
   .user-answer-header {
