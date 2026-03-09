@@ -410,14 +410,29 @@ function showAIAnswer() {
   }
 
   .answer-input-section {
+    display: flex;
+    flex-direction: column;
     padding: 16px;
     border-width: 1px;
     margin: 0 -8px;
     border-radius: 8px;
   }
 
+  /* Принудительно ставим label над textarea для мобильных */
+  .answer-input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0; /* Убираем лишний отступ снизу */
+  }
+
   .answer-input :deep(.ant-form-item-label) {
+    text-align: left;
     font-size: 15px;
+    padding-bottom: 4px;
+  }
+
+  .answer-input :deep(.ant-form-item-control) {
+    width: 100%;
   }
 
   .answer-textarea :deep(textarea) {
@@ -425,9 +440,12 @@ function showAIAnswer() {
     min-height: 140px;
   }
 
+  /* Выстраиваем кнопки в колонку */
   .answer-actions {
+    display: flex;
     flex-direction: column;
-    gap: 8px;
+    width: 100%;
+    gap: 12px;
     margin-top: 16px;
   }
 
@@ -501,7 +519,6 @@ function showAIAnswer() {
     padding: 10px 14px;
   }
 
-  /* Улучшение accessibility для касаний */
   .mobile-action-btn:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
