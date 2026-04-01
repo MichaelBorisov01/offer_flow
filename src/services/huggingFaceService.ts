@@ -29,9 +29,6 @@ export class HuggingFaceService {
     this.config = config
   }
 
-  /**
-   * Основной метод для чат-комплишена
-   */
   async chatCompletion(messages: ChatCompletionInputMessage[]): Promise<string> {
     try {
       const response: ChatCompletionOutput = await this.client.chatCompletion({

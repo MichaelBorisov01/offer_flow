@@ -18,11 +18,7 @@ export function isShortTextGibberish(text: string): boolean {
   const hasVowels = /[аеёиоуыэюяaeiou]/i.test(text)
   const isITAcronym = /^[a-z]{2,4}$/i.test(text) && !hasVowels
 
-  if (!hasVowels && !isITAcronym && textLength > 4) {
-    return true
-  }
-
-  return false
+  return !hasVowels && !isITAcronym && textLength > 4
 }
 
 export function isMeaningfulText(text: string): boolean {
