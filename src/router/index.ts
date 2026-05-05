@@ -2,18 +2,26 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
+  // 1. Лендинг (лицо продукта). Доступен всем
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/components/features/InterviewTrainer/InterviewTrainer.vue'),
-    meta: { requiresAuth: true },
+    name: 'Landing',
+    component: () => import('@/pages/LandingPage.vue'),
   },
+  // 2. Сам тренажер
+  {
+    path: '/trainer',
+    name: 'Trainer',
+    component: () => import('@/components/features/InterviewTrainer/InterviewTrainer.vue'),
+  },
+  // 3. Авторизация
   {
     path: '/auth',
     name: 'Auth',
     component: () => import('@/components/features/Auth/AuthView.vue'),
     meta: { requiresGuest: true },
   },
+  // 4. Профиль
   {
     path: '/profile',
     name: 'Profile',
@@ -34,7 +42,6 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Если хранилище еще не инициализировано, ждем инициализации
   if (!authStore.isInitialized) {
     try {
       await authStore.init()
@@ -44,12 +51,11 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // Теперь проверяем аутентификацию
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth')
   }
   else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/')
+    next('/trainer')
   }
   else {
     next()

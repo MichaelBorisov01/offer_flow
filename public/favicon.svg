@@ -1,0 +1,14 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="bubble-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#9D50BB" />
+            <stop offset="100%" style="stop-color:#4facfe" />
+        </linearGradient>
+    </defs>
+
+    <path d="M16 4C9.37 4 4 9.15 4 15.5C4 18.25 5.05 20.77 6.8 22.75L5 28L10.5 26.25C12.18 26.73 14.03 27 16 27C22.63 27 28 21.85 28 15.5C28 9.15 22.63 4 16 4Z" fill="url(#bubble-grad)"/>
+
+    <path d="M17 9L18.2 12.8L22 14L18.2 15.2L17 19L15.8 15.2L12 14L15.8 12.8L17 9Z" fill="white" />
+
+    <path d="M12 17L12.7 19.3L15 20L12.7 20.7L12 23L11.3 20.7L9 20L11.3 19.3L12 17Z" fill="white" />
+</svg>
