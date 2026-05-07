@@ -34,24 +34,24 @@ const aiSettings = reactive<AISettings>({
   skill: props.initialSettings?.skill || 'hard',
 })
 
-const aiStatus = ref<'connected' | 'fallback' | 'error'>('fallback')
+const aiStatus = ref<'checking' | 'connected' | 'error'>('checking')
 
 const aiStatusMessage = computed(() => {
   const messages = {
-    connected: 'Режим ИИ: Подключен к Hugging Face API',
-    fallback: 'Режим ИИ: Используются локальные вопросы (не добавлен Hugging Face API ключ)',
-    error: 'Режим ИИ: Ошибка подключения, используются локальные вопросы',
+    checking: 'Режим ИИ: Установка защищенного соединения с сервером...',
+    connected: 'Режим ИИ: Подключен через безопасный API',
+    error: 'Режим ИИ: Сервер недоступен, временно используются локальные вопросы',
   }
   return messages[aiStatus.value]
 })
 
 const aiStatusType = computed(() => {
   const types = {
+    checking: 'info',
     connected: 'success',
-    fallback: 'warning',
-    error: 'error',
+    error: 'warning',
   }
-  return types[aiStatus.value]
+  return types[aiStatus.value] as 'info' | 'success' | 'warning'
 })
 
 const aiQuestions = ref<Question[]>([])
@@ -267,24 +267,28 @@ watch(aiSettings, (newSettings) => {
   emit('settingsChanged', { ...newSettings })
 }, { deep: true })
 
-onMounted(() => {
+onMounted(async () => {
   if (props.initialSettings) {
     Object.assign(aiSettings, props.initialSettings)
   }
-  const hasApiKey = !!import.meta.env.VITE_HUGGING_FACE_API_KEY
-  aiStatus.value = hasApiKey ? 'connected' : 'fallback'
+
+  // Пингуем наш бэкенд, чтобы убедиться, что всё работает
+  const isConnected = await AIService.testConnection()
+  aiStatus.value = isConnected ? 'connected' : 'error'
 })
 </script>
 
 <template>
   <div class="ai-setup">
     <div class="ai-status">
-      <a-alert
-        :message="aiStatusMessage"
-        :type="aiStatusType"
-        show-icon
-        class="status-alert"
-      />
+      <a-spin :spinning="aiStatus === 'checking'">
+        <a-alert
+          :message="aiStatusMessage"
+          :type="aiStatusType"
+          show-icon
+          class="status-alert"
+        />
+      </a-spin>
     </div>
 
     <h3 class="section-title">

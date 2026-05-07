@@ -12,7 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_APP_ID: string
 
   // Hugging Face API
-  readonly VITE_HUGGING_FACE_API_KEY: string
+  readonly HF_TOKEN: string
 
   [key: string]: string | boolean | undefined
 }

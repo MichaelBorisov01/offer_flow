@@ -1,6 +1,6 @@
-import type { ChatCompletionInputMessage, ChatCompletionOutput } from '@huggingface/tasks'
+import type { ChatCompletionInputMessage } from '@huggingface/tasks'
 import type { AIAnswer } from '@/types/interview'
-import { InferenceClient } from '@huggingface/inference'
+import axios from 'axios'
 
 import {
   DEFAULT_CONFIG,
@@ -14,55 +14,60 @@ import { PROMPTS } from '@/utils/constants/prompts'
 import { isGibberish, isLikelyNormalQuestion } from '@/utils/helpers/AITextHelpers'
 
 export interface HuggingFaceConfig {
-  apiKey: string
   model?: string
   maxTokens?: number
   temperature?: number
 }
 
 export class HuggingFaceService {
-  private client: InferenceClient
   private config: HuggingFaceConfig
 
   constructor(config: HuggingFaceConfig) {
-    this.client = new InferenceClient(config.apiKey)
     this.config = config
   }
 
   async chatCompletion(messages: ChatCompletionInputMessage[]): Promise<string> {
     try {
-      const response: ChatCompletionOutput = await this.client.chatCompletion({
+      // Отправляем запрос на защищенный Vercel API-роут
+      const response = await axios.post('/api/chat', {
         model: this.config.model || DEFAULT_CONFIG.MODEL,
         messages,
-        max_tokens: this.config.maxTokens || DEFAULT_CONFIG.MAX_TOKENS,
-        temperature: this.config.temperature || DEFAULT_CONFIG.TEMPERATURE,
+        parameters: {
+          max_tokens: this.config.maxTokens || DEFAULT_CONFIG.MAX_TOKENS,
+          temperature: this.config.temperature || DEFAULT_CONFIG.TEMPERATURE,
+        },
       })
 
-      if (response.choices && response.choices.length > 0) {
-        return response.choices[0]?.message.content || ''
+      const data = response.data
+
+      if (data.choices && data.choices.length > 0) {
+        return data.choices[0]?.message.content || ''
       }
       else {
         throw new Error(ERROR_MESSAGES.NO_RESPONSE)
       }
     }
     catch (error: any) {
-      console.error('Hugging Face API Error:', {
-        status: error.status,
+      console.error('API Bridge Error:', {
+        status: error.response?.status,
         message: error.message,
-        details: error,
+        data: error.response?.data,
       })
 
-      if (error.status === 401) {
+      const status = error.response?.status
+      const errorMsg = error.response?.data?.error || error.message
+
+      if (status === 401 || status === 403) {
         throw new Error(ERROR_MESSAGES.INVALID_TOKEN)
       }
-      else if (error.status === 429) {
+      else if (status === 429) {
         throw new Error(ERROR_MESSAGES.RATE_LIMIT)
       }
-      else if (error.message?.includes('model is currently loading')) {
+      else if (errorMsg?.includes('loading')) {
         throw new Error(ERROR_MESSAGES.MODEL_LOADING)
       }
       else {
-        throw new Error(`${ERROR_MESSAGES.API_ERROR} ${error.message || 'Неизвестная ошибка'}`)
+        throw new Error(`${ERROR_MESSAGES.API_ERROR} ${errorMsg || 'Неизвестная ошибка'}`)
       }
     }
   }
@@ -232,22 +237,8 @@ ${technology ? `Основная технология: ${technology}` : ''}
     }
   }
 
-  /**
-   * Получение информации о доступных моделях
-   */
-  async getAvailableModels(): Promise<string[]> {
-    return [
-      'meta-llama/Llama-3.1-8B-Instruct',
-      'meta-llama/Llama-3.1-70B-Instruct',
-      'microsoft/DialoGPT-large',
-      'google/gemma-2-9b-it',
-      'mistralai/Mistral-7B-Instruct-v0.3',
-    ]
-  }
-
   async generateAnswer(question: string, userAnswer?: string, questionCategory?: string): Promise<AIAnswer> {
     try {
-    // Для софт-вопросов всегда генерируем серьезный ответ
       const isSoftQuestion = questionCategory === 'soft-skills'
       if (isSoftQuestion) {
         const messages = this.buildSoftSkillsAnswerMessages(question)
@@ -259,12 +250,10 @@ ${technology ? `Основная технология: ${technology}` : ''}
         }
       }
 
-      // Для технических вопросов используем улучшенную логику с проверкой на "ерунду" и нормальные вопросы
       const isQuestionGibberish = isGibberish(question)
       const isAnswerGibberish = userAnswer ? isGibberish(userAnswer) : false
       const isLikelyNormal = isLikelyNormalQuestion(question)
 
-      // Генерируем шутку только если вопрос или ответ - ерунда И это не похоже на нормальный вопрос
       const shouldGenerateJoke = (isQuestionGibberish || isAnswerGibberish) && !isLikelyNormal
 
       const messages: ChatCompletionInputMessage[] = shouldGenerateJoke
@@ -352,9 +341,8 @@ ${technology ? `Основная технология: ${technology}` : ''}
   }
 }
 
-// Создаем экземпляр сервиса
+// Экспортируем инстанс без API ключа
 export const huggingFaceService = new HuggingFaceService({
-  apiKey: import.meta.env.VITE_HUGGING_FACE_API_KEY || '',
   model: RECOMMENDED_MODELS.GENERAL,
   maxTokens: DEFAULT_CONFIG.MAX_TOKENS,
   temperature: DEFAULT_CONFIG.TEMPERATURE,
