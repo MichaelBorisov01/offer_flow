@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { AISettings, Question } from '@/types/interview'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { AIService } from '@/services/aiService'
 import { QuestionService } from '@/services/questionService'
+import { useAuthStore } from '@/stores/auth'
 import { useInterviewStore } from '@/stores/interview'
 import { getDifficultyColor } from '@/utils/helpers/questionHelpers'
 
@@ -20,6 +22,8 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const interviewStore = useInterviewStore()
+const router = useRouter()
+const authStore = useAuthStore()
 const isGenerating = ref(false)
 const savingQuestionIds = ref<Set<string>>(new Set())
 const isSavingAll = ref(false)
@@ -128,7 +132,33 @@ function handleFieldChange() {
   aiSettings.technology = availableTechnologies.value[0]?.value || ''
 }
 
+function showAuthRequiredModal(title: string, content: string) {
+  Modal.info({
+    title,
+    content,
+    okText: 'Зарегистрироваться',
+    cancelText: 'Позже',
+    closable: true,
+    maskClosable: true,
+    onOk() {
+      router.push('/auth')
+    },
+  })
+}
+
 async function generateQuestions() {
+  // 1. Проверка лимита для неавторизованных пользователей
+  if (!authStore.isAuthenticated) {
+    const hasUsedDemo = localStorage.getItem('offerflow_demo_used')
+    if (hasUsedDemo) {
+      showAuthRequiredModal(
+        'Демо-режим исчерпан 🚀',
+        'Вы уже сгенерировали свой первый набор вопросов. Зарегистрируйтесь бесплатно, чтобы получить безлимитный доступ к тренажеру и сохранять прогресс!',
+      )
+      return
+    }
+  }
+
   isGenerating.value = true
 
   try {
@@ -139,6 +169,12 @@ async function generateQuestions() {
     }))
 
     interviewStore.questions = aiQuestions.value
+
+    // 2. Если гость успешно сгенерировал вопросы, записываем это в localStorage
+    if (!authStore.isAuthenticated) {
+      localStorage.setItem('offerflow_demo_used', 'true')
+    }
+
     emit('questionsGenerated')
   }
   catch (error) {
@@ -168,12 +204,20 @@ function isDuplicateQuestion(question: Question): boolean {
 }
 
 async function saveQuestionToDB(question: Question, tempId: string) {
+  // Блокируем сохранение для гостей
+  if (!authStore.isAuthenticated) {
+    showAuthRequiredModal(
+      'Сохранение вопросов 📚',
+      'Чтобы собрать свою личную базу для подготовки и отслеживать прогресс, пожалуйста, войдите в аккаунт.',
+    )
+    return
+  }
+
   if (savingQuestionIds.value.has(tempId)) {
     return
   }
 
   savingQuestionIds.value.add(tempId)
-
   try {
     if (isDuplicateQuestion(question)) {
       showMessage('warning', 'Этот вопрос уже есть в вашей коллекции')
@@ -201,6 +245,14 @@ async function saveQuestionToDB(question: Question, tempId: string) {
 }
 
 async function saveAllQuestions() {
+  if (!authStore.isAuthenticated) {
+    showAuthRequiredModal(
+      'Сохранение вопросов 📚',
+      'Чтобы собрать свою личную базу для подготовки и отслеживать прогресс, пожалуйста, войдите в аккаунт.',
+    )
+    return
+  }
+
   if (!hasQuestions.value)
     return
 
