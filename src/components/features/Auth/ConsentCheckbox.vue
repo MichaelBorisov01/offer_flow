@@ -163,7 +163,6 @@ onMounted(() => {
 
 .consent-container:focus-within {
   border-color: #1890ff;
-  background-color: #f0f8ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
 }
 

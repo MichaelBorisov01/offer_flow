@@ -42,6 +42,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
+  // Дожидаемся проверки токена Firebase
   if (!authStore.isInitialized) {
     try {
       await authStore.init()
@@ -51,12 +52,15 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // 1. Если маршрут требует авторизации, а юзер гость -> на страницу входа
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/auth')
   }
-  else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+  // 2. Если юзер авторизован и пытается зайти на страницы для гостей (логин) ИЛИ на лендинг -> в тренажер
+  else if ((to.meta.requiresGuest || to.path === '/') && authStore.isAuthenticated) {
     next('/trainer')
   }
+  // 3. Во всех остальных случаях -> пускаем
   else {
     next()
   }

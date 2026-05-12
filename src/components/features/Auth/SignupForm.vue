@@ -1,4 +1,3 @@
-<!-- src/components/features/Auth/SignupForm.vue -->
 <script setup lang="ts">
 import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
@@ -55,7 +54,7 @@ async function handleSignup() {
 
     if (success) {
       message.success('Регистрация успешна!')
-      router.push('/')
+      router.push('/trainer')
     }
   }
   catch (error: any) {

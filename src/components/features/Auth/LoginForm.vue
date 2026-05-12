@@ -28,7 +28,7 @@ async function handleLogin() {
     const success = await authStore.signIn(formState.email, formState.password)
     if (success) {
       message.success('Добро пожаловать!')
-      router.push('/')
+      router.push('/trainer')
     }
   }
   catch (error: any) {
