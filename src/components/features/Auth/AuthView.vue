@@ -9,7 +9,6 @@ const currentForm = ref<'login' | 'signup'>('login')
 <template>
   <div class="auth-page">
     <div class="auth-wrapper">
-
       <div class="auth-banner">
         <div class="banner-content">
           <div class="logo-placeholder">
@@ -37,22 +36,21 @@ const currentForm = ref<'login' | 'signup'>('login')
           </div>
         </div>
 
-        <div class="banner-background"></div>
+        <div class="banner-background" />
       </div>
 
       <div class="auth-form-container">
         <div class="form-wrapper">
           <LoginForm
-              v-if="currentForm === 'login'"
-              @switch-to-signup="currentForm = 'signup'"
+            v-if="currentForm === 'login'"
+            @switch-to-signup="currentForm = 'signup'"
           />
           <SignupForm
-              v-else
-              @switch-to-login="currentForm = 'login'"
+            v-else
+            @switch-to-login="currentForm = 'login'"
           />
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -274,9 +272,16 @@ const currentForm = ref<'login' | 'signup'>('login')
   color: #64748b;
 }
 
+/* Иконки слева и справа (включая глазик пароля) */
 :deep(.ant-input-prefix),
+:deep(.ant-input-suffix),
 :deep(.ant-input-password-icon) {
-  color: #94a3b8;
+  color: #94a3b8 !important;
+}
+
+/* Глазик при наведении становится ярче */
+:deep(.ant-input-password-icon:hover) {
+  color: #f8fafc !important;
 }
 
 :deep(.consent-text) {
