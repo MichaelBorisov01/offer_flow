@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import type { InterviewSession, QARecord } from '@/types/history.ts'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { ProgressSection } from '@/components/shared/ProgressSection'
 import { QuestionCard } from '@/components/shared/QuestionCard'
 import { QuestionNavigation } from '@/components/shared/QuestionNavigation'
+import { HistoryService } from '@/services/historyService.ts'
+import { useAuthStore } from '@/stores/auth.ts'
 import { useInterviewStore } from '@/stores/interview'
 import AIAnswerCard from '../shared/AIAnswerCard.vue'
 import AnswerEvaluation from '../shared/AnswerEvaluation.vue'
 
 const interviewStore = useInterviewStore()
+const authStore = useAuthStore()
 
 const questions = computed(() => interviewStore.sessionQuestionsList)
 const currentQuestion = computed(() => interviewStore.currentQuestion!)
@@ -111,14 +115,57 @@ function goToQuestion(index: number) {
   }
 }
 
-function finishInterview() {
-  interviewStore.finishInterview()
+async function finishInterview() {
+  // 1. Показываем лоадер
+  message.loading({ content: 'Сохраняем результаты...', key: 'saveProgress' })
 
-  if (totalScore.value !== null) {
-    message.success(`Собеседование завершено! Ваш средний балл: ${totalScore.value.toFixed(1)}/10`)
+  try {
+    // 2. Если юзер авторизован, собираем данные для истории
+    if (authStore.isAuthenticated && authStore.user) {
+      // Формируем красивый список вопросов и ответов
+      const qaList: QARecord[] = interviewStore.userAnswers.map((answer) => {
+        const questionObj = questions.value.find(q => q.id === answer.questionId)
+        return {
+          question: questionObj?.text || 'Неизвестный вопрос',
+          userAnswer: answer.userAnswer,
+          score: answer.evaluation?.score || 0,
+          feedback: answer.evaluation?.feedback || 'Нет обратной связи',
+        }
+      })
+
+      // Собираем объект сессии
+      const sessionData: Omit<InterviewSession, 'id'> = {
+        userId: authStore.user.uid,
+        specialty: questions.value[0]?.category || 'frontend',
+        difficulty: questions.value[0]?.difficulty || 'middle',
+        date: new Date().toISOString(),
+        averageScore: totalScore.value || 0,
+        qaList,
+      }
+
+      // Отправляем в Firebase!
+      await HistoryService.saveSession(sessionData)
+    }
+
+    // 3. Завершаем локально
+    interviewStore.finishInterview()
+
+    // 4. Уведомляем об успехе
+    const scoreMsg = totalScore.value !== null
+      ? `Ваш средний балл: ${totalScore.value.toFixed(1)}/10`
+      : ''
+
+    message.success({
+      content: `Собеседование завершено! ${scoreMsg}. Результаты сохранены в профиле.`,
+      key: 'saveProgress',
+      duration: 3,
+    })
   }
-  else {
-    message.success('Собеседование завершено!')
+  catch (error) {
+    console.error('Ошибка сохранения прогресса:', error)
+    message.error({ content: 'Собеседование завершено, но произошла ошибка при сохранении в историю.', key: 'saveProgress', duration: 3 })
+    // Все равно завершаем локально, чтобы не блочить UI
+    interviewStore.finishInterview()
   }
 }
 
@@ -171,9 +218,11 @@ onMounted(() => {
         :evaluating="isEvaluating"
         :user-answer="currentUserAnswer"
         :ai-answer-loading="interviewStore.isGeneratingAnswer"
+        :is-last-question="interviewStore.isLastQuestion"
         @submit="handleAnswerSubmit"
         @skip="handleSkipQuestion"
         @next="handleNextQuestion"
+        @finish="finishInterview"
         @edit="handleEditAnswer"
         @show-ai-answer="handleShowAIAnswer"
       />
@@ -225,12 +274,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .progress-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
   .ai-interview-session {
     padding: 10px;
   }

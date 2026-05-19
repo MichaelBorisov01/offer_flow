@@ -77,8 +77,21 @@ export class HuggingFaceService {
    */
   async generateQuestions(settings: any): Promise<string[]> {
     const messages = this.buildQuestionsMessages(settings)
-    const generatedText = await this.chatCompletion(messages)
-    return this.parseQuestions(generatedText)
+
+    // Временно меняем конфиг для жесткой генерации
+    const originalConfig = { ...this.config }
+
+    // ДИНАМИЧЕСКИЙ РАСЧЕТ: примерно 40 токенов на 1 вопрос + 50 токенов запаса
+    this.config.maxTokens = (settings.questionsCount * 40) + 50
+    this.config.temperature = 0.3
+
+    try {
+      const generatedText = await this.chatCompletion(messages)
+      return this.parseQuestions(generatedText)
+    }
+    finally {
+      this.config = originalConfig
+    }
   }
 
   /**
@@ -141,20 +154,59 @@ ${technology ? `Основная технология: ${technology}` : ''}
     if (!text)
       return []
 
-    return text
-      .split('\n')
+    let rawQuestions: string[] = []
+
+    try {
+      // 1. Пытаемся найти JSON массив
+      const jsonMatch = text.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        rawQuestions = JSON.parse(jsonMatch[0])
+        if (Array.isArray(rawQuestions) && typeof rawQuestions[0] === 'string') {
+          return rawQuestions
+        }
+      }
+      else {
+        // СПАСАТЕЛЬНЫЙ КРУГ: если ИИ оборвался и не закрыл скобку ']'
+        // Ищем открывающую скобку и пытаемся закрыть её принудительно
+        const unclosedJsonMatch = text.match(/\[[\s\S]*/)
+        if (unclosedJsonMatch) {
+          let attemptStr = unclosedJsonMatch[0]
+          // Удаляем последнюю недописанную строку/запятую
+          attemptStr = attemptStr.replace(/,\s*(?:"[^"]*)?$/, '')
+          attemptStr += ']' // Принудительно закрываем массив
+
+          try {
+            rawQuestions = JSON.parse(attemptStr)
+            if (Array.isArray(rawQuestions) && typeof rawQuestions[0] === 'string') {
+              return rawQuestions
+            }
+          }
+          catch (e) {
+            console.warn('JSON parsing failed', e)
+          }
+        }
+      }
+    }
+    catch (e) {
+      console.warn('JSON parsing failed, falling back to string split', e)
+    }
+
+    // 2. Fallback: если ИИ не вернул JSON, используем разбивку по строкам
+    rawQuestions = text.split('\n')
+
+    return rawQuestions
       .map(line => line.trim())
       .filter((line) => {
         return line.length > DEFAULT_CONFIG.MIN_QUESTION_LENGTH
           && !line.match(/^(?:\d+[.)]?|[\-*>])\s/)
-          && !line.match(/^(?:вопрос|пример|система|user|assistant|сгенерир|ответ)/i)
+          && !line.match(/^(?:вопрос|пример|система|user|assistant|сгенерир|ответ|вариант)/i)
           && line.match(/[.?!]$/)
           && line.match(/\p{L}/u)
       })
       .map((line) => {
         return line.replace(/^["'](.*)["']$/, '$1').trim()
       })
-      .slice(0, DEFAULT_CONFIG.MAX_QUESTIONS)
+      .slice(0, DEFAULT_CONFIG.MAX_QUESTIONS) // Обрезаем до максимума, но не требуем точного совпадения с questionsCount
   }
 
   /**

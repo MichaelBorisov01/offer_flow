@@ -10,12 +10,14 @@ interface Props {
   evaluating?: boolean
   userAnswer?: UserAnswer
   aiAnswerLoading?: boolean
+  isLastQuestion?: boolean
 }
 
 interface Emits {
   (e: 'submit', answer: string): void
   (e: 'skip'): void
   (e: 'next'): void
+  (e: 'finish'): void
   (e: 'edit'): void
   (e: 'showAiAnswer'): void
 }
@@ -54,6 +56,10 @@ function skipAnswer() {
 
 function nextQuestion() {
   emit('next')
+}
+
+function finishInterview() {
+  emit('finish')
 }
 
 function editAnswer() {
@@ -148,6 +154,17 @@ function showAIAnswer() {
         <div class="post-evaluation-actions">
           <div class="action-buttons">
             <a-button
+              v-if="isLastQuestion"
+              type="primary"
+              size="large"
+              class="next-button mobile-action-btn finish-mode"
+              @click="finishInterview"
+            >
+              <span class="button-text">Завершить собеседование</span>
+            </a-button>
+
+            <a-button
+              v-else
               type="primary"
               size="large"
               class="next-button mobile-action-btn"
@@ -377,6 +394,16 @@ function showAIAnswer() {
   background: #73d13d;
   border-color: #73d13d;
   transform: translateY(-1px);
+}
+
+.next-button.finish-mode {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.next-button.finish-mode:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
 }
 
 .edit-button {
