@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { MailOutlined, UserOutlined } from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
 import { reactive, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -17,7 +16,6 @@ const emit = defineEmits<Emits>()
 
 const authStore = useAuthStore()
 const formRef = ref()
-const isLoading = ref(false)
 
 const formState = reactive({
   displayName: '',
@@ -42,23 +40,6 @@ watch(formState, () => {
   emit('change')
 }, { deep: true })
 
-async function handleSubmit() {
-  try {
-    isLoading.value = true
-    await authStore.updateUserProfile({
-      displayName: formState.displayName,
-    })
-    message.success('Профиль обновлен')
-  }
-  catch (error: any) {
-    message.error(error.message || 'Ошибка при обновлении профиля')
-  }
-  finally {
-    isLoading.value = false
-  }
-}
-
-// Метод для получения данных формы (для родительского компонента)
 function getFormData() {
   return {
     displayName: formState.displayName,
@@ -76,7 +57,6 @@ defineExpose({
     :model="formState"
     :rules="rules"
     layout="vertical"
-    @finish="handleSubmit"
   >
     <a-form-item label="Имя" name="displayName">
       <a-input
@@ -104,11 +84,6 @@ defineExpose({
       <template #help>
         <span style="color: #999;">Email нельзя изменить</span>
       </template>
-    </a-form-item>
-    <a-form-item>
-      <a-button type="primary" html-type="submit" :loading="isLoading">
-        Сохранить изменения
-      </a-button>
     </a-form-item>
   </a-form>
 </template>

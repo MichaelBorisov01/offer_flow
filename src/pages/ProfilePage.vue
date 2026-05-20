@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import type { InterviewSession } from '@/types/history'
+import { BarChartOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+
 import { useRouter } from 'vue-router'
-import DataManagementSection from '@/components/profile/DataManagementSection.vue'
-import PasswordChangeForm from '@/components/profile/PasswordChangeForm.vue'
-import ProfileInfoForm from '@/components/profile/ProfileInfoForm.vue'
+import ProfileAnalytics from '@/components/profile/ProfileAnalytics.vue'
+import ProfileInfoForm from '@/components/profile/ProfileFormInfo.vue'
+import PasswordChangeForm from '@/components/profile/ProfileFormPassword.vue'
+import DeleteAccountModal from '@/components/profile/ProfileModalDelete.vue'
+
+import DataManagementSection from '@/components/profile/ProfileSectionDanger.vue'
+import { HistoryService } from '@/services/historyService'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -13,35 +20,52 @@ const router = useRouter()
 const profileInfoFormRef = ref()
 const passwordFormRef = ref()
 
+const activeTab = ref('analytics')
 const hasChanges = ref(false)
 const isSaving = ref(false)
+const sessions = ref<InterviewSession[]>([])
+const isLoadingHistory = ref(false)
 const deleteModalVisible = ref(false)
 const isDeleting = ref(false)
-const deleteConfirmed = ref(false)
-const deletePassword = ref('')
+
+// Вычисляемые свойства для аналитики
+const totalInterviews = computed(() => sessions.value.length)
+const averageScore = computed(() => {
+  if (sessions.value.length === 0)
+    return 0
+  const sum = sessions.value.reduce((acc, s) => acc + s.averageScore, 0)
+  return Number((sum / sessions.value.length).toFixed(1))
+})
+
+async function loadHistory() {
+  if (!authStore.user?.uid)
+    return
+  isLoadingHistory.value = true
+  try {
+    sessions.value = await HistoryService.getUserHistory(authStore.user.uid)
+  }
+  catch (error) {
+    console.error('Failed to load history:', error)
+    message.error('Не удалось загрузить историю сессий')
+  }
+  finally {
+    isLoadingHistory.value = false
+  }
+}
 
 async function saveAllChanges() {
-  if (!hasChanges.value) {
-    message.info('Нет изменений для сохранения')
+  if (!hasChanges.value)
     return
-  }
-
   isSaving.value = true
 
   try {
-    // Сохраняем данные профиля
     const profileData = await profileInfoFormRef.value?.getFormData()
-
-    if (profileData) {
+    if (profileData)
       await authStore.updateUserProfile(profileData)
-    }
 
-    // Сохраняем пароль если он был изменен
     const passwordChanged = await passwordFormRef.value?.savePassword()
-
-    if (passwordChanged) {
+    if (passwordChanged)
       message.success('Пароль успешно изменен')
-    }
 
     hasChanges.value = false
     message.success('Все изменения сохранены')
@@ -54,32 +78,12 @@ async function saveAllChanges() {
   }
 }
 
-function showDeleteConfirm() {
-  deleteModalVisible.value = true
-  deleteConfirmed.value = false
-  deletePassword.value = ''
-}
-
-async function handleAccountDelete() {
-  if (!deleteConfirmed.value) {
-    message.error('Подтвердите удаление аккаунта')
-    return
-  }
-
-  if (!deletePassword.value) {
-    message.error('Введите пароль для подтверждения')
-    return
-  }
-
+async function handleAccountDelete(password: string) {
   isDeleting.value = true
-
   try {
-    await authStore.deleteAccount(deletePassword.value)
-
-    message.success('Аккаунт и все данные успешно удалены')
+    await authStore.deleteAccount(password)
+    message.success('Аккаунт успешно удален')
     deleteModalVisible.value = false
-
-    // Перенаправляем на страницу авторизации
     await router.push('/auth')
   }
   catch (error: any) {
@@ -90,6 +94,10 @@ async function handleAccountDelete() {
   }
 }
 
+onMounted(() => {
+  loadHistory()
+})
+
 onUnmounted(() => {
   hasChanges.value = false
 })
@@ -98,96 +106,76 @@ onUnmounted(() => {
 <template>
   <div class="profile-page">
     <a-page-header
-      title="Профиль"
+      title="Личный кабинет"
       class="profile-header"
       @back="() => $router.back()"
     >
       <template #extra>
         <a-button
+          v-if="activeTab === 'settings'"
           type="primary"
           :loading="isSaving"
           :disabled="!hasChanges"
           @click="saveAllChanges"
         >
-          Сохранить
+          Сохранить изменения
         </a-button>
       </template>
     </a-page-header>
 
     <div class="profile-content">
-      <a-row :gutter="24">
-        <!-- Левая колонка - Основная информация -->
-        <a-col :xs="24" :lg="12">
-          <a-card title="Основная информация" class="profile-card">
-            <ProfileInfoForm
-              ref="profileInfoFormRef"
-              :user-profile="authStore.userProfile"
-              @change="hasChanges = true"
-            />
-          </a-card>
+      <a-tabs v-model:active-key="activeTab" class="profile-tabs">
+        <a-tab-pane key="analytics">
+          <template #tab>
+            <span><BarChartOutlined />Аналитика и история</span>
+          </template>
 
-          <a-card title="Безопасность" class="profile-card">
-            <PasswordChangeForm
-              ref="passwordFormRef"
-              @change="hasChanges = true"
-            />
-          </a-card>
-        </a-col>
+          <ProfileAnalytics
+            :sessions="sessions"
+            :is-loading="isLoadingHistory"
+            :total-interviews="totalInterviews"
+            :average-score="averageScore"
+          />
+        </a-tab-pane>
 
-        <!-- Правая колонка - Дополнительные настройки -->
-        <a-col :xs="24" :lg="12">
-          <a-card title="Управление данными" class="profile-card danger-zone">
-            <DataManagementSection
-              @account-delete="showDeleteConfirm"
-            />
-          </a-card>
-        </a-col>
-      </a-row>
+        <a-tab-pane key="settings">
+          <template #tab>
+            <span><SettingOutlined />Настройки аккаунта</span>
+          </template>
+
+          <a-row :gutter="[24, 24]">
+            <a-col :xs="24" :lg="12">
+              <a-card title="Основная информация" class="profile-card">
+                <ProfileInfoForm
+                  ref="profileInfoFormRef"
+                  :user-profile="authStore.userProfile"
+                  @change="hasChanges = true"
+                />
+              </a-card>
+
+              <a-card title="Безопасность" class="profile-card">
+                <PasswordChangeForm
+                  ref="passwordFormRef"
+                  @change="hasChanges = true"
+                />
+              </a-card>
+            </a-col>
+
+            <a-col :xs="24" :lg="12">
+              <a-card title="Управление данными" class="profile-card danger-zone">
+                <DataManagementSection @account-delete="deleteModalVisible = true" />
+              </a-card>
+            </a-col>
+          </a-row>
+        </a-tab-pane>
+      </a-tabs>
     </div>
 
-    <!-- Модальное окно подтверждения удаления -->
-    <a-modal
+    <DeleteAccountModal
       v-model:open="deleteModalVisible"
-      title="Подтверждение удаления аккаунта"
-      ok-text="Удалить аккаунт"
-      cancel-text="Отмена"
-      :ok-button-props="{ danger: true }"
-      :confirm-loading="isDeleting"
-      :closable="!isDeleting"
-      :mask-closable="!isDeleting"
-      @ok="handleAccountDelete"
-    >
-      <div class="delete-confirm-content">
-        <a-alert
-          type="warning"
-          message="Внимание! Это действие необратимо"
-          description="Все ваши данные, включая все вопросы, будут безвозвратно удалены."
-          show-icon
-          class="delete-alert"
-        />
-
-        <div class="delete-checkbox">
-          <a-checkbox v-model:checked="deleteConfirmed" :disabled="isDeleting">
-            Я понимаю, что все мои данные будут удалены без возможности восстановления
-          </a-checkbox>
-        </div>
-
-        <div v-if="deleteConfirmed" class="password-confirm">
-          <a-alert
-            type="info"
-            message="Для подтверждения введите ваш пароль"
-            show-icon
-          />
-          <a-input-password
-            v-model:value="deletePassword"
-            placeholder="Введите ваш пароль"
-            class="password-input"
-            :disabled="isDeleting"
-            @press-enter="handleAccountDelete"
-          />
-        </div>
-      </div>
-    </a-modal>
+      :is-deleting="isDeleting"
+      @confirm="handleAccountDelete"
+    />
   </div>
 </template>
 
@@ -195,23 +183,29 @@ onUnmounted(() => {
 .profile-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 24px 40px 24px;
 }
 
 .profile-header {
   width: 100%;
   background: white;
   margin-bottom: 24px;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
 }
 
-.profile-content {
-  background: transparent;
+.profile-tabs :deep(.ant-tabs-nav) {
+  margin-bottom: 24px;
+  background: white;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .profile-card {
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
   margin-bottom: 24px;
-  border-radius: 8px;
 }
 
 .profile-card.danger-zone {
@@ -220,39 +214,21 @@ onUnmounted(() => {
 
 .profile-card.danger-zone :deep(.ant-card-head) {
   color: #ff4d4f;
-}
-
-.delete-confirm-content {
-  padding: 8px 0;
-}
-
-.delete-alert {
-  margin-bottom: 16px;
-}
-
-.delete-checkbox {
-  margin: 16px 0;
-}
-
-.password-confirm {
-  margin-top: 16px;
-}
-
-.password-input {
-  margin-top: 8px;
+  border-bottom: 1px solid #ffccc7;
+  background: #fff2f0;
+  border-radius: 12px 12px 0 0;
 }
 
 @media (max-width: 768px) {
-  .profile-page {
-    padding: 0 16px;
-  }
+  .profile-page { padding: 0 12px 24px 12px; }
+  .profile-header { margin-bottom: 16px; }
+  .profile-card { margin-bottom: 16px; }
+}
 
-  .profile-header {
-    margin-bottom: 16px;
-  }
-
-  .profile-card {
-    margin-bottom: 16px;
+@media (max-width: 480px) {
+  .profile-tabs :deep(.ant-tabs-tab) {
+    padding: 12px 8px;
+    font-size: 13px;
   }
 }
 
