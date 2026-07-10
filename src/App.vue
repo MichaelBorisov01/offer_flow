@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Добавили потерянный импорт LoginOutlined
 import { LoginOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { theme } from 'ant-design-vue'
 import ruRU from 'ant-design-vue/es/locale/ru_RU'
@@ -35,7 +34,6 @@ const antTheme = computed(() => {
     },
     components: {
       Layout: {
-        // Делаем шапку белой в светлой теме, и темной в темной (стандартное поведение)
         headerBg: themeStore.isDark ? '#141414' : '#ffffff',
         bodyBg: themeStore.isDark ? '#000000' : '#f0f2f5',
       },
