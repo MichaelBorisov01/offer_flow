@@ -46,11 +46,11 @@ defineEmits<Emits>()
 
 .danger-section h4 {
   margin-bottom: 8px;
-  color: #ff4d4f;
+  color: var(--ant-color-error);
 }
 
 .danger-section p {
-  color: #666;
+  color: var(--ant-color-text-secondary);
   margin-bottom: 16px;
   font-size: 14px;
   line-height: 1.5;
@@ -59,20 +59,20 @@ defineEmits<Emits>()
 .delete-info {
   margin-top: 16px;
   padding: 12px;
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
+  background: var(--ant-color-error-bg);
+  border: 1px solid var(--ant-color-error-border);
   border-radius: 6px;
 }
 
 .delete-info p {
   margin: 0 0 8px 0;
-  color: #333;
+  color: var(--ant-color-text);
 }
 
 .delete-info ul {
   margin: 0;
   padding-left: 20px;
-  color: #666;
+  color: var(--ant-color-text-secondary);
 }
 
 .delete-info li {

@@ -3,7 +3,7 @@ import type { Category, QuestionForm } from '@/types/interview'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { message, Modal, Tooltip } from 'ant-design-vue'
 import { computed, defineExpose, h, onMounted, ref, watch } from 'vue'
-import CreateCategoryModal from '@/components/features/InterviewTrainer/modal/CreateCategoryModal.vue'
+import CreateCategoryModal from '@/components/features/InterviewTrainer/modals/CreateCategoryModal.vue'
 import { CategoryService } from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
 import { useInterviewStore } from '@/stores/interview'
@@ -90,7 +90,6 @@ async function loadCategories() {
     const data = await CategoryService.getCategories()
     categories.value = data
 
-    // Устанавливаем первую категорию по умолчанию, если не выбрана
     if (!formState.value.category && data.length > 0) {
       const firstCategory = data[0]
       if (firstCategory && firstCategory.id) {
@@ -169,7 +168,7 @@ async function handleDeleteAllCustomCategories() {
   Modal.confirm({
     title: 'Удаление всех пользовательских категорий',
     icon: h(ExclamationCircleOutlined),
-    content: `Вы уверены, что хотите удалить все пользовательские категории (${categoriesToDelete.length} шт.)? 
+    content: `Вы уверены, что хотите удалить все пользовательские категории (${categoriesToDelete.length} шт.)?
               \nУдаляемые категории: ${categoriesNames}`,
     okText: 'Удалить все',
     cancelText: 'Отмена',
@@ -228,7 +227,6 @@ function handleTagsBlur() {
 }
 
 function handleTagInput() {
-  // Автоматически добавляем тег при вводе запятой или пробела
   if (tagsInput.value.includes(',') || tagsInput.value.endsWith(' ')) {
     addTag()
   }
@@ -394,7 +392,7 @@ function openAddCategoryModal() {
                         <div class="category-actions">
                           <Tooltip
                             v-if="option.isCustom"
-                            :title="isCategoryUsed(option.value) ? `Категория используется в ${getQuestionsCountInCategory(option.value)} вопросе(ах)` : 'Удалить категорию'"
+                            :title="isCategoryUsed(option.value) ? `Категория используется in ${getQuestionsCountInCategory(option.value)} вопросе(ах)` : 'Удалить категорию'"
                             placement="top"
                           >
                             <a-button
@@ -540,9 +538,9 @@ function openAddCategoryModal() {
 
 <style scoped>
 .question-form-collapse {
-  background: #fafafa;
+  background: var(--ant-color-fill-quaternary);
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
   margin-bottom: 16px;
 }
 
@@ -550,12 +548,15 @@ function openAddCategoryModal() {
   padding: 16px 20px !important;
   font-weight: 600;
   font-size: 16px;
-  background: white;
+  background: var(--ant-color-bg-container);
   border-radius: 12px 12px 0 0 !important;
+  color: var(--ant-color-text);
 }
 
 .question-form-panel :deep(.ant-collapse-content-box) {
   padding: 20px;
+  background: var(--ant-color-bg-container);
+  border-radius: 0 0 12px 12px;
 }
 
 .form-item-mobile :deep(.ant-form-item-label) {
@@ -566,7 +567,7 @@ function openAddCategoryModal() {
   font-size: 14px;
   font-weight: 500;
   height: auto;
-  color: #262626;
+  color: var(--ant-color-text);
 }
 
 .question-textarea :deep(textarea) {
@@ -633,6 +634,7 @@ function openAddCategoryModal() {
   max-width: 200px;
   min-width: 0;
   font-size: 14px;
+  color: var(--ant-color-text);
 }
 
 .category-actions {
@@ -644,7 +646,7 @@ function openAddCategoryModal() {
 }
 
 .delete-category-btn {
-  color: #ff4d4f;
+  color: var(--ant-color-error);
   width: 32px;
   height: 32px;
   display: flex;
@@ -654,15 +656,16 @@ function openAddCategoryModal() {
   box-shadow: none;
   flex-shrink: 0;
   border-radius: 6px;
+  background: transparent;
 }
 
 .delete-category-btn:hover:not(.disabled-category) {
-  background: #fff2f0;
-  color: #ff7875;
+  background: var(--ant-color-error-bg);
+  color: var(--ant-color-error-hover);
 }
 
 .disabled-category {
-  color: #d9d9d9;
+  color: var(--ant-color-text-disabled);
   cursor: not-allowed;
 }
 
@@ -692,15 +695,15 @@ function openAddCategoryModal() {
 .tags-hint {
   margin-top: 6px;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--ant-color-text-secondary);
 }
 
 .hint-text {
-  color: #8c8c8c;
+  color: var(--ant-color-text-description);
 }
 
 .tags-limit-reached {
-  color: #ff4d4f;
+  color: var(--ant-color-error);
   font-weight: 500;
 }
 
@@ -718,15 +721,15 @@ function openAddCategoryModal() {
   max-width: 200px;
   height: 28px;
   padding: 0 10px;
-  background: #f0f7ff;
-  border: 1px solid #d6e4ff;
+  background: var(--ant-color-primary-bg);
+  border: 1px solid var(--ant-color-primary-border);
   border-radius: 16px;
   transition: all 0.2s ease;
 }
 
 .tag-item:hover {
-  background: #e6f7ff;
-  border-color: #91d5ff;
+  background: var(--ant-color-primary-bg-hover);
+  border-color: var(--ant-color-primary);
 }
 
 .tag-text {
@@ -737,7 +740,7 @@ function openAddCategoryModal() {
   font-size: 12px;
   line-height: 26px;
   max-width: 160px;
-  color: #1890ff;
+  color: var(--ant-color-primary);
   font-weight: 500;
 }
 
@@ -745,20 +748,20 @@ function openAddCategoryModal() {
   flex-shrink: 0;
   margin-left: 4px;
   font-size: 10px;
-  color: #8c8c8c;
+  color: var(--ant-color-text-description);
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .tag-item :deep(.anticon-close:hover) {
-  color: #ff4d4f;
+  color: var(--ant-color-error);
 }
 
 .form-actions {
   display: flex;
   margin-bottom: 0;
   padding-top: 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--ant-color-border-secondary);
 }
 
 .action-buttons-mobile {
@@ -768,7 +771,6 @@ function openAddCategoryModal() {
   width: 100%;
 }
 
-/* Универсальные стили для мобильных кнопок */
 .mobile-action-btn {
   height: 48px;
   min-height: 48px;
@@ -794,38 +796,46 @@ function openAddCategoryModal() {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #52c41a, #73d13d);
+  background: var(--ant-color-success);
   border: none;
+  color: white;
   font-weight: 500;
 }
 
-.submit-btn:hover {
-  background: linear-gradient(135deg, #73d13d, #95de64);
+.submit-btn:hover:not(:disabled) {
+  background: var(--ant-color-success-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn:disabled {
+  background: var(--ant-color-text-disabled);
+  color: var(--ant-color-text-description);
 }
 
 .cancel-btn {
-  border-color: #ff4d4f;
-  color: #ff4d4f;
+  border-color: var(--ant-color-error);
+  color: var(--ant-color-error);
+  background: transparent;
 }
 
 .cancel-btn:hover {
-  border-color: #ff7875;
-  color: #ff7875;
-  background: #fff2f0;
+  border-color: var(--ant-color-error-hover);
+  color: var(--ant-color-error-hover);
+  background: var(--ant-color-error-bg);
   transform: translateY(-1px);
 }
 
 .clear-btn {
-  border-color: #d9d9d9;
-  color: #8c8c8c;
+  border-color: var(--ant-color-border);
+  color: var(--ant-color-text-secondary);
+  background: transparent;
 }
 
 .clear-btn:hover {
-  border-color: #40a9ff;
-  color: #40a9ff;
-  background: #f0f7ff;
+  border-color: var(--ant-color-primary);
+  color: var(--ant-color-primary);
+  background: var(--ant-color-primary-bg);
   transform: translateY(-1px);
 }
 
@@ -839,25 +849,25 @@ function openAddCategoryModal() {
 }
 
 .add-category-btn {
-  border-color: #1890ff;
-  color: #1890ff;
+  border-color: var(--ant-color-primary);
+  color: var(--ant-color-primary);
 }
 
 .add-category-btn:hover {
-  border-color: #40a9ff;
-  color: #40a9ff;
-  background: #f0f7ff;
+  border-color: var(--ant-color-primary-hover);
+  color: var(--ant-color-primary-hover);
+  background: var(--ant-color-primary-bg);
 }
 
 .delete-all-categories-btn {
-  border-color: #ff4d4f;
-  color: #ff4d4f;
+  border-color: var(--ant-color-error);
+  color: var(--ant-color-error);
 }
 
 .delete-all-categories-btn:hover {
-  border-color: #ff7875;
-  color: #ff7875;
-  background: #fff2f0;
+  border-color: var(--ant-color-error-hover);
+  color: var(--ant-color-error-hover);
+  background: var(--ant-color-error-bg);
 }
 
 @media (max-width: 768px) {
@@ -955,7 +965,6 @@ function openAddCategoryModal() {
     font-size: 14px;
   }
 
-  /* Улучшение accessibility для касаний */
   .mobile-action-btn:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
@@ -1088,37 +1097,15 @@ function openAddCategoryModal() {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Улучшение фокуса для accessibility */
 .mobile-action-btn:focus-visible,
 .select-mobile:focus :deep(.ant-select-selector),
 .question-textarea:focus :deep(textarea),
 .tags-input-mobile:focus :deep(.ant-input) {
-  outline: 2px solid #1890ff;
+  outline: 2px solid var(--ant-color-primary);
   outline-offset: 2px;
 }
 
 .question-form-panel :deep(.ant-collapse-content) {
   -webkit-overflow-scrolling: touch;
-}
-</style>
-
-<style>
-/* Глобальные стили для улучшения мобильного опыта */
-@media (max-width: 768px) {
-  .question-form-panel .ant-form-item {
-    margin-bottom: 16px;
-  }
-
-  .question-form-panel .ant-btn-loading-icon {
-    font-size: 16px;
-  }
-
-  .question-form-panel .ant-btn > .anticon + span {
-    margin-left: 6px;
-  }
-
-  .ant-tooltip {
-    pointer-events: none;
-  }
 }
 </style>

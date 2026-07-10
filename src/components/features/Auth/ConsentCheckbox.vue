@@ -162,8 +162,8 @@ onMounted(() => {
 }
 
 .consent-container:focus-within {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  border-color: var(--ant-color-primary);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
 }
 
 .consent-checkbox-input:deep(.ant-checkbox-wrapper) {
@@ -180,12 +180,12 @@ onMounted(() => {
 .consent-text {
   font-size: 14px;
   line-height: 1.5;
-  color: #262626;
+  color: var(--ant-color-text);
   display: inline;
 }
 
 .legal-link {
-  color: #1890ff;
+  color: var(--ant-color-primary);
   text-decoration: underline;
   text-underline-offset: 2px;
   white-space: nowrap;
@@ -195,36 +195,26 @@ onMounted(() => {
 }
 
 .legal-link:hover {
-  color: #40a9ff;
+  color: var(--ant-color-primary-hover);
   text-decoration: none;
-  background-color: #f0f8ff;
+  background-color: var(--ant-color-primary-bg);
 }
 
 .legal-link:focus-visible {
-  outline: 2px solid #1890ff;
+  outline: 2px solid var(--ant-color-primary);
   outline-offset: 2px;
-  background-color: #f0f8ff;
+  background-color: var(--ant-color-primary-bg);
   text-decoration: none;
 }
 
 .required-indicator {
-  color: #ff4d4f;
+  color: var(--ant-color-error);
   margin-left: 2px;
   font-weight: 600;
 }
 
-.consent-error {
-  color: #ff4d4f;
-  font-size: 12px;
-  margin-top: 4px;
-  padding: 4px 8px;
-  background-color: #fff2f0;
-  border: 1px solid #ffccc7;
-  border-radius: 4px;
-}
-
 .consent-hint {
-  color: #8c8c8c;
+  color: var(--ant-color-text-secondary);
   font-size: 12px;
   margin-top: 4px;
   font-style: italic;
@@ -279,11 +269,6 @@ onMounted(() => {
   .legal-link {
     white-space: normal;
     padding: 2px 4px;
-  }
-
-  .consent-error {
-    font-size: 11px;
-    margin-top: 3px;
   }
 
   .consent-hint {
@@ -343,12 +328,6 @@ onMounted(() => {
   .required-indicator {
     color: #ff0000;
   }
-
-  .consent-error {
-    color: #ff0000;
-    background-color: #ffffff;
-    border: 2px solid #ff0000;
-  }
 }
 
 /* Поддержка уменьшенного движения */
@@ -381,10 +360,6 @@ onMounted(() => {
 @media (prefers-text-size: large) {
   .consent-text {
     font-size: 16px;
-  }
-
-  .consent-error {
-    font-size: 14px;
   }
 
   .consent-hint {

@@ -549,7 +549,7 @@ onMounted(async () => {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 20px;
-  color: #262626;
+  color: var(--ant-color-text);
 }
 
 .ai-settings-form {
@@ -627,11 +627,6 @@ onMounted(async () => {
   justify-content: center;
 }
 
-.clear-button {
-  border: 1px solid #d9d9d9;
-  background: #fff;
-}
-
 .questions-preview {
   margin-top: 24px;
 }
@@ -649,7 +644,7 @@ onMounted(async () => {
 
 .preview-title {
   margin: 0;
-  color: #262626;
+  color: var(--ant-color-text);
   font-size: 18px;
   font-weight: 600;
   text-align: center;
@@ -669,17 +664,17 @@ onMounted(async () => {
 }
 
 .preview-item {
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
   border-radius: 8px;
   margin-bottom: 12px;
   padding: 16px;
   transition: all 0.3s ease;
-  background: #fff;
+  background: var(--ant-color-bg-container);
 }
 
 .preview-item:hover {
-  border-color: #1890ff;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+  border-color: var(--ant-color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .preview-meta :deep(.ant-list-item-meta-content) {
@@ -696,7 +691,7 @@ onMounted(async () => {
 .question-text {
   line-height: 1.5;
   font-size: 15px;
-  color: #262626;
+  color: var(--ant-color-text);
   word-break: break-word;
 }
 
@@ -714,8 +709,8 @@ onMounted(async () => {
 }
 
 .save-single-button {
-  background: #52c41a;
-  border-color: #52c41a;
+  background: var(--ant-color-success);
+  border-color: var(--ant-color-success);
   color: white;
   padding: 0 16px;
   height: 36px;
@@ -724,11 +719,13 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.save-single-button:hover {
-  background: #73d13d;
-  border-color: #73d13d;
+.save-single-button:hover,
+.save-single-button:focus {
+  background: var(--ant-color-success-hover);
+  border-color: var(--ant-color-success-hover);
+  color: white;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(82, 196, 26, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .preview-meta-tags {
@@ -828,24 +825,5 @@ onMounted(async () => {
   .preview-item {
     padding: 12px;
   }
-}
-
-/* Улучшение скролла на мобильных */
-.preview-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.preview-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-
-.preview-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 2px;
-}
-
-.preview-list::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
 }
 </style>

@@ -1,35 +1,38 @@
 * {
-    // Webkit браузеры (Chrome, Safari, Edge)
+    /* Webkit (Chrome, Safari, Edge) */
     &::-webkit-scrollbar {
         width: 8px;
         height: 8px;
     }
 
     &::-webkit-scrollbar-track {
-        background: #f8f9fa;
-        border-radius: 4px;
+        background: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-        background: #d9d9d9;
+        background: rgba(139, 92, 246, 0.3);
         border-radius: 4px;
-        border: 2px solid #f8f9fa;
-        transition: all 0.2s ease;
-        background-clip: padding-box;
+        transition: background 0.2s ease;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-        background: #bfbfbf;
-        transform: scale(1.05);
+        background: rgba(139, 92, 246, 0.6);
     }
 
-    &::-webkit-scrollbar-thumb:active {
-        background: #8c8c8c;
-    }
-
-    // Firefox
+    /* Firefox */
     scrollbar-width: thin;
-    scrollbar-color: #d9d9d9 #f8f9fa;
+    scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+}
+
+/* Для темной темы */
+html.dark-theme * {
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 html {
@@ -39,8 +42,8 @@ html {
 @media (max-width: 768px) {
     * {
         &::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
         }
     }
 }

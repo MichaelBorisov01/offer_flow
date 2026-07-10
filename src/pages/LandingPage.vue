@@ -72,7 +72,7 @@
 <style scoped>
 .landing-container {
   min-height: 100vh;
-  background: #f0f2f5;
+  background: transparent;
 }
 
 .content-wrapper {
@@ -96,12 +96,14 @@
 
 .hero-subtitle {
   font-size: clamp(16px, 3vw, 20px);
-  color: #595959;
+  color: var(--ant-color-text-secondary);
   margin: 24px 0;
 }
 
 .highlight {
-  color: #1890ff;
+  background: linear-gradient(135deg, #9D50BB, #4facfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .cta-group {

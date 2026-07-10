@@ -193,7 +193,7 @@ defineExpose({
 <style scoped>
 .password-help {
   font-size: 12px;
-  color: #666;
+  color: var(--ant-color-text-secondary);
 }
 
 .password-requirements {
@@ -211,7 +211,7 @@ defineExpose({
 }
 
 .password-help li.valid {
-  color: #52c41a;
+  color: var(--ant-color-success);
   text-decoration: line-through;
 }
 </style>

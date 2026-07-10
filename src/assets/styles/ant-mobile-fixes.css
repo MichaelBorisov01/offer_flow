@@ -1,0 +1,19 @@
+@charset "UTF-8";
+/* Мобильные улучшения для компонентов Ant Design */
+@media (max-width: 768px) {
+  .question-form-panel .ant-form-item {
+    margin-bottom: 16px;
+  }
+  .question-form-panel .ant-btn-loading-icon {
+    font-size: 16px;
+  }
+  .question-form-panel .ant-btn > .anticon + span {
+    margin-left: 6px;
+  }
+  /* Отключаем тултипы на мобилках, чтобы они не залипали при тапах */
+  .ant-tooltip {
+    pointer-events: none;
+  }
+}
+
+/*# sourceMappingURL=ant-mobile-fixes.css.map */

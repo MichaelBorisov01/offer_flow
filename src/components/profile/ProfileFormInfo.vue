@@ -82,8 +82,14 @@ defineExpose({
         </template>
       </a-input>
       <template #help>
-        <span style="color: #999;">Email нельзя изменить</span>
+        <span class="help-text">Email нельзя изменить</span>
       </template>
     </a-form-item>
   </a-form>
 </template>
+
+<style scoped>
+.help-text {
+  color: var(--ant-color-text-secondary);
+}
+</style>

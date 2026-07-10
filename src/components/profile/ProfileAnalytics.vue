@@ -31,7 +31,7 @@ function formatDate(dateStr: string): string {
             :value="totalInterviews"
           >
             <template #prefix>
-              <TrophyOutlined class="icon-stat text-purple" />
+              <TrophyOutlined class="icon-stat icon-trophy" />
             </template>
           </a-statistic>
         </a-card>
@@ -46,7 +46,7 @@ function formatDate(dateStr: string): string {
             suffix="/ 10"
           >
             <template #prefix>
-              <UserOutlined class="icon-stat text-blue" />
+              <UserOutlined class="icon-stat icon-user" />
             </template>
           </a-statistic>
         </a-card>
@@ -98,12 +98,15 @@ function formatDate(dateStr: string): string {
 
 .stats-card {
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  transition: transform 0.2s ease;
+  border: 1px solid var(--ant-color-border-secondary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  background: var(--ant-color-bg-container);
 }
 
 .stats-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--ant-color-border);
 }
 
 .icon-stat {
@@ -111,13 +114,19 @@ function formatDate(dateStr: string): string {
   margin-right: 8px;
 }
 
-.text-purple { color: #722ed1; }
-.text-blue { color: #1890ff; }
+.icon-trophy {
+  color: var(--ant-color-warning);
+}
+
+.icon-user {
+  color: var(--ant-color-primary);
+}
 
 .history-card {
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
   margin-bottom: 24px;
+  background: var(--ant-color-bg-container);
 }
 
 .loading-container {
@@ -130,16 +139,21 @@ function formatDate(dateStr: string): string {
 .history-item {
   padding: 16px 24px;
   transition: background 0.2s ease;
+  border-bottom: 1px solid var(--ant-color-border-secondary) !important;
+}
+
+.history-item:last-child {
+  border-bottom: none !important;
 }
 
 .history-item:hover {
-  background: #fafafa;
+  background: var(--ant-color-fill-quaternary);
 }
 
 .session-title-text {
   font-weight: 600;
   font-size: 15px;
-  color: #262626;
+  color: var(--ant-color-text);
 }
 
 .difficulty-tag {
@@ -148,7 +162,7 @@ function formatDate(dateStr: string): string {
 }
 
 .session-date {
-  color: #8c8c8c;
+  color: var(--ant-color-text-secondary);
   font-size: 13px;
 }
 
@@ -160,7 +174,7 @@ function formatDate(dateStr: string): string {
 
 .score-label {
   font-size: 13px;
-  color: #8c8c8c;
+  color: var(--ant-color-text-secondary);
 }
 
 .score-tag {
@@ -182,7 +196,7 @@ function formatDate(dateStr: string): string {
   .session-score {
     width: 100%;
     justify-content: space-between;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--ant-color-border-secondary);
     padding-top: 8px;
   }
 }

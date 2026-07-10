@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import AppThemeToggle from '@/components/shared/AppThemeToggle.vue'
 import LoginForm from './LoginForm.vue'
 import SignupForm from './SignupForm.vue'
 
@@ -8,11 +9,14 @@ const currentForm = ref<'login' | 'signup'>('login')
 
 <template>
   <div class="auth-page">
+    <div class="auth-theme-toggle">
+      <AppThemeToggle />
+    </div>
     <div class="auth-wrapper">
       <div class="auth-banner">
         <div class="banner-content">
           <div class="logo-placeholder">
-            <span class="logo-icon">✨</span> OfferFlow
+            <span class="logo-icon">✨</span> <span class="logo-text">OfferFlow</span>
           </div>
           <h1 class="banner-title">
             Твой персональный<br>
@@ -25,13 +29,13 @@ const currentForm = ref<'login' | 'signup'>('login')
 
           <div class="banner-features">
             <div class="feature-item">
-              <span class="check">✓</span> База частых вопросов HR
+              <span class="check">✓</span> Умная генерация вопросов под ваш стек
             </div>
             <div class="feature-item">
-              <span class="check">✓</span> Детальная аналитика ответов
+              <span class="check">✓</span> Мгновенная ИИ-оценка и разбор ответов
             </div>
             <div class="feature-item">
-              <span class="check">✓</span> Подготовка к системному дизайну
+              <span class="check">✓</span> Трекинг прогресса и сложных тем
             </div>
           </div>
         </div>
@@ -57,23 +61,36 @@ const currentForm = ref<'login' | 'signup'>('login')
 
 <style scoped>
 .auth-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #020617;
+  background-color: transparent;
   padding: 20px;
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  background: var(--ant-color-bg-container);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  border: 1px solid var(--ant-color-border-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .auth-wrapper {
   display: flex;
   width: 100%;
   max-width: 1200px;
-  background: #0f172a;
+  background: var(--ant-color-bg-container);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--ant-color-border-secondary);
   min-height: 700px;
 }
 
@@ -86,7 +103,7 @@ const currentForm = ref<'login' | 'signup'>('login')
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  color: white;
+  background: var(--ant-color-bg-layout);
 }
 
 .banner-background {
@@ -95,7 +112,7 @@ const currentForm = ref<'login' | 'signup'>('login')
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
   z-index: 1;
 }
 
@@ -124,6 +141,10 @@ const currentForm = ref<'login' | 'signup'>('login')
   margin-bottom: 60px;
 }
 
+.logo-text {
+  color: var(--ant-color-text);
+}
+
 .logo-icon {
   background: linear-gradient(135deg, #9D50BB, #4facfe);
   -webkit-background-clip: text;
@@ -136,7 +157,7 @@ const currentForm = ref<'login' | 'signup'>('login')
   line-height: 1.2;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #f8fafc;
+  color: var(--ant-color-text);
 }
 
 .highlight {
@@ -147,7 +168,7 @@ const currentForm = ref<'login' | 'signup'>('login')
 
 .banner-text {
   font-size: 18px;
-  color: #94a3b8;
+  color: var(--ant-color-text-secondary);
   line-height: 1.6;
   margin-bottom: 40px;
   max-width: 400px;
@@ -164,7 +185,7 @@ const currentForm = ref<'login' | 'signup'>('login')
   align-items: center;
   gap: 12px;
   font-size: 16px;
-  color: #cbd5e1;
+  color: var(--ant-color-text);
 }
 
 .check {
@@ -173,8 +194,8 @@ const currentForm = ref<'login' | 'signup'>('login')
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: rgba(147, 51, 234, 0.2);
-  color: #a855f7;
+  background: rgba(147, 51, 234, 0.15);
+  color: var(--ant-color-primary);
   border-radius: 50%;
   font-size: 14px;
   font-weight: bold;
@@ -186,7 +207,7 @@ const currentForm = ref<'login' | 'signup'>('login')
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1e293b;
+  background: var(--ant-color-bg-container);
   padding: 40px;
 }
 
@@ -210,24 +231,6 @@ const currentForm = ref<'login' | 'signup'>('login')
 :deep(.auth-card .ant-card-head-title) {
   font-size: 28px;
   font-weight: 700;
-  color: #f8fafc;
-}
-
-:deep(.ant-input-affix-wrapper) {
-  background: #0f172a;
-  border-color: #334155;
-}
-
-:deep(.ant-input) {
-  background: transparent;
-  color: #f8fafc;
-}
-
-:deep(.ant-input-affix-wrapper:hover),
-:deep(.ant-input-affix-wrapper:focus),
-:deep(.ant-input-affix-wrapper-focused) {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
 :deep(.ant-btn-primary) {
@@ -236,71 +239,24 @@ const currentForm = ref<'login' | 'signup'>('login')
   height: 48px;
   font-weight: 600;
   font-size: 16px;
+  color: white;
 }
 
 :deep(.ant-btn-primary:hover) {
   opacity: 0.9;
   transform: translateY(-1px);
-}
-
-:deep(.auth-footer) {
-  color: #94a3b8;
-}
-
-:deep(.auth-footer a) {
-  color: #4facfe;
-  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 @media (max-width: 992px) {
   .auth-banner {
     display: none;
   }
-
   .auth-wrapper {
     min-height: auto;
   }
-
   .auth-form-container {
     padding: 30px 20px;
   }
-}
-
-/* --- Theme Fixes & Autofill overrides --- */
-
-:deep(.ant-input::placeholder) {
-  color: #64748b;
-}
-
-/* Иконки слева и справа (включая глазик пароля) */
-:deep(.ant-input-prefix),
-:deep(.ant-input-suffix),
-:deep(.ant-input-password-icon) {
-  color: #94a3b8 !important;
-}
-
-/* Глазик при наведении становится ярче */
-:deep(.ant-input-password-icon:hover) {
-  color: #f8fafc !important;
-}
-
-:deep(.consent-text) {
-  color: #f8fafc;
-}
-:deep(.consent-hint) {
-  color: #94a3b8;
-}
-:deep(.ant-checkbox-wrapper) {
-  color: #f8fafc;
-}
-
-/* Fix browser autofill styles */
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
-  -webkit-text-fill-color: #f8fafc !important;
-  transition: background-color 5000s ease-in-out 0s;
 }
 </style>

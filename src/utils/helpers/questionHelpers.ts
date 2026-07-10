@@ -11,7 +11,7 @@ import {
 } from '../constants/questionConstants'
 
 export function getDifficultyColor(difficulty: string): string {
-  return DIFFICULTY_COLORS[difficulty as keyof typeof DIFFICULTY_COLORS] || 'blue'
+  return DIFFICULTY_COLORS[difficulty as keyof typeof DIFFICULTY_COLORS] || 'var(--ant-color-primary)'
 }
 
 export function getDifficultyLabel(difficulty: string): string {
@@ -28,13 +28,13 @@ export function getCategoryLabelShort(category: string): string {
 
 export function getCardBorderColor(status?: QuestionStatus): string {
   if (!status)
-    return '#f0f0f0'
+    return 'var(--ant-color-border-secondary)'
   return QUESTION_STATUS_COLORS[status].border
 }
 
 export function getCardBackgroundColor(status?: QuestionStatus): string {
   if (!status)
-    return '#ffffff'
+    return 'transparent'
   return QUESTION_STATUS_COLORS[status].background
 }
 

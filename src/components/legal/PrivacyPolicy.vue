@@ -4,7 +4,7 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
 
 <template>
   <div class="privacy-policy">
-    <a-card title="Политика конфиденциальности" class="legal-document">
+    <a-card :bordered="false" class="legal-document">
       <div class="document-content">
         <section class="document-section">
           <h2>1. Общие положения</h2>
@@ -86,10 +86,12 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
 .legal-document {
   max-width: 800px;
   margin: 0 auto;
+  background: transparent;
 }
 
 .document-content {
   line-height: 1.6;
+  color: var(--ant-color-text);
 }
 
 .document-section {
@@ -97,8 +99,8 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
 }
 
 .document-section h2 {
-  color: #1890ff;
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--ant-color-primary);
+  border-bottom: 1px solid var(--ant-color-border-secondary);
   padding-bottom: 8px;
   margin-bottom: 16px;
 }
@@ -114,8 +116,8 @@ const currentDate = new Date().toLocaleDateString('ru-RU')
 .document-footer {
   margin-top: 32px;
   padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--ant-color-border-secondary);
   text-align: center;
-  color: #666;
+  color: var(--ant-color-text-secondary);
 }
 </style>

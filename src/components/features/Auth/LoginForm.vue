@@ -78,5 +78,16 @@ async function handleLogin() {
 .auth-footer {
   text-align: center;
   margin-top: 16px;
+  color: var(--ant-color-text-secondary);
+}
+
+.auth-footer a {
+  color: var(--ant-color-primary);
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.auth-footer a:hover {
+  color: var(--ant-color-primary-hover);
 }
 </style>

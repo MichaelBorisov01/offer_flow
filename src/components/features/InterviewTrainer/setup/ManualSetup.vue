@@ -2,15 +2,15 @@
 import type { Question, QuestionForm, QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import ConfirmClearAllModal from '@/components/features/InterviewTrainer/modals/ConfirmClearAllModal.vue'
 import { useInterviewMode } from '@/composables/useInterviewMode'
-import { useInterviewStore } from '@/stores/interview/index'
-import { EmptyStates } from '../components/EmptyStates'
-import { QuestionItem } from '../components/QuestionItem'
-import { QuestionListHeader } from '../components/QuestionListHeader'
-import ConfirmClearAllModal from '../modal/ConfirmClearAllModal.vue'
-import QuestionFilters from '../shared/QuestionFilters.vue'
-import SearchInput from '../shared/SearchInput.vue'
-import StatusProgressBar from '../shared/StatusProgressBar.vue'
+import { useInterviewStore } from '@/stores/interview'
+import SearchInput from '../components/Controls/SearchInput.vue'
+import QuestionFilters from '../components/Questions/QuestionFilters.vue'
+import QuestionItem from '../components/Questions/QuestionItem.vue'
+import QuestionListHeader from '../components/Questions/QuestionListHeader.vue'
+import EmptyStates from '../components/Shared/EmptyStates.vue'
+import StatusProgressBar from '../components/Shared/StatusProgressBar.vue'
 import EditQuestionForm from './EditQuestionForm.vue'
 
 const emit = defineEmits<{
@@ -74,10 +74,9 @@ function updateDisplayedQuestions() {
 
     // Если есть активный поиск, применяем фильтры к результатам поиска
     if (isSearchActive.value) {
-      const filteredSearchResults = interviewStore.filteredQuestions.filter(question =>
+      questionsToDisplay = interviewStore.filteredQuestions.filter(question =>
         searchResults.value.some(searchQuestion => searchQuestion.id === question.id),
       )
-      questionsToDisplay = filteredSearchResults
     }
   }
 
@@ -434,6 +433,7 @@ onMounted(() => {
 .questions-list {
   max-height: 600px;
   overflow-y: auto;
+  padding-right: 4px;
 }
 
 .divider {

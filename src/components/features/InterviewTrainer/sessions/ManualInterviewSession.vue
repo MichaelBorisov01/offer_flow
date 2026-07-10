@@ -2,14 +2,14 @@
 import type { Question, QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
 import { computed, ref } from 'vue'
-import { ProgressSection } from '@/components/shared/ProgressSection'
-import { QuestionCard } from '@/components/shared/QuestionCard'
-import { QuestionNavigation } from '@/components/shared/QuestionNavigation'
-import { QuestionStatusActions } from '@/components/shared/QuestionStatusActions'
-import { QuestionTags } from '@/components/shared/QuestionTags'
 import { useInterviewStore } from '@/stores/interview'
 import { sanitizedContent } from '@/utils/helpers/answerHelpers'
-import AIAnswerCard from '../shared/AIAnswerCard.vue'
+import AIAnswerCard from '../components/Evaluation/AIAnswerCard.vue'
+import QuestionCard from '../components/Questions/QuestionCard.vue'
+import QuestionNav from '../components/Questions/QuestionNav.vue'
+import QuestionStatusActions from '../components/Questions/QuestionStatusActions.vue'
+import QuestionTags from '../components/Questions/QuestionTags.vue'
+import Progress from '../components/Shared/Progress.vue'
 
 interface Emits {
   (e: 'saveAiToUserAnswer', question: Question, aiAnswer: string): void
@@ -116,8 +116,8 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 
 <template>
   <div class="interview-session">
-    <a-card title="Режим собеседования" class="session-card">
-      <ProgressSection
+    <a-card title="Режим собеседования" class="session-card" :bordered="false">
+      <Progress
         v-if="interviewSettings.showProgress"
         :progress="progress"
         :current-index="currentQuestionIndex"
@@ -182,7 +182,7 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
       </div>
 
       <div class="fixed-navigation-section">
-        <QuestionNavigation
+        <QuestionNav
           :questions="questions"
           :current-index="currentQuestionIndex"
           :is-question-answered="isQuestionAnswered"
@@ -200,13 +200,27 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 @import '@/assets/styles/markdown-content.scss';
 
 .interview-session {
-   height: 100%;
+  height: 100%;
 }
 
 .session-card {
   height: 100%;
   display: flex;
   flex-direction: column;
+  border-radius: 12px;
+  border: 1px solid var(--ant-color-border-secondary);
+  background: var(--ant-color-bg-container);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.session-card :deep(.ant-card-head) {
+  border-bottom: 1px solid var(--ant-color-border-secondary);
+}
+
+.session-card :deep(.ant-card-head-title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ant-color-text);
 }
 
 .question-section {
@@ -218,14 +232,15 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 }
 
 .user-answer-card {
-  border: 1px solid #e6f7ff;
-  background: #f6ffed;
+  border: 1px solid var(--ant-color-success-border);
+  background: var(--ant-color-success-bg);
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .user-answer-card.expanded {
-  border-color: #b7eb8f;
-  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.1);
+  border-color: var(--ant-color-success);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .user-answer-header {
@@ -236,7 +251,7 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 
 .user-answer-title {
   font-weight: 600;
-  color: #52c41a;
+  color: var(--ant-color-success);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -245,7 +260,7 @@ function handleSaveAiToUserAnswer(aiAnswer: string) {
 .fixed-navigation-section {
   position: sticky;
   bottom: 0;
-  background: white;
+  background: var(--ant-color-bg-container);
   padding: 16px 0;
   margin-top: auto;
   flex-shrink: 0;

@@ -1,7 +1,7 @@
 export const DIFFICULTY_COLORS = {
-  junior: 'green',
-  middle: 'orange',
-  senior: 'red',
+  junior: 'var(--ant-color-success)',
+  middle: 'var(--ant-color-warning)',
+  senior: 'var(--ant-color-error)',
 } as const
 
 export const DIFFICULTY_LABELS = {
@@ -38,19 +38,19 @@ export const CATEGORY_LABELS_SHORT = {
 
 export const QUESTION_STATUS_COLORS = {
   known: {
-    border: '#b7eb8f',
-    background: '#f6ffed',
-    text: '#52c41a',
+    border: 'var(--ant-color-success-border)',
+    background: 'var(--ant-color-success-bg)',
+    text: 'var(--ant-color-success)',
   },
   repeat: {
-    border: '#ffd591',
-    background: '#fff7e6',
-    text: '#fa8c16',
+    border: 'var(--ant-color-warning-border)',
+    background: 'var(--ant-color-warning-bg)',
+    text: 'var(--ant-color-warning)',
   },
   hard: {
-    border: '#ffccc7',
-    background: '#fff2f0',
-    text: '#ff4d4f',
+    border: 'var(--ant-color-error-border)',
+    background: 'var(--ant-color-error-bg)',
+    text: 'var(--ant-color-error)',
   },
 } as const
 
@@ -66,8 +66,8 @@ export const STATUS_LABELS: Record<AllQuestionStatus, string> = {
 }
 
 export const STATUS_COLORS: Record<AllQuestionStatus, string> = {
-  known: '#52c41a',
-  repeat: '#fa8c16',
-  hard: '#ff4d4f',
-  unknown: '#d9d9d9',
+  known: 'var(--ant-color-success)',
+  repeat: 'var(--ant-color-warning)',
+  hard: 'var(--ant-color-error)',
+  unknown: 'var(--ant-color-text-secondary)',
 }

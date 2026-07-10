@@ -1,0 +1,48 @@
+@charset "UTF-8";
+* {
+  /* Webkit (Chrome, Safari, Edge) */
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+* {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+}
+
+/* Для темной темы */
+html.dark-theme *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+html.dark-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+html.dark-theme * {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 768px) {
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/*# sourceMappingURL=scroll.css.map */

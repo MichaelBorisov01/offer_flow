@@ -2,14 +2,14 @@
 import type { InterviewSession, QARecord } from '@/types/history.ts'
 import { message } from 'ant-design-vue'
 import { computed, onMounted, ref, watch } from 'vue'
-import { ProgressSection } from '@/components/shared/ProgressSection'
-import { QuestionCard } from '@/components/shared/QuestionCard'
-import { QuestionNavigation } from '@/components/shared/QuestionNavigation'
 import { HistoryService } from '@/services/historyService.ts'
 import { useAuthStore } from '@/stores/auth.ts'
 import { useInterviewStore } from '@/stores/interview'
-import AIAnswerCard from '../shared/AIAnswerCard.vue'
-import AnswerEvaluation from '../shared/AnswerEvaluation.vue'
+import AIAnswerCard from '../components/Evaluation/AIAnswerCard.vue'
+import AnswerEvaluation from '../components/Evaluation/AnswerEvaluation.vue'
+import QuestionCard from '../components/Questions/QuestionCard.vue'
+import QuestionNav from '../components/Questions/QuestionNav.vue'
+import Progress from '../components/Shared/Progress.vue'
 
 const interviewStore = useInterviewStore()
 const authStore = useAuthStore()
@@ -190,9 +190,8 @@ onMounted(() => {
 
 <template>
   <div class="ai-interview-session">
-    <a-card title="Собеседование с ИИ" class="session-card">
-      <!-- Прогресс бар -->
-      <ProgressSection
+    <a-card title="Собеседование с ИИ" class="session-card" :bordered="false">
+      <Progress
         v-if="interviewSettings.showProgress"
         :progress="progress"
         :current-index="currentQuestionIndex"
@@ -201,7 +200,6 @@ onMounted(() => {
         :score="totalScore"
       />
 
-      <!-- Текущий вопрос -->
       <div class="question-section">
         <QuestionCard
           :question="currentQuestion"
@@ -209,7 +207,6 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Компонент оценки ответа -->
       <AnswerEvaluation
         v-if="interviewSettings.enableAnswerInput"
         :key="answerEvaluationKey"
@@ -227,9 +224,8 @@ onMounted(() => {
         @show-ai-answer="handleShowAIAnswer"
       />
 
-      <!-- Навигация -->
       <div v-else class="navigation-section">
-        <QuestionNavigation
+        <QuestionNav
           :questions="questions"
           :current-index="currentQuestionIndex"
           :is-evaluating="isEvaluating"
@@ -241,7 +237,6 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Ответ ИИ (по требованию) -->
       <AIAnswerCard
         v-if="showAIAnswer && currentQuestion.aiAnswer"
         :answer="currentQuestion.aiAnswer"
@@ -263,6 +258,20 @@ onMounted(() => {
 .session-card {
   max-width: 1000px;
   margin: 0 auto;
+  border-radius: 12px;
+  border: 1px solid var(--ant-color-border-secondary);
+  background: var(--ant-color-bg-container);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.session-card :deep(.ant-card-head) {
+  border-bottom: 1px solid var(--ant-color-border-secondary);
+}
+
+.session-card :deep(.ant-card-head-title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ant-color-text);
 }
 
 .question-section {

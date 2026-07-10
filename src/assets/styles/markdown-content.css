@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .answer-text {
   line-height: 1.6;
   color: var(--ant-color-text);
@@ -20,7 +21,7 @@
 
 /* Стили для кода */
 .answer-text :deep(code) {
-  font-family: 'Consolas', monospace;
+  font-family: "Consolas", monospace;
   background-color: var(--ant-color-fill-tertiary);
   padding: 2px 6px;
   border-radius: 4px;
@@ -51,3 +52,5 @@
   text-align: center;
   padding: 8px;
 }
+
+/*# sourceMappingURL=markdown-content.css.map */

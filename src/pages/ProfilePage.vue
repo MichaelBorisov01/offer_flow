@@ -188,34 +188,35 @@ onUnmounted(() => {
 
 .profile-header {
   width: 100%;
-  background: white;
+  background: var(--ant-color-bg-container);
   margin-bottom: 24px;
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
 }
 
 .profile-tabs :deep(.ant-tabs-nav) {
   margin-bottom: 24px;
-  background: white;
+  background: var(--ant-color-bg-container);
   padding: 0 16px;
   border-radius: 8px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
 }
 
 .profile-card {
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--ant-color-border-secondary);
   margin-bottom: 24px;
+  background: var(--ant-color-bg-container);
 }
 
 .profile-card.danger-zone {
-  border: 1px solid #ff4d4f;
+  border: 1px solid var(--ant-color-error);
 }
 
 .profile-card.danger-zone :deep(.ant-card-head) {
-  color: #ff4d4f;
-  border-bottom: 1px solid #ffccc7;
-  background: #fff2f0;
+  color: var(--ant-color-error);
+  border-bottom: 1px solid var(--ant-color-error-border);
+  background: var(--ant-color-error-bg);
   border-radius: 12px 12px 0 0;
 }
 
