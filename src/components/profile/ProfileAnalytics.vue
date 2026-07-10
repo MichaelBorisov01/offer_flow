@@ -68,10 +68,12 @@ function formatDate(dateStr: string): string {
           <a-list-item class="history-item">
             <a-list-item-meta>
               <template #title>
-                <span class="session-title-text">{{ item.specialty.toUpperCase() }}</span>
-                <a-tag color="blue" class="difficulty-tag">
-                  {{ item.difficulty }}
-                </a-tag>
+                <div class="session-title-wrapper">
+                  <span class="session-title-text">{{ item.specialty.toUpperCase() }}</span>
+                  <a-tag color="blue" class="difficulty-tag">
+                    {{ item.difficulty }}
+                  </a-tag>
+                </div>
               </template>
               <template #description>
                 <span class="session-date">{{ formatDate(item.date) }}</span>
@@ -150,6 +152,13 @@ function formatDate(dateStr: string): string {
   background: var(--ant-color-fill-quaternary);
 }
 
+.session-title-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .session-title-text {
   font-weight: 600;
   font-size: 15px;
@@ -157,13 +166,16 @@ function formatDate(dateStr: string): string {
 }
 
 .difficulty-tag {
-  margin-left: 8px;
   text-transform: capitalize;
+  margin: 0;
 }
 
 .session-date {
+  display: inline-block;
   color: var(--ant-color-text-secondary);
   font-size: 13px;
+  white-space: nowrap;
+  margin-top: 4px;
 }
 
 .session-score {
@@ -189,15 +201,20 @@ function formatDate(dateStr: string): string {
 @media (max-width: 768px) {
   .history-item {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 12px;
     padding: 16px;
   }
+
+  .history-item :deep(.ant-list-item-meta) {
+    width: 100%;
+  }
+
   .session-score {
     width: 100%;
     justify-content: space-between;
     border-top: 1px solid var(--ant-color-border-secondary);
-    padding-top: 8px;
+    padding-top: 12px;
   }
 }
 </style>
