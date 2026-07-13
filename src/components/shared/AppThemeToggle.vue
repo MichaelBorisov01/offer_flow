@@ -1,8 +1,51 @@
 <script setup lang="ts">
 import { BulbFilled, BulbOutlined } from '@ant-design/icons-vue'
-import { useThemeStore } from '@/stores/theme.ts'
+import { nextTick } from 'vue'
+import { useThemeStore } from '@/stores/theme'
 
 const themeStore = useThemeStore()
+
+function handleToggle(event: MouseEvent) {
+  const isAppearanceTransition
+    = 'startViewTransition' in document
+      && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (!isAppearanceTransition) {
+    themeStore.toggleTheme()
+    return
+  }
+
+  const x = event.clientX
+  const y = event.clientY
+
+  const endRadius = Math.hypot(
+    Math.max(x, innerWidth - x),
+    Math.max(y, innerHeight - y),
+  )
+
+  const transition = (document as any).startViewTransition(async () => {
+    themeStore.toggleTheme()
+    await nextTick()
+  })
+
+  transition.ready.then(() => {
+    const clipPath = [
+      `circle(0px at ${x}px ${y}px)`,
+      `circle(${endRadius}px at ${x}px ${y}px)`,
+    ]
+
+    document.documentElement.animate(
+      {
+        clipPath,
+      },
+      {
+        duration: 500,
+        easing: 'ease-in-out',
+        pseudoElement: '::view-transition-new(root)',
+      },
+    )
+  })
+}
 </script>
 
 <template>
@@ -10,7 +53,7 @@ const themeStore = useThemeStore()
     type="text"
     class="theme-toggle-btn"
     :title="themeStore.isDark ? 'Включить светлую тему' : 'Включить темную тему'"
-    @click="themeStore.toggleTheme"
+    @click="handleToggle"
   >
     <template #icon>
       <BulbFilled v-if="themeStore.isDark" class="icon-dark" />
@@ -43,5 +86,13 @@ const themeStore = useThemeStore()
 .icon-light {
   color: var(--ant-color-text-secondary);
   font-size: 18px;
+}
+</style>
+
+<style>
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 </style>
