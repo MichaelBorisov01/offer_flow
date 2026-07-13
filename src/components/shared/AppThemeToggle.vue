@@ -23,7 +23,7 @@ function handleToggle(event: MouseEvent) {
     Math.max(y, innerHeight - y),
   )
 
-  const transition = (document as any).startViewTransition(async () => {
+  const transition = document.startViewTransition(async () => {
     themeStore.toggleTheme()
     await nextTick()
   })
