@@ -146,8 +146,17 @@ function showAuthRequiredModal(title: string, content: string) {
   })
 }
 
+function showOutOfTokensModal() {
+  Modal.warning({
+    title: 'Токены закончились 💎',
+    content: 'У вас закончились бесплатные генерации с помощью ИИ. В будущем здесь появится возможность пополнить баланс, а пока мы работаем над новыми функциями!',
+    okText: 'Понятно',
+    closable: true,
+    maskClosable: true,
+  })
+}
+
 async function generateQuestions() {
-  // 1. Проверка лимита для неавторизованных пользователей
   if (!authStore.isAuthenticated) {
     const hasUsedDemo = localStorage.getItem('offerflow_demo_used')
     if (hasUsedDemo) {
@@ -155,6 +164,13 @@ async function generateQuestions() {
         'Демо-режим исчерпан 🚀',
         'Вы уже сгенерировали свой первый набор вопросов. Зарегистрируйтесь бесплатно, чтобы получить безлимитный доступ к тренажеру и сохранять прогресс!',
       )
+      return
+    }
+  }
+  else {
+    // Пропускаем проверку баланса, если это админ
+    if (!authStore.isAdmin && authStore.userTokens <= 0) {
+      showOutOfTokensModal()
       return
     }
   }
@@ -170,9 +186,17 @@ async function generateQuestions() {
 
     interviewStore.questions = aiQuestions.value
 
-    // 2. Если гость успешно сгенерировал вопросы, записываем это в localStorage
     if (!authStore.isAuthenticated) {
       localStorage.setItem('offerflow_demo_used', 'true')
+    }
+    else {
+      // Списываем токен ТОЛЬКО если API работает нормально
+      if (aiStatus.value !== 'error') {
+        await authStore.decrementToken()
+      }
+      else {
+        showMessage('info', 'Использованы локальные вопросы резервного фонда. Токен не списан.', 4)
+      }
     }
 
     emit('questionsGenerated')
@@ -180,7 +204,7 @@ async function generateQuestions() {
   catch (error) {
     console.error('Error generating questions:', error)
     aiStatus.value = 'error'
-    showMessage('error', 'Ошибка при генерации вопросов')
+    showMessage('error', 'Ошибка при генерации вопросов. Попробуйте еще раз.')
   }
   finally {
     isGenerating.value = false
@@ -204,7 +228,6 @@ function isDuplicateQuestion(question: Question): boolean {
 }
 
 async function saveQuestionToDB(question: Question, tempId: string) {
-  // Блокируем сохранение для гостей
   if (!authStore.isAuthenticated) {
     showAuthRequiredModal(
       'Сохранение вопросов 📚',
@@ -324,7 +347,6 @@ onMounted(async () => {
     Object.assign(aiSettings, props.initialSettings)
   }
 
-  // Пингуем наш бэкенд, чтобы убедиться, что всё работает
   const isConnected = await AIService.testConnection()
   aiStatus.value = isConnected ? 'connected' : 'error'
 })
@@ -447,7 +469,15 @@ onMounted(async () => {
             class="generate-button"
             @click="generateQuestions"
           >
-            {{ hasQuestions ? 'Сгенерировать новые вопросы' : 'Сгенерировать вопросы' }}
+            <span v-if="!authStore.isAuthenticated">
+              {{ hasQuestions ? 'Сгенерировать новые (Демо)' : 'Сгенерировать (Демо)' }}
+            </span>
+            <span v-else>
+              {{ hasQuestions ? 'Сгенерировать новые' : 'Сгенерировать вопросы' }}
+              <span class="token-badge">
+                💎 {{ authStore.isAdmin ? '∞' : authStore.userTokens }}
+              </span>
+            </span>
           </a-button>
 
           <a-button
@@ -625,6 +655,14 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.token-badge {
+  margin-left: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 13px;
 }
 
 .questions-preview {

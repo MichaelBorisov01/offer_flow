@@ -11,13 +11,14 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth'
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, query, setDoc, where } from 'firebase/firestore'
 import { defineStore } from 'pinia'
 import { auth, db } from '@/services/firebase'
 import { ConsentManager } from '@/utils/consentManager'
 
 interface UserProfile {
   displayName?: string
+  tokens?: number
   consent?: {
     privacyPolicy: boolean
     userAgreement: boolean
@@ -37,7 +38,6 @@ interface AuthState {
 
 function getFirebaseErrorMessage(errorCode: string): string {
   const errorMessages: { [key: string]: string } = {
-    // Ошибки аутентификации
     'auth/invalid-credential': 'Неверный email или пароль',
     'auth/user-not-found': 'Пользователь с таким email не найден',
     'auth/wrong-password': 'Неверный пароль',
@@ -49,8 +49,6 @@ function getFirebaseErrorMessage(errorCode: string): string {
     'auth/user-disabled': 'Аккаунт заблокирован',
     'auth/operation-not-allowed': 'Операция не разрешена',
     'auth/requires-recent-login': 'Требуется повторный вход',
-
-    // Общие ошибки
     'auth/unauthorized-domain': 'Неавторизованный домен',
     'auth/app-not-authorized': 'Приложение не авторизовано',
     'auth/argument-error': 'Ошибка аргументов',
@@ -63,7 +61,6 @@ function getFirebaseErrorMessage(errorCode: string): string {
   return errorMessages[errorCode] || 'Произошла неизвестная ошибка. Попробуйте еще раз.'
 }
 
-// Функция для создания тестовых вопросов
 async function createSampleQuestions(userId: string): Promise<void> {
   const sampleQuestions: Omit<Question, 'id'>[] = [
     {
@@ -105,7 +102,6 @@ async function createSampleQuestions(userId: string): Promise<void> {
   }
   catch (error) {
     console.error('❌ Error creating sample questions:', error)
-    // Не прерываем регистрацию из-за ошибки создания вопросов
   }
 }
 
@@ -150,7 +146,15 @@ export const useAuthStore = defineStore('auth', {
         const docSnap = await getDoc(docRef)
 
         if (docSnap.exists()) {
-          this.userProfile = docSnap.data() as UserProfile
+          const data = docSnap.data() as UserProfile
+
+          // Если токенов нет (старый аккаунт), выдаем 3 штуки и сохраняем в БД
+          if (data.tokens === undefined) {
+            await setDoc(docRef, { tokens: 3, updatedAt: new Date() }, { merge: true })
+            data.tokens = 3
+          }
+
+          this.userProfile = data
         }
       }
       catch (error) {
@@ -182,18 +186,17 @@ export const useAuthStore = defineStore('auth', {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         const user = userCredential.user
 
-        // Получаем данные согласия для сохранения в Firebase
         const consentData = ConsentManager.getConsentDataForFirebase()
 
-        // Сохраняем данные пользователя в Firestore с информацией о согласии
+        // Даем 3 токена при регистрации нового профиля
         await setDoc(doc(db, 'users', user.uid), {
           ...userData,
+          tokens: 3,
           consent: consentData,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
 
-        // Обновляем профиль в Firebase Auth
         if (userData.displayName) {
           await updateProfile(user, {
             displayName: userData.displayName,
@@ -223,7 +226,6 @@ export const useAuthStore = defineStore('auth', {
       try {
         await signInWithEmailAndPassword(auth, email, password)
 
-        // После успешного входа синхронизируем согласия из Firebase
         if (this.user) {
           await this.syncConsentFromFirebase()
         }
@@ -263,7 +265,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Метод для обновления профиля пользователя
     async updateUserProfile(updates: Partial<UserProfile>): Promise<boolean> {
       if (!this.user) {
         throw new Error('Пользователь не авторизован')
@@ -285,7 +286,34 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Метод для проверки согласия
+    // Списание одного токена
+    async decrementToken(): Promise<boolean> {
+      // Если это админ — просто разрешаем операцию без списания
+      if (this.isAdmin) {
+        return true
+      }
+
+      if (!this.user || !this.userProfile || (this.userProfile.tokens || 0) <= 0) {
+        return false
+      }
+
+      try {
+        const docRef = doc(db, 'users', this.user.uid)
+
+        await setDoc(docRef, {
+          tokens: increment(-1),
+          updatedAt: new Date(),
+        }, { merge: true })
+
+        this.userProfile.tokens = (this.userProfile.tokens || 0) - 1
+        return true
+      }
+      catch (error) {
+        console.error('Ошибка списания токена:', error)
+        return false
+      }
+    },
+
     hasValidConsent(): boolean {
       return ConsentManager.hasValidConsent()
     },
@@ -303,11 +331,9 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        // Проверка текущего пароля через реавторизацию
         const credential = EmailAuthProvider.credential(this.user.email!, currentPassword)
         await reauthenticateWithCredential(this.user, credential)
 
-        // Изменение пароля
         await updatePassword(this.user, newPassword)
 
         return true
@@ -323,7 +349,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Реальный метод удаления аккаунта
     async deleteAccount(password: string): Promise<boolean> {
       if (!this.user) {
         throw new Error('Пользователь не авторизован')
@@ -333,21 +358,14 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        // Реаутентификация для подтверждения
         const credential = EmailAuthProvider.credential(this.user.email!, password)
         await reauthenticateWithCredential(this.user, credential)
 
-        // Удаление всех данных пользователя из Firestore
         await this.deleteAllUserData(this.user.uid)
-
-        // Удаление аккаунта из Firebase Auth
         await deleteUser(this.user)
 
-        // Очистка локального состояния
         this.user = null
         this.userProfile = null
-
-        // Очистка согласий
         ConsentManager.revokeConsent()
 
         return true
@@ -365,7 +383,6 @@ export const useAuthStore = defineStore('auth', {
 
     async deleteAllUserData(userId: string): Promise<void> {
       try {
-        // Удаление основного профиля пользователя
         await deleteDoc(doc(db, 'users', userId))
 
         const questionsQuery = query(
@@ -381,7 +398,6 @@ export const useAuthStore = defineStore('auth', {
       }
       catch (error) {
         console.error('Error deleting user data:', error)
-        // Не прерываем процесс удаления аккаунта из-за ошибок в данных
       }
     },
   },
@@ -390,8 +406,9 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: state => !!state.user,
     userDisplayName: state =>
       state.userProfile?.displayName || state.user?.email?.split('@')[0] || 'User',
-
-    // Геттер для проверки согласия
+    // Геттер для получения текущего баланса
+    userTokens: state => state.userProfile?.tokens || 0,
+    isAdmin: state => state.user?.email === 'bori.mix@yandex.ru',
     consentGiven: () => ConsentManager.hasValidConsent(),
   },
 })

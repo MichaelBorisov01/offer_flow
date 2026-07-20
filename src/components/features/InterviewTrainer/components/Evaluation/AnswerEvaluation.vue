@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { UserAnswer } from '@/types/interview.ts'
 import { BulbOutlined, CheckOutlined, EditOutlined } from '@ant-design/icons-vue'
-import { ref, watch } from 'vue'
+import { message } from 'ant-design-vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { getScoreColor } from '@/utils/helpers/scoreHelpers.ts'
 
 interface Props {
@@ -29,7 +30,16 @@ const localAnswer = ref('')
 const submittedAnswer = ref<UserAnswer>()
 const showEvaluationModal = ref(false)
 
-// Синхронизируем с переданным ответом
+// Лимиты и кулдауны
+const MAX_ATTEMPTS = 3
+const evalAttempts = ref(0)
+const evalCooldown = ref(0)
+const aiAttempts = ref(0)
+const aiCooldown = ref(0)
+
+let evalTimer: number | null = null
+let aiTimer: number | null = null
+
 watch(() => props.userAnswer, (newAnswer) => {
   if (newAnswer) {
     submittedAnswer.value = newAnswer
@@ -37,39 +47,88 @@ watch(() => props.userAnswer, (newAnswer) => {
   }
 }, { immediate: true })
 
+function startEvalCooldown() {
+  if (evalTimer)
+    clearInterval(evalTimer)
+  evalCooldown.value = 10
+  evalTimer = window.setInterval(() => {
+    evalCooldown.value--
+    if (evalCooldown.value <= 0) {
+      clearInterval(evalTimer!)
+      evalTimer = null
+    }
+  }, 1000)
+}
+
+function startAiCooldown() {
+  if (aiTimer)
+    clearInterval(aiTimer)
+  aiCooldown.value = 10
+  aiTimer = window.setInterval(() => {
+    aiCooldown.value--
+    if (aiCooldown.value <= 0) {
+      clearInterval(aiTimer!)
+      aiTimer = null
+    }
+  }, 1000)
+}
+
 function submitAnswer() {
   if (!localAnswer.value.trim())
     return
 
+  if (evalAttempts.value >= MAX_ATTEMPTS) {
+    message.warning('Вы исчерпали лимит проверок (3 раза) для этого вопроса.')
+    return
+  }
+
+  if (evalCooldown.value > 0)
+    return
+
+  evalAttempts.value++
+  startEvalCooldown()
   showEvaluationModal.value = true
   emit('submit', localAnswer.value.trim())
 
-  // Скрываем модалку через 3 секунды (на случай если оценка затянется)
   setTimeout(() => {
     showEvaluationModal.value = false
   }, 3000)
 }
 
+function showAIAnswer() {
+  if (aiAttempts.value >= MAX_ATTEMPTS) {
+    message.warning('Вы исчерпали лимит генерации ответов ИИ (3 раза) для этого вопроса.')
+    return
+  }
+
+  if (aiCooldown.value > 0)
+    return
+
+  aiAttempts.value++
+  startAiCooldown()
+  emit('showAiAnswer')
+}
+
 function skipAnswer() {
   emit('skip')
 }
-
 function nextQuestion() {
   emit('next')
 }
-
 function finishInterview() {
   emit('finish')
 }
-
 function editAnswer() {
   submittedAnswer.value = undefined
   emit('edit')
 }
 
-function showAIAnswer() {
-  emit('showAiAnswer')
-}
+onUnmounted(() => {
+  if (evalTimer)
+    clearInterval(evalTimer)
+  if (aiTimer)
+    clearInterval(aiTimer)
+})
 </script>
 
 <template>
@@ -93,13 +152,17 @@ function showAIAnswer() {
         <a-button
           type="primary"
           :loading="evaluating"
-          :disabled="!localAnswer.trim()"
+          :disabled="!localAnswer.trim() || evalCooldown > 0 || evalAttempts >= MAX_ATTEMPTS"
           size="large"
           class="submit-button mobile-action-btn"
           @click="submitAnswer"
         >
-          <CheckOutlined />
-          <span class="button-text">Отправить на оценку</span>
+          <CheckOutlined v-if="evalCooldown === 0 && evalAttempts < MAX_ATTEMPTS" />
+          <span class="button-text">
+            <template v-if="evalAttempts >= MAX_ATTEMPTS">Лимит проверок (3/3)</template>
+            <template v-else-if="evalCooldown > 0">Подождите {{ evalCooldown }} сек</template>
+            <template v-else>Отправить на оценку</template>
+          </span>
         </a-button>
 
         <a-button
@@ -122,22 +185,18 @@ function showAIAnswer() {
           </a-tag>
         </template>
 
-        <!-- Обратная связь -->
         <div class="feedback-section">
           <h4 class="section-title feedback-title">
-            <span class="emoji">💡</span>
-            Обратная связь:
+            <span class="emoji">💡</span> Обратная связь:
           </h4>
           <p class="feedback-text">
             {{ submittedAnswer.evaluation!.feedback }}
           </p>
         </div>
 
-        <!-- Предложения для улучшения -->
         <div class="suggestions-section">
           <h4 class="section-title suggestions-title">
-            <span class="emoji">🚀</span>
-            Предложения для улучшения:
+            <span class="emoji">🚀</span> Предложения для улучшения:
           </h4>
           <ul class="suggestions-list">
             <li
@@ -150,7 +209,6 @@ function showAIAnswer() {
           </ul>
         </div>
 
-        <!-- Действия после оценки -->
         <div class="post-evaluation-actions">
           <div class="action-buttons">
             <a-button
@@ -186,13 +244,16 @@ function showAIAnswer() {
               type="link"
               size="large"
               :loading="aiAnswerLoading"
-              :disabled="aiAnswerLoading"
+              :disabled="aiAnswerLoading || aiCooldown > 0 || aiAttempts >= MAX_ATTEMPTS"
               class="ai-answer-button mobile-action-btn"
               @click="showAIAnswer"
             >
-              <BulbOutlined />
+              <BulbOutlined v-if="aiCooldown === 0 && aiAttempts < MAX_ATTEMPTS" />
               <span class="button-text">
-                {{ aiAnswerLoading ? 'Генерация ответа...' : 'Посмотреть ответ ИИ' }}
+                <template v-if="aiAttempts >= MAX_ATTEMPTS">Лимит (3/3)</template>
+                <template v-else-if="aiCooldown > 0">Ожидание {{ aiCooldown }} сек</template>
+                <template v-else-if="aiAnswerLoading">Генерация ответа...</template>
+                <template v-else>Посмотреть ответ ИИ</template>
               </span>
             </a-button>
           </div>

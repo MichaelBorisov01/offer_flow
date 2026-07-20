@@ -84,7 +84,7 @@ onMounted(() => {
 async function handleLogout() {
   try {
     await authStore.signOut()
-    router.push('/auth')
+    await router.push('/auth')
   }
   catch (error) {
     console.error('Logout error:', error)
@@ -133,6 +133,15 @@ function goToLogin() {
                 </template>
                 Войти
               </a-button>
+
+              <!-- Значок баланса токенов -->
+              <div
+                v-if="isAuthenticated"
+                class="token-badge-global"
+                title="Остаток генераций ИИ"
+              >
+                💎 {{ authStore.isAdmin ? '∞' : authStore.userTokens }}
+              </div>
 
               <ThemeToggle />
 
@@ -235,6 +244,30 @@ html, body {
   gap: 16px;
 }
 
+.token-badge-global {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  line-height: 1;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: var(--ant-color-primary);
+  padding: 0 12px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: help;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.token-badge-global:hover {
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-1px);
+}
+
 .login-btn {
   border-radius: 8px;
   font-weight: 600;
@@ -288,6 +321,12 @@ html, body {
 
   .user-name {
     display: none;
+  }
+
+  .token-badge-global {
+    padding: 2px 8px;
+    font-size: 13px;
+    gap: 4px;
   }
 
   .content {

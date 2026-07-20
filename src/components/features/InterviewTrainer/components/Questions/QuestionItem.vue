@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Question } from '@/types/interview.ts'
 import { BulbOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons-vue'
-import { Tooltip } from 'ant-design-vue'
+import { message, Tooltip } from 'ant-design-vue'
+import { onUnmounted, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 import { getCardBackgroundColor, getCardBorderColor } from '@/utils/helpers/questionHelpers.ts'
 
@@ -24,9 +25,46 @@ interface Emits {
   (e: 'saveAiToUserAnswer', question: Question, aiAnswer: string): void
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const interviewStore = useInterviewStore()
+
+const MAX_AI_ATTEMPTS = 3
+const aiAttempts = ref(0)
+const aiCooldown = ref(0)
+let aiTimer: number | null = null
+
+function startAiCooldown() {
+  if (aiTimer)
+    clearInterval(aiTimer)
+  aiCooldown.value = 10
+  aiTimer = window.setInterval(() => {
+    aiCooldown.value--
+    if (aiCooldown.value <= 0) {
+      clearInterval(aiTimer!)
+      aiTimer = null
+    }
+  }, 1000)
+}
+
+function handleGenerateAnswer() {
+  if (aiAttempts.value >= MAX_AI_ATTEMPTS) {
+    message.warning('Лимит генерации (3 раза) для этого вопроса исчерпан.')
+    return
+  }
+
+  if (aiCooldown.value > 0)
+    return
+
+  aiAttempts.value++
+  startAiCooldown()
+  emit('generateAnswer', props.question)
+}
+
+onUnmounted(() => {
+  if (aiTimer)
+    clearInterval(aiTimer)
+})
 </script>
 
 <template>
@@ -62,17 +100,22 @@ const interviewStore = useInterviewStore()
           </a-button>
         </Tooltip>
 
-        <Tooltip title="Сгенерировать ответ ИИ">
+        <Tooltip :title="aiAttempts >= MAX_AI_ATTEMPTS ? 'Лимит исчерпан' : (aiCooldown > 0 ? `Подождите ${aiCooldown} сек` : 'Сгенерировать ответ ИИ')">
           <a-button
             type="text"
             :loading="question.id === generatingAnswerId"
+            :disabled="question.id === generatingAnswerId || aiCooldown > 0 || aiAttempts >= MAX_AI_ATTEMPTS"
             class="action-button"
-            @click="emit('generateAnswer', question)"
+            @click="handleGenerateAnswer"
           >
             <template #icon>
-              <BulbOutlined />
+              <BulbOutlined v-if="aiCooldown === 0 && aiAttempts < MAX_AI_ATTEMPTS" />
             </template>
-            <span class="action-text">ИИ ответ</span>
+            <span class="action-text">
+              <template v-if="aiAttempts >= MAX_AI_ATTEMPTS">Лимит (3/3)</template>
+              <template v-else-if="aiCooldown > 0">{{ aiCooldown }} сек</template>
+              <template v-else>ИИ ответ</template>
+            </span>
           </a-button>
         </Tooltip>
       </div>
@@ -93,7 +136,7 @@ const interviewStore = useInterviewStore()
         v-if="question.aiAnswer"
         :answer="question.aiAnswer"
         mode="manual"
-        @regenerate="() => emit('generateAnswer', question)"
+        @regenerate="handleGenerateAnswer"
         @close="emit('clearAnswer', question)"
         @save-to-user-answer="(text) => emit('saveAiToUserAnswer', question, text)"
       />

@@ -9,7 +9,8 @@ import {
   SaveOutlined,
   SmileOutlined,
 } from '@ant-design/icons-vue'
-import { computed, ref } from 'vue'
+import { message } from 'ant-design-vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { sanitizedContent } from '@/utils/helpers/answerHelpers.ts'
 
 interface Props {
@@ -30,9 +31,27 @@ const emit = defineEmits<Emits>()
 const isSaving = ref(false)
 const isSaved = ref(false)
 
+const MAX_REGEN_ATTEMPTS = 3
+const regenAttempts = ref(0)
+const regenCooldown = ref(0)
+let regenTimer: number | null = null
+
 const cardTitle = computed(() => {
   return props.answer.type === 'joke' ? '🎭 Шутка от ИИ' : '💡 Ответ от ИИ'
 })
+
+function startRegenCooldown() {
+  if (regenTimer)
+    clearInterval(regenTimer)
+  regenCooldown.value = 10
+  regenTimer = window.setInterval(() => {
+    regenCooldown.value--
+    if (regenCooldown.value <= 0) {
+      clearInterval(regenTimer!)
+      regenTimer = null
+    }
+  }, 1000)
+}
 
 async function saveToUserAnswer() {
   if (!props.answer.content)
@@ -42,13 +61,12 @@ async function saveToUserAnswer() {
   try {
     emit('saveToUserAnswer', props.answer.content)
     isSaved.value = true
-
     setTimeout(() => {
       isSaved.value = false
     }, 5000)
   }
   catch (error) {
-    console.error('Error saving AI answer to user answer:', error)
+    console.error('Error saving AI answer:', error)
   }
   finally {
     isSaving.value = false
@@ -56,28 +74,35 @@ async function saveToUserAnswer() {
 }
 
 function regenerateAnswer() {
+  if (regenAttempts.value >= MAX_REGEN_ATTEMPTS) {
+    message.warning('Лимит генерации ответов (3 раза) исчерпан.')
+    return
+  }
+
+  if (regenCooldown.value > 0)
+    return
+
+  regenAttempts.value++
+  startRegenCooldown()
   emit('regenerate')
 }
+
+onUnmounted(() => {
+  if (regenTimer)
+    clearInterval(regenTimer)
+})
 </script>
 
 <template>
   <div class="ai-answer-card">
-    <a-card
-      class="answer-card" :class="[props.answer.type]"
-      :title="cardTitle"
-    >
+    <a-card class="answer-card" :class="[props.answer.type]" :title="cardTitle">
       <template #extra>
         <div class="card-extra">
           <a-tag v-if="answer.type === 'joke'" color="warning" class="type-tag-mobile">
             <SmileOutlined />
             <span class="tag-text">IT-Юмор</span>
           </a-tag>
-          <a-button
-            type="text"
-            size="small"
-            class="close-btn"
-            @click="$emit('close')"
-          >
+          <a-button type="text" size="small" class="close-btn" @click="$emit('close')">
             <CloseOutlined />
             <span class="close-text">Закрыть</span>
           </a-button>
@@ -110,14 +135,22 @@ function regenerateAnswer() {
               size="small"
               class="action-btn regenerate-btn"
               :loading="answerGenerating"
-              :disabled="answerGenerating"
+              :disabled="answerGenerating || regenCooldown > 0 || regenAttempts >= MAX_REGEN_ATTEMPTS"
               @click="regenerateAnswer"
             >
               <template #icon>
-                <ReloadOutlined />
+                <ReloadOutlined v-if="regenCooldown === 0 && regenAttempts < MAX_REGEN_ATTEMPTS" />
               </template>
-              <span class="btn-text full-text">Перегенерировать ответ</span>
-              <span class="btn-text short-text">Перегенерировать</span>
+              <span class="btn-text full-text">
+                <template v-if="regenAttempts >= MAX_REGEN_ATTEMPTS">Лимит (3/3)</template>
+                <template v-else-if="regenCooldown > 0">Ожидание {{ regenCooldown }}с</template>
+                <template v-else>Перегенерировать ответ</template>
+              </span>
+              <span class="btn-text short-text">
+                <template v-if="regenAttempts >= MAX_REGEN_ATTEMPTS">Лимит (3/3)</template>
+                <template v-else-if="regenCooldown > 0">{{ regenCooldown }}с</template>
+                <template v-else>Перегенерировать</template>
+              </span>
             </a-button>
           </div>
 

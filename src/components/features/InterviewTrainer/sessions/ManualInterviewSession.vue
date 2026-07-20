@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Question, QuestionStatus } from '@/types/interview'
 import { message } from 'ant-design-vue'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useInterviewStore } from '@/stores/interview'
 import { sanitizedContent } from '@/utils/helpers/answerHelpers'
 import AIAnswerCard from '../components/Evaluation/AIAnswerCard.vue'
@@ -28,6 +28,12 @@ const interviewSettings = computed(() => interviewStore.interviewSettings)
 const showAIAnswer = ref(false)
 const showUserAnswer = ref(false)
 
+// Лимиты и кулдауны для генерации ответов (с привязкой к ID вопроса)
+const MAX_AI_ATTEMPTS = 3
+const aiAttempts = ref<Record<string, number>>({})
+const aiCooldown = ref(0)
+let aiTimer: number | null = null
+
 function isQuestionAnswered(questionId: string): boolean {
   return !!interviewStore.getUserAnswer(questionId)
 }
@@ -35,6 +41,19 @@ function isQuestionAnswered(questionId: string): boolean {
 const hasUserAnswer = computed(() => {
   return !!(currentQuestion.value?.userAnswer && currentQuestion.value.userAnswer.trim().length > 0)
 })
+
+function startAiCooldown() {
+  if (aiTimer)
+    clearInterval(aiTimer)
+  aiCooldown.value = 10
+  aiTimer = window.setInterval(() => {
+    aiCooldown.value--
+    if (aiCooldown.value <= 0) {
+      clearInterval(aiTimer!)
+      aiTimer = null
+    }
+  }, 1000)
+}
 
 async function setQuestionStatus(status: QuestionStatus) {
   if (!currentQuestion.value?.id) {
@@ -55,13 +74,19 @@ async function toggleAnswerVisibility() {
     hideAnswer()
   }
   else {
-    await generateAIAnswer()
+    // Если ответ уже есть, не дергаем API, просто показываем!
+    if (currentQuestion.value?.aiAnswer) {
+      showAIAnswer.value = true
+      showUserAnswer.value = false
+    }
+    else {
+      await generateAIAnswer()
+    }
   }
 }
 
 function toggleUserAnswerVisibility() {
   showUserAnswer.value = !showUserAnswer.value
-  // Скрываем AI ответ при показе пользовательского
   if (showUserAnswer.value) {
     showAIAnswer.value = false
   }
@@ -73,11 +98,28 @@ function hideAnswer() {
 }
 
 async function generateAIAnswer() {
-  if (!currentQuestion.value?.id)
+  const qId = currentQuestion.value?.id
+  if (!qId)
     return
 
+  // Проверяем лимиты попыток для ТЕКУЩЕГО вопроса
+  const attempts = aiAttempts.value[qId] || 0
+  if (attempts >= MAX_AI_ATTEMPTS) {
+    message.warning('Лимит генерации ответов (3 раза) для этого вопроса исчерпан.')
+    return
+  }
+
+  // Проверяем глобальный кулдаун
+  if (aiCooldown.value > 0) {
+    message.warning(`Подождите ${aiCooldown.value} сек. перед следующей генерацией.`)
+    return
+  }
+
   try {
-    await interviewStore.generateAnswerForQuestion(currentQuestion.value.id)
+    aiAttempts.value[qId] = attempts + 1
+    startAiCooldown()
+
+    await interviewStore.generateAnswerForQuestion(qId)
     message.success('Ответ сгенерирован!')
     showAIAnswer.value = true
     showUserAnswer.value = false
@@ -112,6 +154,11 @@ function navigateToQuestion(index: number) {
 function handleSaveAiToUserAnswer(aiAnswer: string) {
   emit('saveAiToUserAnswer', currentQuestion.value, aiAnswer)
 }
+
+onUnmounted(() => {
+  if (aiTimer)
+    clearInterval(aiTimer)
+})
 </script>
 
 <template>
