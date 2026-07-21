@@ -658,11 +658,16 @@ onMounted(async () => {
 }
 
 .token-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 8px;
   background: rgba(255, 255, 255, 0.2);
-  padding: 2px 8px;
+  height: 24px;
+  padding: 0 10px;
   border-radius: 12px;
   font-size: 13px;
+  line-height: 1;
 }
 
 .questions-preview {
