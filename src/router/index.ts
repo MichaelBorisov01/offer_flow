@@ -31,6 +31,16 @@ const routes = [
       requiresAuth: true,
     },
   },
+  // 5. Тарифы
+  {
+    path: '/pricing',
+    name: 'pricing',
+    component: () => import('@/pages/PricingPage.vue'),
+    meta: {
+      title: 'Тарифы | OfferFlow',
+      requiresAuth: false,
+    },
+  },
 ]
 
 const router = createRouter({
